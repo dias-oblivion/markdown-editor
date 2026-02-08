@@ -1,0 +1,25 @@
+appId: com.markdown-editor.app
+productName: Markdown Editor
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**/*
+  - electron-dist/**/*
+  - assets/icon.png
+asar: true
+icon: assets/icon.png
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Development
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.developer-tools
+win:
+  target:
+    - nsis
+    - portable

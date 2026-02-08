@@ -1,0 +1,193 @@
+.editorArea {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+}
+
+.editorPane {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.previewPane {
+  flex: 1;
+  overflow: hidden;
+  border-left: 1px solid var(--border-color);
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  padding: 4px 12px;
+  height: 28px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.previewContent {
+  height: calc(100% - 28px);
+  overflow-y: auto;
+}
+
+.cmEditor {
+  height: 100%;
+  overflow: auto;
+}
+
+.cmEditor .cm-editor {
+  height: 100%;
+}
+
+.cmEditor .cm-scroller {
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 14px;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.emptyShortcut {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 2px 8px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+}
+
+/* Status Bar */
+.statusBar {
+  display: flex;
+  align-items: center;
+  height: var(--statusbar-height);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  padding: 0 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+  gap: 16px;
+}
+
+.statusItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.statusSpacer {
+  flex: 1;
+}
+
+/* Find & Replace bar */
+.findBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  flex-wrap: wrap;
+}
+
+.findInput {
+  flex: 1;
+  min-width: 150px;
+  padding: 4px 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.findInput:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.findButton {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+}
+
+.findButton:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.findButtonPrimary {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  border-color: var(--accent-primary);
+}
+
+.findButtonPrimary:hover {
+  background: var(--accent-hover);
+}
+
+.findClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.findClose:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.findOptions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.findCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.findCheckbox input {
+  accent-color: var(--accent-primary);
+}
+
+.findRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}

@@ -1,0 +1,83 @@
+:root {
+  /* ── Dark theme (default) — FrankMD-style Matte Black ── */
+  --bg-primary: #111111;
+  --bg-secondary: #141414;
+  --bg-tertiary: #1a1a1a;
+  --bg-editor: #1e1e1e;
+  --bg-elevated: #2a2a2a;
+  --bg-hover: #2e2e2e;
+  --bg-active: #383838;
+
+  --text-primary: #d4d4d4;
+  --text-secondary: #8a8a8a;
+  --text-muted: #555555;
+  --text-accent: #e8a838;
+
+  --border-color: #2a2a2a;
+  --border-subtle: #1e1e1e;
+
+  --accent-primary: #e8a838;
+  --accent-hover: #f0b848;
+  --accent-muted: rgba(232, 168, 56, 0.12);
+
+  --danger: #e85454;
+  --success: #4caf50;
+  --info: #5c9ce6;
+
+  --scrollbar-track: #111111;
+  --scrollbar-thumb: #333333;
+  --scrollbar-thumb-hover: #444444;
+
+  --sidebar-width: 250px;
+  --toolbar-height: 40px;
+  --statusbar-height: 28px;
+
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+}
+
+/* ── Light theme ── */
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #ebebeb;
+  --bg-editor: #ffffff;
+  --bg-elevated: #e0e0e0;
+  --bg-hover: #e8e8e8;
+  --bg-active: #d5d5d5;
+
+  --text-primary: #1a1a1a;
+  --text-secondary: #555555;
+  --text-muted: #999999;
+  --text-accent: #c48820;
+
+  --border-color: #dcdcdc;
+  --border-subtle: #e8e8e8;
+
+  --accent-primary: #d49520;
+  --accent-hover: #c48820;
+  --accent-muted: rgba(212, 149, 32, 0.1);
+
+  --danger: #d32f2f;
+  --success: #388e3c;
+  --info: #1976d2;
+
+  --scrollbar-track: #f5f5f5;
+  --scrollbar-thumb: #c0c0c0;
+  --scrollbar-thumb-hover: #a0a0a0;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
