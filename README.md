@@ -56,12 +56,54 @@ npm run build
 npm run electron:build
 ```
 
-## Docker
+## Install via Docker
+
+The fastest way to use the editor — no need to clone the repo.
+
+### 1. Pull the image
 
 ```bash
-docker build -t markdown-editor .
-docker run -p 3000:80 markdown-editor
+docker pull <DOCKERHUB_USER>/markdown-editor:latest
 ```
+
+### 2. Set up the `md` command
+
+Download the CLI script and place it in your PATH:
+
+```bash
+sudo curl -fsSL https://raw.githubusercontent.com/<GITHUB_USER>/markdown-editor/main/scripts/md \
+  -o /usr/local/bin/md
+sudo chmod +x /usr/local/bin/md
+```
+
+Or manually: copy the `scripts/md` file from this repo to anywhere in your `$PATH`.
+
+### 3. Use it
+
+```bash
+# Open the current directory
+md .
+
+# Open a specific directory
+md ~/Documents/notes
+```
+
+The script automatically pulls the image on first run if it's not present locally.
+
+### Requirements
+
+- **Docker** installed and running
+- **Linux**: X11 display server (default on most distros)
+- **macOS**: [XQuartz](https://www.xquartz.org/) with "Allow connections from network clients" enabled
+
+### Updating
+
+```bash
+docker rmi <DOCKERHUB_USER>/markdown-editor:latest
+docker pull <DOCKERHUB_USER>/markdown-editor:latest
+```
+
+Or pin a specific version: `docker pull <DOCKERHUB_USER>/markdown-editor:1.0.0`
 
 ## Credits
 

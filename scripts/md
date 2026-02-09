@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMAGE_NAME="markdown-editor:electron"
+DOCKERHUB_IMAGE="obliviondias/markdown-editor"
+IMAGE_TAG="latest"
+IMAGE_NAME="$DOCKERHUB_IMAGE:$IMAGE_TAG"
 
 # ── Resolve workspace directory ──
 if [ $# -ge 1 ]; then
@@ -18,18 +20,10 @@ fi
 # ── Detect OS ──
 OS="$(uname -s)"
 
-# ── Build image if not present ──
+# ── Pull image if not present ──
 if ! docker image inspect "$IMAGE_NAME" > /dev/null 2>&1; then
-    echo "Image '$IMAGE_NAME' not found. Building (first run)..."
-    # Resolve the project root relative to this script
-    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-    PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-    docker build \
-        -f "$PROJECT_DIR/Dockerfile.electron" \
-        --build-arg USER_ID="$(id -u)" \
-        --build-arg GROUP_ID="$(id -g)" \
-        -t "$IMAGE_NAME" \
-        "$PROJECT_DIR"
+    echo "Image '$IMAGE_NAME' not found locally. Pulling from Docker Hub..."
+    docker pull "$IMAGE_NAME"
 fi
 
 # ── Platform-specific display config ──
