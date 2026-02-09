@@ -6,8 +6,8 @@
   "main": "electron-dist/main.js",
   "scripts": {
     "dev": "concurrently -k \"vite\" \"npm run electron:start\"",
-    "electron:start": "npx tsc -p tsconfig.electron.json && wait-on http://localhost:5173 && NODE_ENV=development electron .",
-    "build": "tsc -b && vite build && npx tsc -p tsconfig.electron.json",
+    "electron:start": "npx tsc -p tsconfig.electron.json && npx tsc -p tsconfig.electron.preload.json && wait-on http://localhost:5173 && NODE_ENV=development electron .",
+    "build": "tsc -b && vite build && npx tsc -p tsconfig.electron.json && npx tsc -p tsconfig.electron.preload.json",
     "electron:build": "npm run build && electron-builder",
     "lint": "eslint .",
     "preview": "vite preview"

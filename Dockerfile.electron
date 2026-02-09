@@ -1,0 +1,77 @@
+# ── Stage 1: Build ──────────────────────────────────────────────
+FROM node:20-bookworm AS build
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+# Build: Vite frontend + Electron main (ESM) + Electron preload (CJS)
+RUN npm run build
+
+# ── Stage 2: Runtime ────────────────────────────────────────────
+FROM node:20-bookworm-slim
+
+# Apt retry config for transient mirror issues
+RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries
+
+# Electron/Chromium runtime dependencies (X11, GTK, audio, etc.)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libx11-xcb1 \
+    libxcb-dri3-0 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxi6 \
+    libxrandr2 \
+    libxrender1 \
+    libxss1 \
+    libxtst6 \
+    libglib2.0-0 \
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libdbus-1-3 \
+    libexpat1 \
+    libgbm1 \
+    libgtk-3-0 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libasound2 \
+    libxshmfence1 \
+    fonts-liberation \
+    fonts-noto-color-emoji \
+    xdg-utils \
+    libgl1-mesa-dri \
+    libgl1-mesa-glx \
+    dbus-x11 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy built artifacts and dependencies
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/electron-dist ./electron-dist
+COPY --from=build /app/assets ./assets
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/package.json ./package.json
+
+# Create non-root user with configurable UID/GID to match host user
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+RUN groupadd -g ${GROUP_ID} appuser 2>/dev/null || true && \
+    useradd -u ${USER_ID} -g ${GROUP_ID} -m appuser 2>/dev/null || true
+
+# Workspace mount point
+RUN mkdir -p /workspace && chown ${USER_ID}:${GROUP_ID} /workspace
+VOLUME /workspace
+
+ENV ELECTRON_IN_DOCKER=1
+
+USER ${USER_ID}
+
+ENTRYPOINT ["./node_modules/.bin/electron", ".", "--no-sandbox", "--workspace=/workspace"]

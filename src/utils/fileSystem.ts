@@ -8,6 +8,7 @@ interface ElectronAPI {
   readFile: (filePath: string) => Promise<string>;
   writeFile: (filePath: string, content: string) => Promise<void>;
   createFile: (dirPath: string, name: string) => Promise<string>;
+  getInitialWorkspace: () => Promise<string | null>;
 }
 
 function getElectronAPI(): ElectronAPI | null {
@@ -17,6 +18,14 @@ function getElectronAPI(): ElectronAPI | null {
 
 export function isElectron(): boolean {
   return getElectronAPI() !== null;
+}
+
+// ── Initial workspace (CLI / Docker) ──
+
+export async function getInitialWorkspace(): Promise<string | null> {
+  const api = getElectronAPI();
+  if (!api) return null;
+  return api.getInitialWorkspace();
 }
 
 // ── Open directory ──

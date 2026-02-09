@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+IMAGE_NAME="markdown-editor:electron"
+
+# ── Resolve workspace directory ──
+if [ $# -ge 1 ]; then
+    if [ -d "$1" ]; then
+        WORKSPACE_DIR="$(cd "$1" && pwd)"
+    else
+        echo "Error: '$1' is not a valid directory" >&2
+        exit 1
+    fi
+else
+    WORKSPACE_DIR="$(pwd)"
+fi
+
+# ── Detect OS ──
+OS="$(uname -s)"
+
+# ── Build image if not present ──
+if ! docker image inspect "$IMAGE_NAME" > /dev/null 2>&1; then
+    echo "Image '$IMAGE_NAME' not found. Building (first run)..."
+    # Resolve the project root relative to this script
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+    PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+    docker build \
+        -f "$PROJECT_DIR/Dockerfile.electron" \
+        --build-arg USER_ID="$(id -u)" \
+        --build-arg GROUP_ID="$(id -g)" \
+        -t "$IMAGE_NAME" \
+        "$PROJECT_DIR"
+fi
+
+# ── Platform-specific display config ──
+DOCKER_ARGS=(
+    --rm
+    -v "$WORKSPACE_DIR:/workspace"
+    --ipc=host
+    --security-opt seccomp=unconfined
+    -e ELECTRON_IN_DOCKER=1
+)
+
+case "$OS" in
+    Linux)
+        DOCKER_ARGS+=(
+            -e "DISPLAY=${DISPLAY:-:0}"
+            -v "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+        )
+        xhost +local:docker 2>/dev/null || true
+        ;;
+    Darwin)
+        # macOS requires XQuartz: brew install --cask xquartz
+        # In XQuartz Preferences > Security: enable "Allow connections from network clients"
+        if [ ! -d "/Applications/Utilities/XQuartz.app" ]; then
+            echo "Error: XQuartz is required on macOS." >&2
+            echo "Install with: brew install --cask xquartz" >&2
+            echo "Then log out and back in, and enable 'Allow connections from network clients' in XQuartz preferences." >&2
+            exit 1
+        fi
+        xhost +localhost 2>/dev/null || true
+        DOCKER_ARGS+=(
+            -e "DISPLAY=host.docker.internal:0"
+        )
+        ;;
+    *)
+        echo "Error: Unsupported OS '$OS'." >&2
+        exit 1
+        ;;
+esac
+
+# ── Run ──
+exec docker run "${DOCKER_ARGS[@]}" "$IMAGE_NAME"

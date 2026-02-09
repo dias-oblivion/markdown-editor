@@ -6,6 +6,22 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Parse --workspace=<path> from CLI arguments
+function getWorkspaceArg(): string | null {
+  const prefix = '--workspace=';
+  const arg = process.argv.find(a => a.startsWith(prefix));
+  return arg ? arg.substring(prefix.length) : null;
+}
+
+const initialWorkspace = getWorkspaceArg();
+
+// Docker mode: disable GPU and sandbox (no hardware acceleration in containers)
+if (process.env.ELECTRON_IN_DOCKER === '1') {
+  app.commandLine.appendSwitch('no-sandbox');
+  app.commandLine.appendSwitch('disable-gpu');
+  app.commandLine.appendSwitch('disable-software-rasterizer');
+}
+
 let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
@@ -53,6 +69,10 @@ app.on('activate', () => {
 });
 
 // IPC Handlers
+
+ipcMain.handle('app:getInitialWorkspace', () => {
+  return initialWorkspace;
+});
 
 ipcMain.handle('dialog:openDirectory', async () => {
   const result = await dialog.showOpenDialog(mainWindow!, {

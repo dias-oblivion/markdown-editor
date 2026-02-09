@@ -7,6 +7,7 @@ import {
   readFileContent,
   writeFileContent,
   findFileByPath,
+  getInitialWorkspace,
 } from '../utils/fileSystem';
 import { saveSession, getSession, clearSession } from '../utils/sessionStorage';
 
@@ -43,13 +44,27 @@ export function useFileSystem() {
 
     async function restore() {
       try {
+        // Priority 1: CLI argument (Docker / --workspace flag)
+        if (isElectron()) {
+          const cliWorkspace = await getInitialWorkspace();
+          if (cliWorkspace && !cancelled) {
+            const entry = await reopenDirectoryByPath(cliWorkspace);
+            if (entry && !cancelled) {
+              rootPathRef.current = cliWorkspace;
+              setRootEntry(entry);
+              setIsRestoring(false);
+              return;
+            }
+          }
+        }
+
+        // Priority 2: Restore from session storage
         const session = getSession();
         if (!session?.directoryPath || cancelled) {
           setIsRestoring(false);
           return;
         }
 
-        // In Electron we can just re-read the directory by path — no permissions needed
         if (isElectron()) {
           const entry = await reopenDirectoryByPath(session.directoryPath);
           if (!entry || cancelled) {
