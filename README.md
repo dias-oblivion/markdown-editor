@@ -60,25 +60,23 @@ npm run electron:build
 
 The fastest way to use the editor — no need to clone the repo.
 
-### 1. Pull the image
+### Quick Start
 
 ```bash
-docker pull <DOCKERHUB_USER>/markdown-editor:latest
-```
+# Pull the image
+docker pull obliviondias/markdown-editor:latest
 
-### 2. Set up the `md` command
-
-Download the CLI script and place it in your PATH:
-
-```bash
-sudo curl -fsSL https://raw.githubusercontent.com/<GITHUB_USER>/markdown-editor/main/scripts/md \
+# Set up the md command
+sudo curl -fsSL https://raw.githubusercontent.com/dias-oblivion/markdown-editor/main/scripts/md \
   -o /usr/local/bin/md
+
 sudo chmod +x /usr/local/bin/md
+
+# Run the application
+md .
 ```
 
-Or manually: copy the `scripts/md` file from this repo to anywhere in your `$PATH`.
-
-### 3. Use it
+### Usage
 
 ```bash
 # Open the current directory
@@ -99,11 +97,46 @@ The script automatically pulls the image on first run if it's not present locall
 ### Updating
 
 ```bash
-docker rmi <DOCKERHUB_USER>/markdown-editor:latest
-docker pull <DOCKERHUB_USER>/markdown-editor:latest
+docker rmi obliviondias/markdown-editor:latest
+docker pull obliviondias/markdown-editor:latest
 ```
 
-Or pin a specific version: `docker pull <DOCKERHUB_USER>/markdown-editor:1.0.0`
+Or pin a specific version: `docker pull obliviondias/markdown-editor:1.0.0`
+
+## Roadmap
+
+Future features and improvements planned for the editor:
+
+### Claude Assist Integration
+
+- **Professional Rewriter** — Transform current file into a more professional and detailed version  
+  Output: `filename-claude-detailed.md`
+
+- **Diagram Generator** — Generate flowcharts and diagrams from markdown content  
+  Output: `filename-diagram.png`
+
+- **Creative Brainstorming** — Get 5+ different creative approaches based on the current content  
+  Output: `filename-claude-free-ideas.md`
+
+- **Task Breakdown** — Convert markdown content into structured Trello-style tasks with titles and descriptions
+
+### Grammar & Spell Check
+
+- **AI-Powered Corrections** — Orthographic correction using Claude integration
+- **Diff View** — Side-by-side comparison showing original vs corrected text (Git-style)
+- **Smart Suggestions** — Context-aware grammar and style improvements
+
+### Additional Ideas
+
+- **Export Templates** — Convert markdown to PDF, HTML, or slide presentations
+- **Collaborative Comments** — Add inline comments and suggestions for team workflows  
+- **Plugin System** — Custom extensions for specialized markdown features
+- **Git Integration** — Track changes, commit directly from editor, and sync with repositories
+- **AI Summarizer** — Generate executive summaries or abstracts from long documents
+- **Content Analytics** — Word count, reading time, complexity metrics per section
+- **Link Checker** — Validate all external and internal links in documents
+
+> **Note:** This roadmap represents ideas and potential features. Implementation priority will depend on user feedback and development capacity.
 
 ## Credits
 
