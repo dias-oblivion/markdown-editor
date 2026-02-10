@@ -63,17 +63,20 @@ The fastest way to use the editor — no need to clone the repo.
 ### Quick Start
 
 ```bash
-# Pull the image
-docker pull obliviondias/markdown-editor:latest
+# Download and run the installer
+bash <(curl -sL https://raw.githubusercontent.com/dias-oblivion/markdown-editor/main/scripts/install.sh)
+```
 
-# Set up the md command
-sudo curl -fsSL https://raw.githubusercontent.com/dias-oblivion/markdown-editor/main/scripts/md \
-  -o /usr/local/bin/md
+Then add the following line to your `~/.bashrc` or `~/.zshrc`:
 
-sudo chmod +x /usr/local/bin/md
+```bash
+source ~/.config/markdown-editor/md.sh
+```
 
-# Run the application
-md .
+Reload your shell and you're ready to go:
+
+```bash
+md ~/my-notes
 ```
 
 ### Usage
@@ -84,9 +87,15 @@ md .
 
 # Open a specific directory
 md ~/Documents/notes
+
+# Update the Docker image
+md-update
+
+# Stop a running container
+md-stop
 ```
 
-The script automatically pulls the image on first run if it's not present locally.
+The `md` command automatically pulls the image on first run if it's not present locally.
 
 ### Requirements
 
@@ -97,8 +106,7 @@ The script automatically pulls the image on first run if it's not present locall
 ### Updating
 
 ```bash
-docker rmi obliviondias/markdown-editor:latest
-docker pull obliviondias/markdown-editor:latest
+md-update
 ```
 
 Or pin a specific version: `docker pull obliviondias/markdown-editor:1.0.0`
