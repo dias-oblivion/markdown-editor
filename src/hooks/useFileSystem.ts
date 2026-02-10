@@ -8,6 +8,8 @@ import {
   writeFileContent,
   findFileByPath,
   getInitialWorkspace,
+  createNewFile,
+  refreshDirectoryTree,
 } from '../utils/fileSystem';
 import { saveSession, getSession, clearSession } from '../utils/sessionStorage';
 
@@ -207,6 +209,37 @@ export function useFileSystem() {
     );
   }, []);
 
+  const handleCreateFile = useCallback(async (dirPath: string, fileName: string) => {
+    const root = rootEntry;
+    if (!root) return;
+
+    // Find the target directory in the tree
+    const targetDir = dirPath === root.path
+      ? root
+      : findDirByPath(root, dirPath);
+    if (!targetDir) return;
+
+    // Create the file on disk
+    const { filePath, handle } = await createNewFile(targetDir, fileName);
+
+    // Refresh the directory tree
+    const refreshed = await refreshDirectoryTree(root);
+    if (refreshed) {
+      setRootEntry(refreshed);
+      rootPathRef.current = refreshed.path;
+
+      // Find the new file and open it
+      const newFileEntry = findFileByPath(refreshed, filePath);
+      if (newFileEntry) {
+        // If browser mode, attach the handle we got from createNewFile
+        if (handle && !newFileEntry.handle) {
+          newFileEntry.handle = handle;
+        }
+        handleOpenFile(newFileEntry);
+      }
+    }
+  }, [rootEntry, handleOpenFile]);
+
   return {
     rootEntry,
     tabs,
@@ -218,5 +251,17 @@ export function useFileSystem() {
     closeTab: handleCloseTab,
     updateContent: handleUpdateContent,
     saveFile: handleSaveFile,
+    createFile: handleCreateFile,
   };
+}
+
+function findDirByPath(entry: FileEntry, targetPath: string): FileEntry | null {
+  if (entry.isDirectory && entry.path === targetPath) return entry;
+  if (entry.children) {
+    for (const child of entry.children) {
+      const found = findDirByPath(child, targetPath);
+      if (found) return found;
+    }
+  }
+  return null;
 }

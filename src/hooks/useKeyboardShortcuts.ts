@@ -4,6 +4,7 @@ interface ShortcutHandlers {
   onSave?: () => void;
   onCommandPalette?: () => void;
   onFind?: () => void;
+  onNewFile?: () => void;
 }
 
 export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
@@ -24,6 +25,11 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       if (ctrl && e.key === 'f') {
         e.preventDefault();
         handlers.onFind?.();
+      }
+
+      if (ctrl && e.key === 'n') {
+        e.preventDefault();
+        handlers.onNewFile?.();
       }
     }
 

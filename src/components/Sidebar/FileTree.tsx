@@ -8,9 +8,10 @@ interface FileTreeProps {
   depth?: number;
   activeFilePath: string | null;
   onFileSelect: (entry: FileEntry) => void;
+  onDirContextMenu?: (e: React.MouseEvent, dirPath: string) => void;
 }
 
-export function FileTree({ entry, depth = 0, activeFilePath, onFileSelect }: FileTreeProps) {
+export function FileTree({ entry, depth = 0, activeFilePath, onFileSelect, onDirContextMenu }: FileTreeProps) {
   const [expanded, setExpanded] = useState(depth < 1);
 
   if (!entry.isDirectory) {
@@ -38,6 +39,13 @@ export function FileTree({ entry, depth = 0, activeFilePath, onFileSelect }: Fil
         className={styles.treeItem}
         style={{ '--depth': depth } as React.CSSProperties}
         onClick={() => setExpanded(!expanded)}
+        onContextMenu={(e) => {
+          if (onDirContextMenu) {
+            e.preventDefault();
+            e.stopPropagation();
+            onDirContextMenu(e, entry.path);
+          }
+        }}
       >
         <span className={`${styles.treeItemIcon} ${styles.chevron} ${expanded ? styles.open : ''}`}>
           <Icon icon="codicon:chevron-right" width={14} />
@@ -57,6 +65,7 @@ export function FileTree({ entry, depth = 0, activeFilePath, onFileSelect }: Fil
           depth={depth + 1}
           activeFilePath={activeFilePath}
           onFileSelect={onFileSelect}
+          onDirContextMenu={onDirContextMenu}
         />
       ))}
     </div>

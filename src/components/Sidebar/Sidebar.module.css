@@ -123,3 +123,145 @@
 .chevron.open {
   transform: rotate(90deg);
 }
+
+/* Context Menu */
+.ctxOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+}
+
+.ctxMenu {
+  position: fixed;
+  background: var(--bg-elevated, var(--bg-secondary));
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 4px 0;
+  min-width: 160px;
+  box-shadow: var(--shadow-lg, 0 4px 12px rgba(0, 0, 0, 0.3));
+  z-index: 1000;
+}
+
+.ctxItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.ctxItem:hover {
+  background: var(--bg-hover);
+}
+
+/* New File Dialog */
+.dialogOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  min-width: 380px;
+  max-width: 90vw;
+  box-shadow: var(--shadow-lg, 0 8px 32px rgba(0, 0, 0, 0.4));
+}
+
+.dialogTitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.dialogField {
+  margin-bottom: 8px;
+}
+
+.dialogLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.dialogLabel strong {
+  color: var(--text-primary);
+}
+
+.dialogInput {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.dialogInput:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.dialogError {
+  font-size: 11px;
+  color: #e55;
+  margin-top: 4px;
+}
+
+.dialogHint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.dialogHint code {
+  background: var(--bg-primary);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.dialogButton {
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.dialogButtonCancel {
+  color: var(--text-secondary);
+}
+
+.dialogButtonCancel:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.dialogButtonPrimary {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
+.dialogButtonPrimary:hover {
+  background: var(--accent-hover);
+}

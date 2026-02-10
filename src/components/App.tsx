@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { Icon } from '@iconify/react';
 import type { ViewMode, FormatAction } from '../types';
 
 import { useFileSystem } from '../hooks/useFileSystem';
@@ -31,6 +32,7 @@ export function App() {
     closeTab,
     updateContent,
     saveFile,
+    createFile,
   } = useFileSystem();
 
   const [viewMode, setViewMode] = useState<ViewMode>('editor');
@@ -39,6 +41,7 @@ export function App() {
   const [showFind, setShowFind] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [scratchContent, setScratchContent] = useState('');
+  const [requestNewFile, setRequestNewFile] = useState(false);
 
   // Apply theme to document root and persist
   useEffect(() => {
@@ -72,6 +75,9 @@ export function App() {
     onSave: handleSave,
     onCommandPalette: () => setShowCommandPalette(true),
     onFind: () => setShowFind(true),
+    onNewFile: () => {
+      if (rootEntry) setRequestNewFile(true);
+    },
   });
 
   // Context menu
@@ -102,6 +108,8 @@ export function App() {
     editorApplyFormat(prefix, suffix);
   }, []);
 
+  const showEmptyState = !activeTab && tabs.length === 0;
+
   return (
     <div
       style={{ display: 'flex', height: '100vh', width: '100vw' }}
@@ -112,6 +120,9 @@ export function App() {
         activeFilePath={activeTab?.path ?? null}
         onOpenDirectory={openDirectory}
         onFileSelect={openFile}
+        onCreateFile={createFile}
+        requestNewFile={requestNewFile}
+        onNewFileDialogDone={() => setRequestNewFile(false)}
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -128,15 +139,55 @@ export function App() {
           onFind={() => setShowFind(true)}
         />
 
-        <Editor
-          content={currentContent}
-          viewMode={viewMode}
-          theme={theme}
-          onChange={handleContentChange}
-          onInsertRef={insertRef}
-          showFind={showFind}
-          onCloseFind={() => setShowFind(false)}
-        />
+        {showEmptyState ? (
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 16,
+            color: 'var(--text-muted)',
+            userSelect: 'none',
+          }}>
+            <Icon icon="codicon:markdown" width={48} style={{ opacity: 0.3 }} />
+            <div style={{ textAlign: 'center', lineHeight: 1.6 }}>
+              {rootEntry ? (
+                <>
+                  <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>No file open</p>
+                  <p style={{ fontSize: 13 }}>
+                    Press <kbd style={{
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 4,
+                      padding: '2px 6px',
+                      fontSize: 12,
+                      fontFamily: 'var(--font-mono)',
+                    }}>Ctrl+N</kbd> to create a new note
+                  </p>
+                  <p style={{ fontSize: 12, marginTop: 4, opacity: 0.7 }}>
+                    or use the <Icon icon="codicon:new-file" width={12} style={{ verticalAlign: 'middle' }} /> button in the sidebar
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Welcome to FrankMD</p>
+                  <p style={{ fontSize: 13 }}>Open a folder to get started</p>
+                </>
+              )}
+            </div>
+          </div>
+        ) : (
+          <Editor
+            content={currentContent}
+            viewMode={viewMode}
+            theme={theme}
+            onChange={handleContentChange}
+            onInsertRef={insertRef}
+            showFind={showFind}
+            onCloseFind={() => setShowFind(false)}
+          />
+        )}
       </div>
 
       {/* Command Palette */}

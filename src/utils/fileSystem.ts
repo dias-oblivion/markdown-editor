@@ -158,6 +158,35 @@ export async function createFile(
   return dirHandle.getFileHandle(name, { create: true });
 }
 
+/** Create a new file in either Electron or Browser mode, then return a fresh FileEntry for it. */
+export async function createNewFile(
+  dirEntry: FileEntry,
+  fileName: string,
+): Promise<{ filePath: string; handle?: FileSystemFileHandle }> {
+  const api = getElectronAPI();
+  if (api) {
+    const filePath = await api.createFile(dirEntry.path, fileName);
+    return { filePath };
+  }
+  if (dirEntry.handle) {
+    const fileHandle = await (dirEntry.handle as FileSystemDirectoryHandle).getFileHandle(fileName, { create: true });
+    return { filePath: `${dirEntry.path}/${fileName}`, handle: fileHandle };
+  }
+  throw new Error('Cannot create file: no handle or Electron API');
+}
+
+/** Re-read the full directory tree from root. */
+export async function refreshDirectoryTree(rootEntry: FileEntry): Promise<FileEntry | null> {
+  const api = getElectronAPI();
+  if (api) {
+    return reopenDirectoryByPath(rootEntry.path);
+  }
+  if (rootEntry.handle) {
+    return reopenDirectory(rootEntry.handle as FileSystemDirectoryHandle);
+  }
+  return null;
+}
+
 export function flattenFiles(entry: FileEntry): FileEntry[] {
   const result: FileEntry[] = [];
 
