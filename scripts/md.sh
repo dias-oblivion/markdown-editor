@@ -6,6 +6,9 @@ DOCKERHUB_IMAGE="obliviondias/markdown-editor"
 IMAGE_TAG="latest"
 MD_IMAGE="$DOCKERHUB_IMAGE:$IMAGE_TAG"
 
+# Remove alias if it exists (zsh common-aliases plugin defines md='mkdir -p')
+unalias md 2>/dev/null
+
 md() {
     local workspace_dir
 
