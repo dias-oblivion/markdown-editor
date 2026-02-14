@@ -240,6 +240,18 @@ export function useFileSystem() {
     }
   }, [rootEntry, handleOpenFile]);
 
+  const handleRefresh = useCallback(async () => {
+    const root = rootEntry;
+    if (!root) return;
+
+    // Refresh the directory tree to detect external changes
+    const refreshed = await refreshDirectoryTree(root);
+    if (refreshed) {
+      setRootEntry(refreshed);
+      rootPathRef.current = refreshed.path;
+    }
+  }, [rootEntry]);
+
   return {
     rootEntry,
     tabs,
@@ -252,6 +264,7 @@ export function useFileSystem() {
     updateContent: handleUpdateContent,
     saveFile: handleSaveFile,
     createFile: handleCreateFile,
+    refreshTree: handleRefresh,
   };
 }
 

@@ -4,7 +4,9 @@
       "Bash(npm create:*)",
       "Bash(npm install:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Read",
+      "Write"
     ]
   }
 }

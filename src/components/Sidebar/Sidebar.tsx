@@ -11,11 +11,12 @@ interface SidebarProps {
   onOpenDirectory: () => void;
   onFileSelect: (entry: FileEntry) => void;
   onCreateFile: (dirPath: string, fileName: string) => Promise<void>;
+  onRefresh: () => void;
   requestNewFile?: boolean;
   onNewFileDialogDone?: () => void;
 }
 
-export function Sidebar({ rootEntry, activeFilePath, onOpenDirectory, onFileSelect, onCreateFile, requestNewFile, onNewFileDialogDone }: SidebarProps) {
+export function Sidebar({ rootEntry, activeFilePath, onOpenDirectory, onFileSelect, onCreateFile, onRefresh, requestNewFile, onNewFileDialogDone }: SidebarProps) {
   const [newFileDialog, setNewFileDialog] = useState<{ dirPath: string } | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; dirPath: string } | null>(null);
 
@@ -70,13 +71,22 @@ export function Sidebar({ rootEntry, activeFilePath, onOpenDirectory, onFileSele
         <span>Explorer</span>
         <div className={styles.headerActions}>
           {rootEntry && (
-            <button
-              className={styles.iconButton}
-              onClick={openNewFileDialogForRoot}
-              title="New File (Ctrl+N)"
-            >
-              <Icon icon="codicon:new-file" width={16} />
-            </button>
+            <>
+              <button
+                className={styles.iconButton}
+                onClick={openNewFileDialogForRoot}
+                title="New File (Ctrl+N)"
+              >
+                <Icon icon="codicon:new-file" width={16} />
+              </button>
+              <button
+                className={styles.iconButton}
+                onClick={onRefresh}
+                title="Refresh Explorer"
+              >
+                <Icon icon="codicon:refresh" width={16} />
+              </button>
+            </>
           )}
           <button
             className={styles.iconButton}

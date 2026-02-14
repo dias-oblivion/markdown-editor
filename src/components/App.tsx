@@ -33,6 +33,7 @@ export function App() {
     updateContent,
     saveFile,
     createFile,
+    refreshTree,
   } = useFileSystem();
 
   const [viewMode, setViewMode] = useState<ViewMode>('editor');
@@ -48,6 +49,18 @@ export function App() {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('markdown-editor-theme', theme);
   }, [theme]);
+
+  // Auto-refresh file tree when window gains focus (to detect external file changes)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (rootEntry) {
+        refreshTree();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [rootEntry, refreshTree]);
 
   const insertRef = useRef<((text: string) => void) | null>(null);
 
@@ -121,6 +134,7 @@ export function App() {
         onOpenDirectory={openDirectory}
         onFileSelect={openFile}
         onCreateFile={createFile}
+        onRefresh={refreshTree}
         requestNewFile={requestNewFile}
         onNewFileDialogDone={() => setRequestNewFile(false)}
       />

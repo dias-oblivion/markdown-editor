@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { spawn, spawnSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -102,60 +103,100 @@ ipcMain.handle('fs:createFile', async (_event, dirPath: string, name: string) =>
 
 // ── Claude Assist ──
 
-const CLAUDE_SYSTEM_PROMPTS: Record<string, string> = {
-  rewriter: `You are a professional technical writer. Rewrite the provided markdown content into a polished, professional, and detailed version. Maintain the same core information but improve clarity, readability, professional tone, structure, and grammar. Return ONLY the improved markdown, no explanations.`,
-  diagram: `You are a diagram generation expert. Analyze the provided markdown content and generate a Mermaid diagram that visually represents the key concepts, relationships, or flow. Return ONLY the mermaid code block in markdown format (\`\`\`mermaid ... \`\`\`), no explanations.`,
-  brainstorm: `You are a creative brainstorming assistant. Based on the provided markdown content, generate 5 or more creative approaches, ideas, or alternative perspectives. Format each as a markdown section. Return ONLY the markdown content, no meta-commentary.`,
-  tasks: `You are a project management assistant. Convert the provided markdown content into a structured, actionable task breakdown as a markdown checklist with main tasks and sub-tasks using checkboxes. Return ONLY the markdown task list, no explanations.`,
+/**
+ * Action-specific prompts that tell Claude what to do with the referenced file
+ */
+const CLAUDE_ACTION_PROMPTS: Record<string, (fileName: string, outputFileName: string) => string> = {
+  rewriter: (fileName, outputFileName) =>
+    `You are a professional technical writer. Read @${fileName}, rewrite its markdown content into a polished, professional, and detailed version. Maintain the same core information but improve clarity, readability, professional tone, structure, and grammar. Write ONLY the improved markdown to ${outputFileName}.`,
+  diagram: (fileName, outputFileName) =>
+    `You are a diagram generation expert. Read @${fileName}, analyze its markdown content and generate a Mermaid diagram that visually represents the key concepts, relationships, or flow. Write ONLY the mermaid code block in markdown format to ${outputFileName}.`,
+  brainstorm: (fileName, outputFileName) =>
+    `You are a creative brainstorming assistant. Read @${fileName}, and based on its markdown content, generate 5 or more creative approaches, ideas, or alternative perspectives. Format each as a markdown section and write the result to ${outputFileName}.`,
+  tasks: (fileName, outputFileName) =>
+    `You are a project management assistant. Read @${fileName}, convert its markdown content into a structured, actionable task breakdown as a markdown checklist with main tasks and sub-tasks using checkboxes. Write the task list to ${outputFileName}.`,
 };
 
-function loadApiKey(): string | null {
-  // Check environment variable first
-  if (process.env.VITE_ANTHROPIC_API_KEY) return process.env.VITE_ANTHROPIC_API_KEY;
-  // Fall back to .env file
-  try {
-    const envPath = path.join(__dirname, '..', '.env');
-    const envContent = fs.readFileSync(envPath, 'utf-8');
-    const match = envContent.match(/^VITE_ANTHROPIC_API_KEY=(.+)$/m);
-    return match ? match[1].trim() : null;
-  } catch {
-    return null;
+/**
+ * Run Claude CLI in background and return the generated file content
+ * This approach:
+ * 1. Runs `claude` in the workspace directory
+ * 2. Uses @file syntax to reference the input file
+ * 3. Waits for Claude to create the output file
+ * 4. Reads and returns the output file content
+ */
+async function runClaudeCLI(
+  workspaceDir: string,
+  fileName: string,
+  action: string
+): Promise<string> {
+  // Generate output file name based on action
+  const baseName = path.basename(fileName, '.md');
+  const outputFileName = `${baseName}-${action}.md`;
+  const outputFilePath = path.join(workspaceDir, outputFileName);
+
+  // Get the prompt for this action
+  const promptGenerator = CLAUDE_ACTION_PROMPTS[action];
+  if (!promptGenerator) {
+    throw new Error(`Unknown action: ${action}`);
   }
+
+  const prompt = promptGenerator(fileName, outputFileName);
+
+  return new Promise((resolve, reject) => {
+    // Spawn claude CLI in the workspace directory
+    const claude = spawn('claude', [prompt], {
+      cwd: workspaceDir,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let errorBuffer = '';
+
+    // Capture stderr for error messages
+    claude.stderr.on('data', (data: Buffer) => {
+      errorBuffer += data.toString();
+    });
+
+    // Handle process completion
+    claude.on('close', async (code) => {
+      if (code !== 0) {
+        reject(new Error(`Claude CLI exited with code ${code}: ${errorBuffer}`));
+        return;
+      }
+
+      // Wait a bit for file to be written
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Check if output file was created
+      try {
+        const content = await fs.promises.readFile(outputFilePath, 'utf-8');
+        resolve(content);
+      } catch (error) {
+        reject(new Error(`Output file not created: ${outputFileName}`));
+      }
+    });
+
+    // Handle process errors
+    claude.on('error', (error) => {
+      reject(new Error(`Failed to spawn Claude CLI: ${error.message}`));
+    });
+  });
 }
 
-ipcMain.handle('claude:assist', async (_event, action: string, content: string, _fileName: string) => {
-  const apiKey = loadApiKey();
-  if (!apiKey || apiKey === 'your-api-key-here') {
-    throw new Error('Anthropic API key not configured. Set VITE_ANTHROPIC_API_KEY in .env file.');
+ipcMain.handle('claude:assist', async (_event, action: string, _content: string, filePath: string) => {
+  // Get workspace directory and file name
+  // filePath can be a full path like /home/user/Markdown/file.md
+  const workspaceDir = path.dirname(filePath);
+  const fileName = path.basename(filePath);
+
+  try {
+    // Run Claude CLI and get the result
+    const result = await runClaudeCLI(workspaceDir, fileName, action);
+    return result;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Claude CLI error: ${errorMessage}`);
   }
-
-  const systemPrompt = CLAUDE_SYSTEM_PROMPTS[action];
-  if (!systemPrompt) throw new Error(`Unknown action: ${action}`);
-
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: `Here is the markdown content:\n\n${content}` }],
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(`Claude API error (${response.status}): ${JSON.stringify(error)}`);
-  }
-
-  const data = await response.json() as { content: Array<{ type: string; text: string }> };
-  const textBlock = data.content?.find((block) => block.type === 'text');
-  if (!textBlock?.text) throw new Error('No response from Claude');
-  return textBlock.text;
 });
 
 interface FsEntry {

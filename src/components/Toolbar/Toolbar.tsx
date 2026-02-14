@@ -163,7 +163,7 @@ export function Toolbar({
       {showClaudeDialog && (
         <ClaudeAssistDialog
           content={activeTab?.content ?? ''}
-          fileName={activeTab?.name ?? ''}
+          fileName={activeTab?.path ?? activeTab?.name ?? ''}
           onInsertResult={onInsertText}
           onCancel={() => setShowClaudeDialog(false)}
         />
