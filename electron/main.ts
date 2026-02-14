@@ -100,6 +100,64 @@ ipcMain.handle('fs:createFile', async (_event, dirPath: string, name: string) =>
   return filePath;
 });
 
+// ── Claude Assist ──
+
+const CLAUDE_SYSTEM_PROMPTS: Record<string, string> = {
+  rewriter: `You are a professional technical writer. Rewrite the provided markdown content into a polished, professional, and detailed version. Maintain the same core information but improve clarity, readability, professional tone, structure, and grammar. Return ONLY the improved markdown, no explanations.`,
+  diagram: `You are a diagram generation expert. Analyze the provided markdown content and generate a Mermaid diagram that visually represents the key concepts, relationships, or flow. Return ONLY the mermaid code block in markdown format (\`\`\`mermaid ... \`\`\`), no explanations.`,
+  brainstorm: `You are a creative brainstorming assistant. Based on the provided markdown content, generate 5 or more creative approaches, ideas, or alternative perspectives. Format each as a markdown section. Return ONLY the markdown content, no meta-commentary.`,
+  tasks: `You are a project management assistant. Convert the provided markdown content into a structured, actionable task breakdown as a markdown checklist with main tasks and sub-tasks using checkboxes. Return ONLY the markdown task list, no explanations.`,
+};
+
+function loadApiKey(): string | null {
+  // Check environment variable first
+  if (process.env.VITE_ANTHROPIC_API_KEY) return process.env.VITE_ANTHROPIC_API_KEY;
+  // Fall back to .env file
+  try {
+    const envPath = path.join(__dirname, '..', '.env');
+    const envContent = fs.readFileSync(envPath, 'utf-8');
+    const match = envContent.match(/^VITE_ANTHROPIC_API_KEY=(.+)$/m);
+    return match ? match[1].trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+ipcMain.handle('claude:assist', async (_event, action: string, content: string, _fileName: string) => {
+  const apiKey = loadApiKey();
+  if (!apiKey || apiKey === 'your-api-key-here') {
+    throw new Error('Anthropic API key not configured. Set VITE_ANTHROPIC_API_KEY in .env file.');
+  }
+
+  const systemPrompt = CLAUDE_SYSTEM_PROMPTS[action];
+  if (!systemPrompt) throw new Error(`Unknown action: ${action}`);
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4096,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: `Here is the markdown content:\n\n${content}` }],
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(`Claude API error (${response.status}): ${JSON.stringify(error)}`);
+  }
+
+  const data = await response.json() as { content: Array<{ type: string; text: string }> };
+  const textBlock = data.content?.find((block) => block.type === 'text');
+  if (!textBlock?.text) throw new Error('No response from Claude');
+  return textBlock.text;
+});
+
 interface FsEntry {
   name: string;
   path: string;

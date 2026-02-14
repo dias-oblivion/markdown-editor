@@ -7,4 +7,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   writeFile: (path: string, content: string) => ipcRenderer.invoke('fs:writeFile', path, content),
   createFile: (dirPath: string, name: string) => ipcRenderer.invoke('fs:createFile', dirPath, name),
   getInitialWorkspace: () => ipcRenderer.invoke('app:getInitialWorkspace'),
+  claudeAssist: (action: string, content: string, fileName: string) =>
+    ipcRenderer.invoke('claude:assist', action, content, fileName),
 });

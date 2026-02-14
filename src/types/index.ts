@@ -37,3 +37,5 @@ export interface CodeBlockConfig {
   code: string;
   useTabs: boolean;
 }
+
+export type ClaudeAssistAction = 'rewriter' | 'diagram' | 'brainstorm' | 'tasks';

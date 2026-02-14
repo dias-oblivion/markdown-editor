@@ -4,6 +4,7 @@ import type { ViewMode, EditorTab, CodeBlockConfig, TableConfig } from '../../ty
 import { generateCodeBlock, generateTable } from '../../utils/markdown';
 import { CodeBlockDialog } from './CodeBlockDialog';
 import { TableDialog } from './TableDialog';
+import { ClaudeAssistDialog } from './ClaudeAssistDialog';
 import styles from './Toolbar.module.css';
 
 interface ToolbarProps {
@@ -31,8 +32,10 @@ export function Toolbar({
   onTabClose,
   onFind,
 }: ToolbarProps) {
+  const activeTab = tabs.find(t => t.id === activeTabId) ?? null;
   const [showCodeDialog, setShowCodeDialog] = useState(false);
   const [showTableDialog, setShowTableDialog] = useState(false);
+  const [showClaudeDialog, setShowClaudeDialog] = useState(false);
 
   function handleInsertCode(config: CodeBlockConfig) {
     onInsertText(generateCodeBlock(config));
@@ -97,6 +100,15 @@ export function Toolbar({
             <Icon icon="codicon:table" width={16} />
             <span className={styles.buttonLabel}>Table</span>
           </button>
+
+          <button
+            className={`${styles.button} ${styles.claudeButton}`}
+            onClick={() => setShowClaudeDialog(true)}
+            title="Claude Assist"
+          >
+            <Icon icon="simple-icons:anthropic" width={16} />
+            <span className={styles.buttonLabel}>Claude</span>
+          </button>
         </div>
 
         <div className={styles.separator} />
@@ -146,6 +158,14 @@ export function Toolbar({
         <TableDialog
           onInsert={handleInsertTable}
           onCancel={() => setShowTableDialog(false)}
+        />
+      )}
+      {showClaudeDialog && (
+        <ClaudeAssistDialog
+          content={activeTab?.content ?? ''}
+          fileName={activeTab?.name ?? ''}
+          onInsertResult={onInsertText}
+          onCancel={() => setShowClaudeDialog(false)}
         />
       )}
     </>
