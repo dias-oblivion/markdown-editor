@@ -9,21 +9,22 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  min-width: 180px;
-  padding: 4px 0;
+  box-shadow: var(--shadow-lg);
+  min-width: 200px;
+  padding: 5px 0;
   z-index: 901;
+  backdrop-filter: blur(8px);
 }
 
 .item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 12px;
+  padding: 7px 14px;
   font-size: 13px;
   color: var(--text-primary);
   cursor: pointer;
-  transition: background var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .item:hover {
@@ -46,5 +47,6 @@
 .separator {
   height: 1px;
   background: var(--border-color);
-  margin: 4px 0;
+  margin: 4px 6px;
+  opacity: 0.6;
 }

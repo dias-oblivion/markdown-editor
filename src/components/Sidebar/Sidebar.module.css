@@ -15,10 +15,10 @@
   justify-content: space-between;
   padding: 8px 12px;
   border-bottom: 1px solid var(--border-color);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   color: var(--text-secondary);
 }
 
@@ -55,50 +55,58 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  gap: 12px;
+  gap: 16px;
   color: var(--text-muted);
-  padding: 20px;
+  padding: 24px;
   text-align: center;
+  font-size: 13px;
 }
 
 .openButton {
-  padding: 6px 16px;
+  padding: 8px 20px;
   background: var(--accent-primary);
   color: var(--bg-primary);
-  border-radius: var(--radius-sm);
-  font-weight: 500;
+  border-radius: var(--radius-md);
+  font-weight: 600;
   font-size: 12px;
-  transition: background var(--transition-fast);
+  letter-spacing: 0.02em;
+  transition: all var(--transition-fast);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .openButton:hover {
   background: var(--accent-hover);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
 }
 
 /* File Tree */
 .treeItem {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
+  gap: 6px;
+  padding: 4px 8px;
   padding-left: calc(8px + var(--depth, 0) * 16px);
   cursor: pointer;
   font-size: 13px;
-  color: var(--text-primary);
-  transition: background var(--transition-fast);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
   user-select: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  border-left: 2px solid transparent;
 }
 
 .treeItem:hover {
   background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .treeItem.active {
   background: var(--accent-muted);
   color: var(--accent-primary);
+  border-left-color: var(--accent-primary);
 }
 
 .treeItemIcon {
@@ -133,35 +141,38 @@
 
 .ctxMenu {
   position: fixed;
-  background: var(--bg-elevated, var(--bg-secondary));
+  background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   padding: 4px 0;
-  min-width: 160px;
-  box-shadow: var(--shadow-lg, 0 4px 12px rgba(0, 0, 0, 0.3));
+  min-width: 170px;
+  box-shadow: var(--shadow-lg);
   z-index: 1000;
+  backdrop-filter: blur(8px);
 }
 
 .ctxItem {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 7px 14px;
   font-size: 13px;
   color: var(--text-primary);
   cursor: pointer;
-  transition: background var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .ctxItem:hover {
-  background: var(--bg-hover);
+  background: var(--accent-muted);
+  color: var(--accent-primary);
 }
 
 /* New File Dialog */
 .dialogOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -172,10 +183,10 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 20px;
+  padding: 24px;
   min-width: 380px;
   max-width: 90vw;
-  box-shadow: var(--shadow-lg, 0 8px 32px rgba(0, 0, 0, 0.4));
+  box-shadow: var(--shadow-lg);
 }
 
 .dialogTitle {

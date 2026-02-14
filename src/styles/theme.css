@@ -13,6 +13,12 @@
   --text-muted: #555555;
   --text-accent: #e8a838;
 
+  /* Heading color hierarchy (multi-hue) */
+  --heading-h1: #5c9ce6;
+  --heading-h2: #4db8a0;
+  --heading-h3: #b07cd8;
+  --heading-h4: #8a8a8a;
+
   --border-color: #2a2a2a;
   --border-subtle: #1e1e1e;
 
@@ -61,6 +67,12 @@
   --text-secondary: #555555;
   --text-muted: #999999;
   --text-accent: #c48820;
+
+  /* Heading color hierarchy (multi-hue) */
+  --heading-h1: #1a6cb5;
+  --heading-h2: #2a8a72;
+  --heading-h3: #8840b0;
+  --heading-h4: #777777;
 
   --border-color: #dcdcdc;
   --border-subtle: #e8e8e8;

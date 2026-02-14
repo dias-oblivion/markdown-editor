@@ -25,13 +25,13 @@ const darkHighlight = HighlightStyle.define([
   { tag: tags.definition(tags.variableName), color: '#d4d4d4' },
   { tag: tags.typeName, color: '#e8a838' },
   { tag: tags.propertyName, color: '#e85454' },
-  { tag: tags.heading, color: '#e8a838', fontWeight: 'bold' },
+  { tag: tags.heading, color: '#4FC3F7', fontWeight: 'bold' },
   { tag: tags.emphasis, fontStyle: 'italic' },
   { tag: tags.strong, fontWeight: 'bold' },
   { tag: tags.link, color: '#5c9ce6', textDecoration: 'underline' },
   { tag: tags.url, color: '#5c9ce6' },
   { tag: tags.strikethrough, textDecoration: 'line-through' },
-  { tag: tags.meta, color: '#6a737d' },
+  { tag: tags.meta, color: '#7C4DFF' },
   { tag: tags.processingInstruction, color: '#5c9ce6' },
 ]);
 
@@ -46,13 +46,13 @@ const lightHighlight = HighlightStyle.define([
   { tag: tags.definition(tags.variableName), color: '#1a1a1a' },
   { tag: tags.typeName, color: '#c48820' },
   { tag: tags.propertyName, color: '#d32f2f' },
-  { tag: tags.heading, color: '#c48820', fontWeight: 'bold' },
+  { tag: tags.heading, color: '#0277BD', fontWeight: 'bold' },
   { tag: tags.emphasis, fontStyle: 'italic' },
   { tag: tags.strong, fontWeight: 'bold' },
   { tag: tags.link, color: '#1976d2', textDecoration: 'underline' },
   { tag: tags.url, color: '#1976d2' },
   { tag: tags.strikethrough, textDecoration: 'line-through' },
-  { tag: tags.meta, color: '#6a737d' },
+  { tag: tags.meta, color: '#5E35B1' },
   { tag: tags.processingInstruction, color: '#1976d2' },
 ]);
 

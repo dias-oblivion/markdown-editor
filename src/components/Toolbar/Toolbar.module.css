@@ -4,21 +4,22 @@
   height: var(--toolbar-height);
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
-  padding: 0 8px;
+  padding: 0 10px;
   gap: 2px;
 }
 
 .group {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
 }
 
 .separator {
   width: 1px;
-  height: 20px;
+  height: 18px;
   background: var(--border-color);
-  margin: 0 6px;
+  margin: 0 8px;
+  opacity: 0.6;
 }
 
 .spacer {
@@ -29,10 +30,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 5px;
   height: 28px;
   min-width: 28px;
-  padding: 0 8px;
+  padding: 0 10px;
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   font-size: 12px;
@@ -57,17 +58,22 @@
 
 .buttonLabel {
   font-size: 12px;
+  font-weight: 500;
 }
 
 /* Tabs bar */
 .tabsBar {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   background: var(--bg-primary);
   border-bottom: 1px solid var(--border-color);
-  height: 35px;
+  height: 36px;
   overflow-x: auto;
   overflow-y: hidden;
+}
+
+.tabsBar::-webkit-scrollbar {
+  height: 0;
 }
 
 .tab {
@@ -75,36 +81,53 @@
   align-items: center;
   gap: 6px;
   height: 100%;
-  padding: 0 12px;
+  padding: 0 14px;
   font-size: 12px;
-  color: var(--text-secondary);
-  border-right: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-right: 1px solid var(--border-subtle);
   cursor: pointer;
   white-space: nowrap;
   transition: all var(--transition-fast);
   min-width: 0;
+  position: relative;
 }
 
 .tab:hover {
+  color: var(--text-secondary);
   background: var(--bg-tertiary);
 }
 
 .tab.active {
-  background: var(--bg-tertiary);
+  background: var(--bg-editor);
   color: var(--text-primary);
-  border-bottom: 2px solid var(--accent-primary);
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-primary);
 }
 
 .tabClose {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-sm);
   font-size: 10px;
   color: var(--text-muted);
+  opacity: 0;
   transition: all var(--transition-fast);
+}
+
+.tab:hover .tabClose,
+.tab.active .tabClose {
+  opacity: 1;
 }
 
 .tabClose:hover {
@@ -120,7 +143,8 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -131,20 +155,21 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 20px;
-  min-width: 400px;
+  padding: 24px;
+  min-width: 420px;
   max-width: 90vw;
   box-shadow: var(--shadow-lg);
 }
 
 .dialogTitle {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 16px;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  letter-spacing: -0.01em;
 }
 
 .dialogField {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .dialogLabel {
@@ -153,55 +178,63 @@
   justify-content: space-between;
   font-size: 12px;
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  font-weight: 500;
 }
 
 .dialogInput {
   width: 100%;
-  padding: 8px 12px;
+  padding: 10px 12px;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: 13px;
+  transition: border-color var(--transition-fast);
 }
 
 .dialogInput:focus {
   outline: none;
   border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-muted);
 }
 
 .dialogTextarea {
   width: 100%;
-  min-height: 120px;
+  min-height: 130px;
   padding: 12px;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: 13px;
   resize: vertical;
+  transition: border-color var(--transition-fast);
 }
 
 .dialogTextarea:focus {
   outline: none;
   border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-muted);
 }
 
 .dialogActions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
 }
 
 .dialogButton {
-  padding: 6px 16px;
-  border-radius: var(--radius-sm);
+  padding: 8px 20px;
+  border-radius: var(--radius-md);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   transition: all var(--transition-fast);
 }
 
@@ -217,10 +250,12 @@
 .dialogButtonPrimary {
   background: var(--accent-primary);
   color: var(--bg-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .dialogButtonPrimary:hover {
   background: var(--accent-hover);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
 /* Checkbox */
@@ -240,7 +275,7 @@
 /* Table Editor */
 .tableEditor {
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   overflow: auto;
   max-height: 300px;
 }
@@ -258,16 +293,22 @@
 
 .tableEditor th {
   background: var(--bg-elevated);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .tableEditorInput {
   width: 100%;
-  padding: 6px 8px;
+  padding: 8px 10px;
   border: none;
   background: transparent;
   color: var(--text-primary);
   font-size: 13px;
   outline: none;
+  transition: background var(--transition-fast);
 }
 
 .tableEditorInput:focus {
@@ -278,7 +319,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .tableControlGroup {
@@ -291,9 +332,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
   font-size: 16px;
@@ -301,20 +342,24 @@
 }
 
 .tableControlButton:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+  background: var(--accent-muted);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 
 .tableControlSep {
   width: 1px;
   height: 20px;
   background: var(--border-color);
-  margin: 0 4px;
+  margin: 0 6px;
+  opacity: 0.5;
 }
 
 .tableSize {
   font-size: 12px;
   color: var(--text-muted);
+  font-weight: 500;
+  font-family: var(--font-mono);
 }
 
 /* Claude Assist */
@@ -328,7 +373,7 @@
 }
 
 .claudeDialog {
-  min-width: 480px;
+  min-width: 500px;
 }
 
 .claudeDialogHeader {
@@ -345,21 +390,21 @@
 .claudeDialogSubtitle {
   font-size: 12px;
   color: var(--text-muted);
-  margin: 0 0 20px 0;
+  margin: 0 0 18px 0;
 }
 
 .claudeActionGrid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .claudeActionCard {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px;
-  border-radius: var(--radius-sm);
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background: var(--bg-primary);
   text-align: left;
@@ -369,25 +414,28 @@
 
 .claudeActionCard:hover {
   border-color: #d9773e;
-  background: rgba(217, 119, 62, 0.08);
+  background: rgba(217, 119, 62, 0.06);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .claudeActionIcon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  background: rgba(217, 119, 62, 0.12);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: rgba(217, 119, 62, 0.1);
   color: #d9773e;
   flex-shrink: 0;
+  font-size: 18px;
 }
 
 .claudeActionContent {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
 }
 
@@ -400,16 +448,19 @@
 .claudeActionDesc {
   font-size: 12px;
   color: var(--text-muted);
+  line-height: 1.4;
 }
 
 .claudeActionCard:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
 .claudeActionCard:disabled:hover {
   border-color: var(--border-color);
   background: var(--bg-primary);
+  transform: none;
+  box-shadow: none;
 }
 
 /* Loading */
@@ -418,14 +469,14 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  padding: 40px 0;
+  padding: 48px 24px;
   color: var(--text-secondary);
   font-size: 13px;
 }
 
 .claudeSpinner {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border: 3px solid var(--border-color);
   border-top-color: #d9773e;
   border-radius: 50%;
@@ -446,7 +497,7 @@
   max-height: 400px;
   overflow: auto;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: var(--bg-primary);
   margin-top: 12px;
 }
@@ -455,7 +506,7 @@
   padding: 16px;
   font-family: var(--font-mono);
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--text-primary);
   white-space: pre-wrap;
   word-break: break-word;
@@ -466,26 +517,27 @@
 .claudeError {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 12px;
+  gap: 10px;
+  padding: 14px;
   margin-top: 12px;
-  border-radius: var(--radius-sm);
-  background: rgba(220, 38, 38, 0.1);
-  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: var(--radius-md);
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.2);
   color: #ef4444;
   font-size: 13px;
+  line-height: 1.5;
 }
 
 /* Warning */
 .claudeWarning {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
+  gap: 8px;
+  padding: 10px 14px;
   margin-top: 12px;
-  border-radius: var(--radius-sm);
-  background: rgba(234, 179, 8, 0.1);
-  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: var(--radius-md);
+  background: rgba(234, 179, 8, 0.08);
+  border: 1px solid rgba(234, 179, 8, 0.2);
   color: #eab308;
   font-size: 12px;
 }
