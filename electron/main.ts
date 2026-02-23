@@ -108,94 +108,138 @@ ipcMain.handle('fs:createFile', async (_event, dirPath: string, name: string) =>
  */
 const CLAUDE_ACTION_PROMPTS: Record<string, (fileName: string, outputFileName: string) => string> = {
   rewriter: (fileName, outputFileName) =>
-    `You are a professional technical writer. Read @${fileName}, rewrite its markdown content into a polished, professional, and detailed version. Maintain the same core information but improve clarity, readability, professional tone, structure, and grammar. Write ONLY the improved markdown to ${outputFileName}.`,
+    `Você é um escritor técnico profissional. Leia @${fileName}, reescreva seu conteúdo markdown em uma versão polida, profissional e detalhada. Mantenha as mesmas informações centrais, mas melhore clareza, legibilidade, tom profissional, estrutura e gramática. Escreva APENAS o markdown melhorado em ${outputFileName}. Responda em português.`,
   diagram: (fileName, outputFileName) =>
-    `You are a diagram generation expert. Read @${fileName}, analyze its markdown content and generate a Mermaid diagram that visually represents the key concepts, relationships, or flow. Write ONLY the mermaid code block in markdown format to ${outputFileName}.`,
+    `Você é um especialista em geração de diagramas. Leia @${fileName}, analise seu conteúdo markdown e gere um diagrama Mermaid que represente visualmente os conceitos-chave, relacionamentos ou fluxo descritos. Escreva o resultado em ${outputFileName} usando EXATAMENTE este formato, sem nenhum texto antes ou depois:\n\`\`\`mermaid\n[código do diagrama aqui]\n\`\`\`\nResponda em português.`,
   brainstorm: (fileName, outputFileName) =>
-    `You are a creative brainstorming assistant. Read @${fileName}, and based on its markdown content, generate 5 or more creative approaches, ideas, or alternative perspectives. Format each as a markdown section and write the result to ${outputFileName}.`,
+    `Você é um assistente criativo de brainstorming. Leia @${fileName} e, com base em seu conteúdo markdown, gere 5 ou mais abordagens criativas, ideias ou perspectivas alternativas. Formate cada uma como uma seção markdown e escreva o resultado em ${outputFileName}. Responda em português.`,
   tasks: (fileName, outputFileName) =>
-    `You are a project management assistant. Read @${fileName}, convert its markdown content into a structured, actionable task breakdown as a markdown checklist with main tasks and sub-tasks using checkboxes. Write the task list to ${outputFileName}.`,
+    `Você é um assistente de gerenciamento de projetos. Leia @${fileName}, converta seu conteúdo markdown em uma lista de tarefas estruturada e acionável como checklist markdown com tarefas principais e subtarefas usando checkboxes. Escreva a lista de tarefas em ${outputFileName}. Responda em português.`,
 };
 
-/**
- * Run Claude CLI in background and return the generated file content
- * This approach:
- * 1. Runs `claude` in the workspace directory
- * 2. Uses @file syntax to reference the input file
- * 3. Waits for Claude to create the output file
- * 4. Reads and returns the output file content
- */
 async function runClaudeCLI(
   workspaceDir: string,
   fileName: string,
-  action: string
+  action: string,
+  useTerminal: boolean
 ): Promise<string> {
-  // Generate output file name based on action
   const baseName = path.basename(fileName, '.md');
   const outputFileName = `${baseName}-${action}.md`;
   const outputFilePath = path.join(workspaceDir, outputFileName);
 
-  // Get the prompt for this action
   const promptGenerator = CLAUDE_ACTION_PROMPTS[action];
   if (!promptGenerator) {
-    throw new Error(`Unknown action: ${action}`);
+    throw new Error(`Ação desconhecida: ${action}`);
   }
 
   const prompt = promptGenerator(fileName, outputFileName);
 
+  if (useTerminal) {
+    // Abre um xterm visível com o processo do Claude
+    const promptPath = path.join(workspaceDir, `.claude-assist-prompt.txt`);
+    const scriptPath = path.join(workspaceDir, `.claude-assist-run.sh`);
+
+    await fs.promises.writeFile(promptPath, prompt, 'utf-8');
+
+    const script = `#!/bin/bash
+cd "${workspaceDir}"
+echo "=== Claude Assist ==="
+echo "Ação:    ${action}"
+echo "Entrada: ${fileName}"
+echo "Saída:   ${outputFileName}"
+echo "====================="
+echo ""
+echo "--- Prompt ---"
+cat "${promptPath}"
+echo ""
+echo "--- Iniciando Claude CLI ---"
+echo ""
+PROMPT=$(cat "${promptPath}")
+claude --dangerously-skip-permissions "$PROMPT"
+EXIT_CODE=$?
+echo ""
+echo "====================="
+echo "Código de saída: $EXIT_CODE"
+if [ -f "${outputFilePath}" ]; then
+  echo "Sucesso: ${outputFileName} criado."
+else
+  echo "Erro: arquivo de saída não encontrado."
+fi
+echo ""
+read -p "Pressione Enter para fechar..."
+rm -f "${promptPath}" "${scriptPath}"
+`;
+
+    await fs.promises.writeFile(scriptPath, script, 'utf-8');
+    await fs.promises.chmod(scriptPath, 0o755);
+
+    return new Promise((resolve, reject) => {
+      const terminal = spawn('xterm', ['-title', 'Claude Assist', '-e', `bash "${scriptPath}"`], {
+        cwd: workspaceDir,
+        stdio: 'ignore',
+      });
+
+      terminal.on('close', async () => {
+        await new Promise(r => setTimeout(r, 500));
+        try {
+          const content = await fs.promises.readFile(outputFilePath, 'utf-8');
+          resolve(content);
+        } catch {
+          reject(new Error(`Arquivo de saída não criado: ${outputFileName}`));
+        }
+      });
+
+      terminal.on('error', (error) => {
+        reject(new Error(`Falha ao abrir xterm: ${error.message}. Instale com: sudo apt install xterm`));
+      });
+    });
+  }
+
+  // Modo oculto: spawn em background sem janela
   return new Promise((resolve, reject) => {
-    // Spawn claude CLI in the workspace directory
-    const claude = spawn('claude', [prompt], {
+    const claude = spawn('claude', ['-p', '--dangerously-skip-permissions', prompt], {
       cwd: workspaceDir,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
     let errorBuffer = '';
 
-    // Capture stderr for error messages
     claude.stderr.on('data', (data: Buffer) => {
       errorBuffer += data.toString();
     });
 
-    // Handle process completion
     claude.on('close', async (code) => {
       if (code !== 0) {
-        reject(new Error(`Claude CLI exited with code ${code}: ${errorBuffer}`));
+        reject(new Error(`Claude CLI finalizou com código ${code}: ${errorBuffer}`));
         return;
       }
 
-      // Wait a bit for file to be written
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(r => setTimeout(r, 500));
 
-      // Check if output file was created
       try {
         const content = await fs.promises.readFile(outputFilePath, 'utf-8');
         resolve(content);
-      } catch (error) {
-        reject(new Error(`Output file not created: ${outputFileName}`));
+      } catch {
+        reject(new Error(`Arquivo de saída não criado: ${outputFileName}`));
       }
     });
 
-    // Handle process errors
     claude.on('error', (error) => {
-      reject(new Error(`Failed to spawn Claude CLI: ${error.message}`));
+      reject(new Error(`Falha ao executar Claude CLI: ${error.message}`));
     });
   });
 }
 
-ipcMain.handle('claude:assist', async (_event, action: string, _content: string, filePath: string) => {
-  // Get workspace directory and file name
-  // filePath can be a full path like /home/user/Markdown/file.md
+ipcMain.handle('claude:assist', async (_event, action: string, _content: string, filePath: string, useTerminal: boolean) => {
   const workspaceDir = path.dirname(filePath);
   const fileName = path.basename(filePath);
 
   try {
-    // Run Claude CLI and get the result
-    const result = await runClaudeCLI(workspaceDir, fileName, action);
+    const result = await runClaudeCLI(workspaceDir, fileName, action, useTerminal);
     return result;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Claude CLI error: ${errorMessage}`);
+    throw new Error(`Erro no Claude CLI: ${errorMessage}`);
   }
 });
 

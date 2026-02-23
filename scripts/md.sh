@@ -35,6 +35,7 @@ md() {
     local docker_args=(
         --rm
         -v "$workspace_dir:/workspace"
+        --user "$(id -u):$(id -g)"
         --ipc=host
         --security-opt seccomp=unconfined
         -e ELECTRON_IN_DOCKER=1

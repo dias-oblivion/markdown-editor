@@ -2,7 +2,7 @@ import type { ClaudeAssistAction } from '../types';
 import { isElectron } from './fileSystem';
 
 interface ClaudeElectronAPI {
-  claudeAssist: (action: ClaudeAssistAction, content: string, fileName: string) => Promise<string>;
+  claudeAssist: (action: ClaudeAssistAction, content: string, fileName: string, useTerminal: boolean) => Promise<string>;
 }
 
 function getClaudeElectronAPI(): ClaudeElectronAPI | null {
@@ -12,36 +12,27 @@ function getClaudeElectronAPI(): ClaudeElectronAPI | null {
 }
 
 const SYSTEM_PROMPTS: Record<ClaudeAssistAction, string> = {
-  rewriter: `You are a professional technical writer. Rewrite the provided markdown content into a polished, professional, and detailed version. Maintain the same core information but improve:
-- Clarity and readability
-- Professional tone
-- Structure and organization
-- Grammar and style
-Return ONLY the improved markdown, no explanations.`,
+  rewriter: `Você é um escritor técnico profissional. Reescreva o conteúdo markdown fornecido em uma versão polida, profissional e detalhada. Mantenha as mesmas informações centrais, mas melhore clareza, legibilidade, tom profissional, estrutura e gramática. Retorne APENAS o markdown melhorado, sem explicações. Responda em português.`,
 
-  diagram: `You are a diagram generation expert. Analyze the provided markdown content and generate a Mermaid diagram that visually represents the key concepts, relationships, or flow described in the text. Return ONLY the mermaid code block in markdown format (\`\`\`mermaid ... \`\`\`), no explanations.`,
+  diagram: `Você é um especialista em geração de diagramas. Analise o conteúdo markdown fornecido e gere um diagrama Mermaid que represente visualmente os conceitos-chave, relacionamentos ou fluxo descritos. Retorne APENAS o seguinte formato exato, sem nenhum texto antes ou depois:\n\`\`\`mermaid\n[código do diagrama aqui]\n\`\`\`\nResponda em português.`,
 
-  brainstorm: `You are a creative brainstorming assistant. Based on the provided markdown content, generate 5 or more creative and unique approaches, ideas, or alternative perspectives. Format each idea as a markdown section with a title and brief description. Return ONLY the markdown content, no meta-commentary.`,
+  brainstorm: `Você é um assistente criativo de brainstorming. Com base no conteúdo markdown fornecido, gere 5 ou mais abordagens criativas e únicas, ideias ou perspectivas alternativas. Formate cada ideia como uma seção markdown com título e breve descrição. Retorne APENAS o conteúdo markdown, sem comentários adicionais. Responda em português.`,
 
-  tasks: `You are a project management assistant. Convert the provided markdown content into a structured, actionable task breakdown. Format as a markdown checklist with:
-- Main tasks as top-level items with checkboxes
-- Sub-tasks as nested items with checkboxes
-- Clear, actionable descriptions
-- Priority hints where applicable (🔴 high, 🟡 medium, 🟢 low)
-Return ONLY the markdown task list, no explanations.`,
+  tasks: `Você é um assistente de gerenciamento de projetos. Converta o conteúdo markdown fornecido em uma lista de tarefas estruturada e acionável. Formate como checklist markdown com tarefas principais com checkboxes e subtarefas aninhadas com checkboxes. Retorne APENAS a lista de tarefas em markdown, sem explicações. Responda em português.`,
 };
 
 const ACTION_LABELS: Record<ClaudeAssistAction, string> = {
-  rewriter: 'Professional Rewriter',
-  diagram: 'Diagram Generator',
-  brainstorm: 'Creative Brainstorming',
-  tasks: 'Task Breakdown',
+  rewriter: 'Reescritor Profissional',
+  diagram: 'Gerador de Diagramas',
+  brainstorm: 'Brainstorming Criativo',
+  tasks: 'Divisão de Tarefas',
 };
 
 export async function callClaudeAssist(
   action: ClaudeAssistAction,
   content: string,
   fileName: string,
+  useTerminal = false,
 ): Promise<string> {
   if (!content.trim()) {
     throw new Error('No content to process. Please open a file with content first.');
@@ -50,7 +41,7 @@ export async function callClaudeAssist(
   if (isElectron()) {
     const api = getClaudeElectronAPI();
     if (api) {
-      return api.claudeAssist(action, content, fileName);
+      return api.claudeAssist(action, content, fileName, useTerminal);
     }
   }
 

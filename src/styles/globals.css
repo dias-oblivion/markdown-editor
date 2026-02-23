@@ -164,6 +164,7 @@ input:focus, textarea:focus {
   padding: 18px 20px;
   overflow-x: auto;
   margin: 1.2em 0;
+  white-space: pre;
 }
 
 .markdown-preview pre code {
@@ -172,6 +173,7 @@ input:focus, textarea:focus {
   font-size: 13px;
   line-height: 1.65;
   border: none;
+  white-space: inherit;
 }
 
 /* ── Blockquote ── */
@@ -271,6 +273,20 @@ input:focus, textarea:focus {
 
 .markdown-preview sub {
   font-size: 0.75em;
+}
+
+/* Mermaid diagrams */
+.markdown-preview .mermaid-diagram {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  margin: 1.2em 0;
+  padding: 16px 0;
+}
+
+.markdown-preview .mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
 }
 
 /* Prism theme overrides */

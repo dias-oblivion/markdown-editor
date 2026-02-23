@@ -2,34 +2,45 @@ import { useState } from 'react';
 import { Icon } from '@iconify/react';
 import type { ClaudeAssistAction } from '../../types';
 import { callClaudeAssist, getActionLabel } from '../../utils/claude';
+import { isElectron } from '../../utils/fileSystem';
 import styles from './Toolbar.module.css';
 
 const CLAUDE_ACTIONS: { id: ClaudeAssistAction; icon: string; title: string; description: string }[] = [
   {
     id: 'rewriter',
     icon: 'codicon:edit',
-    title: 'Professional Rewriter',
-    description: 'Transform current file into a professional, detailed version',
+    title: 'Reescritor Profissional',
+    description: 'Transforma o arquivo atual em uma versão profissional e detalhada',
   },
   {
     id: 'diagram',
     icon: 'codicon:type-hierarchy-sub',
-    title: 'Diagram Generator',
-    description: 'Generate flowcharts and diagrams from your markdown',
+    title: 'Gerador de Diagramas',
+    description: 'Gera fluxogramas e diagramas a partir do seu markdown',
   },
   {
     id: 'brainstorm',
     icon: 'codicon:lightbulb',
-    title: 'Creative Brainstorming',
-    description: 'Get 5+ creative approaches and ideas for your content',
+    title: 'Brainstorming Criativo',
+    description: 'Gera 5+ abordagens criativas e ideias para seu conteúdo',
   },
   {
     id: 'tasks',
     icon: 'codicon:checklist',
-    title: 'Task Breakdown',
-    description: 'Convert markdown into structured, actionable tasks',
+    title: 'Divisão de Tarefas',
+    description: 'Converte o markdown em tarefas estruturadas e acionáveis',
   },
 ];
+
+const TERMINAL_MODE_KEY = 'claude-assist-terminal-mode';
+
+function loadTerminalMode(): boolean {
+  try {
+    return localStorage.getItem(TERMINAL_MODE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
 
 interface ClaudeAssistDialogProps {
   content: string;
@@ -43,6 +54,16 @@ export function ClaudeAssistDialog({ content, fileName, onInsertResult, onCancel
   const [activeAction, setActiveAction] = useState<ClaudeAssistAction | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [terminalMode, setTerminalMode] = useState(loadTerminalMode);
+  const inElectron = isElectron();
+
+  function toggleTerminalMode() {
+    const next = !terminalMode;
+    setTerminalMode(next);
+    try {
+      localStorage.setItem(TERMINAL_MODE_KEY, String(next));
+    } catch { /* ignore */ }
+  }
 
   async function handleAction(action: ClaudeAssistAction) {
     setLoading(true);
@@ -51,10 +72,10 @@ export function ClaudeAssistDialog({ content, fileName, onInsertResult, onCancel
     setResult(null);
 
     try {
-      const response = await callClaudeAssist(action, content, fileName);
+      const response = await callClaudeAssist(action, content, fileName, terminalMode);
       setResult(response);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      setError(err instanceof Error ? err.message : 'Ocorreu um erro inesperado');
     } finally {
       setLoading(false);
     }
@@ -73,8 +94,8 @@ export function ClaudeAssistDialog({ content, fileName, onInsertResult, onCancel
     setActiveAction(null);
   }
 
-  // Result view
-  if (result || error) {
+  // Result / Error view
+  if (result !== null || error) {
     return (
       <div className={styles.overlay} onClick={onCancel}>
         <div className={`${styles.dialog} ${styles.claudeDialog} ${styles.claudeResultDialog}`} onClick={e => e.stopPropagation()}>
@@ -90,6 +111,11 @@ export function ClaudeAssistDialog({ content, fileName, onInsertResult, onCancel
               <Icon icon="codicon:error" width={16} />
               <span>{error}</span>
             </div>
+          ) : inElectron ? (
+            <div className={styles.claudeSuccess}>
+              <Icon icon="codicon:check" width={16} />
+              <span>Arquivo criado com sucesso na pasta do workspace.</span>
+            </div>
           ) : (
             <div className={styles.claudeResultPreview}>
               <pre className={styles.claudeResultCode}>{result}</pre>
@@ -98,11 +124,16 @@ export function ClaudeAssistDialog({ content, fileName, onInsertResult, onCancel
 
           <div className={styles.dialogActions}>
             <button className={`${styles.dialogButton} ${styles.dialogButtonCancel}`} onClick={handleBack}>
-              Back
+              Voltar
             </button>
-            {result && (
+            {result && !inElectron && (
               <button className={`${styles.dialogButton} ${styles.dialogButtonPrimary}`} onClick={handleInsert}>
-                Insert Result
+                Inserir Resultado
+              </button>
+            )}
+            {(error || inElectron) && (
+              <button className={`${styles.dialogButton} ${styles.dialogButtonPrimary}`} onClick={onCancel}>
+                Fechar
               </button>
             )}
           </div>
@@ -122,7 +153,11 @@ export function ClaudeAssistDialog({ content, fileName, onInsertResult, onCancel
           </div>
           <div className={styles.claudeLoading}>
             <div className={styles.claudeSpinner} />
-            <span>Running {activeAction ? getActionLabel(activeAction) : ''}...</span>
+            <span>
+              {terminalMode && inElectron
+                ? 'Aguardando o terminal…'
+                : `Executando ${activeAction ? getActionLabel(activeAction) : ''}…`}
+            </span>
           </div>
         </div>
       </div>
@@ -138,7 +173,7 @@ export function ClaudeAssistDialog({ content, fileName, onInsertResult, onCancel
           <span className={styles.dialogTitle} style={{ marginBottom: 0 }}>Claude Assist</span>
         </div>
         <p className={styles.claudeDialogSubtitle}>
-          AI-powered tools to enhance your markdown
+          Ferramentas com IA para aprimorar seu markdown
         </p>
 
         <div className={styles.claudeActionGrid}>
@@ -163,13 +198,24 @@ export function ClaudeAssistDialog({ content, fileName, onInsertResult, onCancel
         {!content.trim() && (
           <div className={styles.claudeWarning}>
             <Icon icon="codicon:warning" width={14} />
-            <span>Open a file with content to use Claude Assist</span>
+            <span>Abra um arquivo com conteúdo para usar o Claude Assist</span>
           </div>
         )}
 
         <div className={styles.dialogActions}>
+          {inElectron && (
+            <label className={styles.claudeTerminalToggle}>
+              <input
+                type="checkbox"
+                checked={terminalMode}
+                onChange={toggleTerminalMode}
+              />
+              <Icon icon="codicon:terminal" width={13} />
+              <span>Abrir terminal</span>
+            </label>
+          )}
           <button className={`${styles.dialogButton} ${styles.dialogButtonCancel}`} onClick={onCancel}>
-            Close
+            Fechar
           </button>
         </div>
       </div>
