@@ -69,6 +69,9 @@ export function App() {
     createFile,
     renameFile,
     deleteFile,
+    createDirectory,
+    renameDirectory,
+    deleteDirectory,
     refreshTree,
   } = useFileSystem();
 
@@ -130,6 +133,9 @@ export function App() {
     onNewFile: () => {
       if (rootEntry) setRequestNewFile(true);
     },
+    onTogglePreview: () => {
+      setViewMode(prev => prev === 'editor' ? 'preview' : 'editor');
+    },
   });
 
   // Context menu
@@ -175,6 +181,9 @@ export function App() {
         onCreateFile={createFile}
         onRenameFile={renameFile}
         onDeleteFile={deleteFile}
+        onCreateDirectory={createDirectory}
+        onRenameDirectory={renameDirectory}
+        onDeleteDirectory={deleteDirectory}
         onRefresh={refreshTree}
         requestNewFile={requestNewFile}
         onNewFileDialogDone={() => setRequestNewFile(false)}

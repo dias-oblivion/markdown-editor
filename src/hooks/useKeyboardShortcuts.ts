@@ -5,6 +5,7 @@ interface ShortcutHandlers {
   onCommandPalette?: () => void;
   onFind?: () => void;
   onNewFile?: () => void;
+  onTogglePreview?: () => void;
 }
 
 export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
@@ -30,6 +31,11 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       if (ctrl && e.key === 'n') {
         e.preventDefault();
         handlers.onNewFile?.();
+      }
+
+      if (ctrl && e.shiftKey && e.key === 'V') {
+        e.preventDefault();
+        handlers.onTogglePreview?.();
       }
     }
 

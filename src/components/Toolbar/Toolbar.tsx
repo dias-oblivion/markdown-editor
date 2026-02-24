@@ -100,7 +100,7 @@ export function Toolbar({
             <button
               className={`${styles.viewToggleBtn} ${viewMode === 'preview' ? styles.active : ''}`}
               onClick={() => onViewModeChange('preview')}
-              title="Preview Mode"
+              title="Preview Mode (Ctrl+Shift+V)"
             >
               <Icon icon="codicon:eye" width={14} />
               <span>Preview</span>

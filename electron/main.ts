@@ -118,6 +118,23 @@ ipcMain.handle('fs:deleteFile', async (_event, filePath: string) => {
   await fs.promises.unlink(filePath);
 });
 
+ipcMain.handle('fs:createDirectory', async (_event, parentPath: string, name: string) => {
+  const dirPath = path.join(parentPath, name);
+  await fs.promises.mkdir(dirPath, { recursive: true });
+  return dirPath;
+});
+
+ipcMain.handle('fs:renameDirectory', async (_event, oldPath: string, newName: string) => {
+  const dir = path.dirname(oldPath);
+  const newPath = path.join(dir, newName);
+  await fs.promises.rename(oldPath, newPath);
+  return newPath;
+});
+
+ipcMain.handle('fs:deleteDirectory', async (_event, dirPath: string) => {
+  await fs.promises.rm(dirPath, { recursive: true, force: true });
+});
+
 // ── Claude Assist ──
 
 /**
