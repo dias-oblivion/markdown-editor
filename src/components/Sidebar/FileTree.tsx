@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import type { FileEntry } from '../../types';
 import styles from './Sidebar.module.css';
@@ -7,28 +7,54 @@ interface FileTreeProps {
   entry: FileEntry;
   depth?: number;
   activeFilePath: string | null;
+  renamingPath: string | null;
   onFileSelect: (entry: FileEntry) => void;
   onDirContextMenu?: (e: React.MouseEvent, dirPath: string) => void;
+  onFileContextMenu?: (e: React.MouseEvent, entry: FileEntry) => void;
+  onStartRename: (path: string) => void;
+  onConfirmRename: (oldPath: string, newName: string) => void;
+  onCancelRename: () => void;
 }
 
-export function FileTree({ entry, depth = 0, activeFilePath, onFileSelect, onDirContextMenu }: FileTreeProps) {
+export function FileTree({
+  entry, depth = 0, activeFilePath, renamingPath,
+  onFileSelect, onDirContextMenu, onFileContextMenu,
+  onStartRename, onConfirmRename, onCancelRename,
+}: FileTreeProps) {
   const [expanded, setExpanded] = useState(depth < 1);
 
   if (!entry.isDirectory) {
     const isActive = entry.path === activeFilePath;
+    const isRenaming = entry.path === renamingPath;
     const iconName = getFileIcon(entry.name);
 
     return (
       <div
         className={`${styles.treeItem} ${isActive ? styles.active : ''}`}
         style={{ '--depth': depth } as React.CSSProperties}
-        onClick={() => onFileSelect(entry)}
+        onClick={() => { if (!isRenaming) onFileSelect(entry); }}
+        onDoubleClick={(e) => { e.stopPropagation(); onStartRename(entry.path); }}
+        onContextMenu={(e) => {
+          if (onFileContextMenu) {
+            e.preventDefault();
+            e.stopPropagation();
+            onFileContextMenu(e, entry);
+          }
+        }}
         title={entry.path}
       >
         <span className={styles.treeItemIcon}>
           <Icon icon={iconName} width={18} />
         </span>
-        <span className={styles.treeItemName}>{entry.name}</span>
+        {isRenaming ? (
+          <RenameInput
+            initialName={entry.name}
+            onConfirm={(newName) => onConfirmRename(entry.path, newName)}
+            onCancel={onCancelRename}
+          />
+        ) : (
+          <span className={styles.treeItemName}>{entry.name}</span>
+        )}
       </div>
     );
   }
@@ -65,11 +91,72 @@ export function FileTree({ entry, depth = 0, activeFilePath, onFileSelect, onDir
           entry={child}
           depth={depth + 1}
           activeFilePath={activeFilePath}
+          renamingPath={renamingPath}
           onFileSelect={onFileSelect}
           onDirContextMenu={onDirContextMenu}
+          onFileContextMenu={onFileContextMenu}
+          onStartRename={onStartRename}
+          onConfirmRename={onConfirmRename}
+          onCancelRename={onCancelRename}
         />
       ))}
     </div>
+  );
+}
+
+function RenameInput({
+  initialName,
+  onConfirm,
+  onCancel,
+}: {
+  initialName: string;
+  onConfirm: (newName: string) => void;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState(initialName);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const committedRef = useRef(false);
+
+  useEffect(() => {
+    const input = inputRef.current;
+    if (input) {
+      input.focus();
+      const dotIndex = initialName.lastIndexOf('.');
+      input.setSelectionRange(0, dotIndex > 0 ? dotIndex : initialName.length);
+    }
+  }, [initialName]);
+
+  const handleCommit = () => {
+    if (committedRef.current) return;
+    committedRef.current = true;
+    const trimmed = value.trim();
+    if (trimmed && trimmed !== initialName) {
+      onConfirm(trimmed);
+    } else {
+      onCancel();
+    }
+  };
+
+  return (
+    <input
+      ref={inputRef}
+      className={styles.renameInput}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onKeyDown={(e) => {
+        e.stopPropagation();
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleCommit();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          committedRef.current = true;
+          onCancel();
+        }
+      }}
+      onClick={(e) => e.stopPropagation()}
+      onBlur={handleCommit}
+    />
   );
 }
 

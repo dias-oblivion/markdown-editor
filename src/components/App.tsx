@@ -67,6 +67,8 @@ export function App() {
     updateContent,
     saveFile,
     createFile,
+    renameFile,
+    deleteFile,
     refreshTree,
   } = useFileSystem();
 
@@ -171,6 +173,8 @@ export function App() {
         onOpenDirectory={openDirectory}
         onFileSelect={openFile}
         onCreateFile={createFile}
+        onRenameFile={renameFile}
+        onDeleteFile={deleteFile}
         onRefresh={refreshTree}
         requestNewFile={requestNewFile}
         onNewFileDialogDone={() => setRequestNewFile(false)}

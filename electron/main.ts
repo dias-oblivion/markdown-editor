@@ -25,6 +25,8 @@ if (process.env.ELECTRON_IN_DOCKER === '1') {
 
 let mainWindow: BrowserWindow | null = null;
 
+const isDev = process.env.NODE_ENV === 'development';
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -34,6 +36,7 @@ function createWindow() {
     title: 'Markdown Editor',
     icon: path.join(__dirname, '../assets/icon.png'),
     backgroundColor: '#111111',
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -41,8 +44,11 @@ function createWindow() {
     },
   });
 
+  // Dev: show menu bar by default; Prod: start hidden. Toggle with Alt key.
+  mainWindow.setMenuBarVisibility(isDev);
+
   // In development, load from Vite dev server
-  if (process.env.NODE_ENV === 'development') {
+  if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
@@ -99,6 +105,17 @@ ipcMain.handle('fs:createFile', async (_event, dirPath: string, name: string) =>
   const filePath = path.join(dirPath, name);
   await fs.promises.writeFile(filePath, '', 'utf-8');
   return filePath;
+});
+
+ipcMain.handle('fs:renameFile', async (_event, oldPath: string, newName: string) => {
+  const dir = path.dirname(oldPath);
+  const newPath = path.join(dir, newName);
+  await fs.promises.rename(oldPath, newPath);
+  return newPath;
+});
+
+ipcMain.handle('fs:deleteFile', async (_event, filePath: string) => {
+  await fs.promises.unlink(filePath);
 });
 
 // ── Claude Assist ──

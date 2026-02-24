@@ -9,6 +9,8 @@ import {
   findFileByPath,
   getInitialWorkspace,
   createNewFile,
+  renameFile,
+  deleteFile,
   refreshDirectoryTree,
 } from '../utils/fileSystem';
 import { saveSession, getSession, clearSession } from '../utils/sessionStorage';
@@ -240,6 +242,98 @@ export function useFileSystem() {
     }
   }, [rootEntry, handleOpenFile]);
 
+  const handleRenameFile = useCallback(async (oldPath: string, newName: string) => {
+    const root = rootEntry;
+    if (!root) return;
+
+    // Find the file entry in the tree
+    const fileEntry = findFileByPath(root, oldPath);
+    if (!fileEntry) return;
+
+    // Find parent directory for browser mode
+    const parentPath = oldPath.substring(0, oldPath.lastIndexOf('/'));
+    const parentDir = parentPath === root.path
+      ? root
+      : findDirByPath(root, parentPath);
+
+    // Perform the rename
+    const newPath = await renameFile(fileEntry, newName, parentDir ?? undefined);
+
+    // Update any open tabs that reference the old path
+    setTabs(prev =>
+      prev.map(t =>
+        t.path === oldPath
+          ? { ...t, name: newName, path: newPath, handle: undefined }
+          : t
+      )
+    );
+
+    // Refresh the directory tree
+    const refreshed = await refreshDirectoryTree(root);
+    if (refreshed) {
+      setRootEntry(refreshed);
+      rootPathRef.current = refreshed.path;
+
+      // Re-attach handle for browser mode if tab is open
+      const tab = tabsRef.current.find(t => t.path === newPath);
+      if (tab && !tab.handle) {
+        const newFileEntry = findFileByPath(refreshed, newPath);
+        if (newFileEntry?.handle) {
+          setTabs(prev =>
+            prev.map(t =>
+              t.path === newPath
+                ? { ...t, handle: newFileEntry.handle as FileSystemFileHandle }
+                : t
+            )
+          );
+        }
+      }
+    }
+  }, [rootEntry]);
+
+  const handleDeleteFile = useCallback(async (filePath: string) => {
+    const root = rootEntry;
+    if (!root) return;
+
+    // Find the file entry in the tree
+    const fileEntry = findFileByPath(root, filePath);
+    if (!fileEntry) return;
+
+    // Find parent directory for browser mode
+    const parentPath = filePath.substring(0, filePath.lastIndexOf('/'));
+    const parentDir = parentPath === root.path
+      ? root
+      : findDirByPath(root, parentPath);
+
+    // Perform the delete
+    await deleteFile(fileEntry, parentDir ?? undefined);
+
+    // Close the tab if the file is open
+    const openTab = tabsRef.current.find(t => t.path === filePath);
+    if (openTab) {
+      setTabs(prev => {
+        const idx = prev.findIndex(t => t.id === openTab.id);
+        const next = prev.filter(t => t.id !== openTab.id);
+
+        if (openTab.id === activeTabId && next.length > 0) {
+          const newIdx = Math.min(idx, next.length - 1);
+          setActiveTabId(next[newIdx].id);
+        } else if (next.length === 0) {
+          setActiveTabId(null);
+        }
+
+        return next;
+      });
+    }
+
+    // Refresh the directory tree
+    const refreshed = await refreshDirectoryTree(root);
+    if (refreshed) {
+      setRootEntry(refreshed);
+      rootPathRef.current = refreshed.path;
+    }
+  }, [rootEntry, activeTabId]);
+
   const handleRefresh = useCallback(async () => {
     const root = rootEntry;
     if (!root) return;
@@ -264,6 +358,8 @@ export function useFileSystem() {
     updateContent: handleUpdateContent,
     saveFile: handleSaveFile,
     createFile: handleCreateFile,
+    renameFile: handleRenameFile,
+    deleteFile: handleDeleteFile,
     refreshTree: handleRefresh,
   };
 }
