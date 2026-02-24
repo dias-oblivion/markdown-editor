@@ -8,6 +8,8 @@ interface ElectronAPI {
   readFile: (filePath: string) => Promise<string>;
   writeFile: (filePath: string, content: string) => Promise<void>;
   createFile: (dirPath: string, name: string) => Promise<string>;
+  renameFile: (oldPath: string, newName: string) => Promise<string>;
+  deleteFile: (filePath: string) => Promise<void>;
   getInitialWorkspace: () => Promise<string | null>;
 }
 
@@ -173,6 +175,52 @@ export async function createNewFile(
     return { filePath: `${dirEntry.path}/${fileName}`, handle: fileHandle };
   }
   throw new Error('Cannot create file: no handle or Electron API');
+}
+
+/** Rename a file. Returns the new path. */
+export async function renameFile(
+  entry: FileEntry,
+  newName: string,
+  parentDirEntry?: FileEntry,
+): Promise<string> {
+  const api = getElectronAPI();
+  if (api) {
+    return api.renameFile(entry.path, newName);
+  }
+  // Browser: use File System Access API — must re-create file with new name and delete old
+  if (parentDirEntry?.handle && entry.handle) {
+    const dirHandle = parentDirEntry.handle as FileSystemDirectoryHandle;
+    const oldFileHandle = entry.handle as FileSystemFileHandle;
+    const file = await oldFileHandle.getFile();
+    const content = await file.text();
+    const newFileHandle = await dirHandle.getFileHandle(newName, { create: true });
+    const writable = await newFileHandle.createWritable();
+    await writable.write(content);
+    await writable.close();
+    await dirHandle.removeEntry(entry.name);
+    const parentPath = parentDirEntry.path;
+    return `${parentPath}/${newName}`;
+  }
+  throw new Error('Cannot rename file: no handle or Electron API');
+}
+
+/** Delete a file. */
+export async function deleteFile(
+  entry: FileEntry,
+  parentDirEntry?: FileEntry,
+): Promise<void> {
+  const api = getElectronAPI();
+  if (api) {
+    await api.deleteFile(entry.path);
+    return;
+  }
+  // Browser: use File System Access API
+  if (parentDirEntry?.handle) {
+    const dirHandle = parentDirEntry.handle as FileSystemDirectoryHandle;
+    await dirHandle.removeEntry(entry.name);
+    return;
+  }
+  throw new Error('Cannot delete file: no handle or Electron API');
 }
 
 /** Re-read the full directory tree from root. */

@@ -149,6 +149,20 @@
   text-overflow: ellipsis;
 }
 
+.renameInput {
+  flex: 1;
+  min-width: 0;
+  padding: 1px 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--accent-primary);
+  border-radius: 3px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 450;
+  outline: none;
+}
+
 .folderIcon {
   color: #64B5F6;
 }
@@ -201,6 +215,21 @@
 .ctxItem:hover {
   background: var(--accent-muted);
   color: var(--accent-primary);
+}
+
+.ctxItemDanger {
+  color: #e55;
+}
+
+.ctxItemDanger:hover {
+  background: rgba(238, 85, 85, 0.1);
+  color: #e55;
+}
+
+.ctxDivider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
 }
 
 /* New File Dialog */
@@ -311,4 +340,26 @@
 
 .dialogButtonPrimary:hover {
   background: var(--accent-hover);
+}
+
+.dialogButtonDanger {
+  background: #e55;
+  color: #fff;
+}
+
+.dialogButtonDanger:hover {
+  background: #d33;
+}
+
+.deleteMessage {
+  font-size: 13px;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+.deleteWarning {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0;
 }

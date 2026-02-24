@@ -11,14 +11,18 @@ interface SidebarProps {
   onOpenDirectory: () => void;
   onFileSelect: (entry: FileEntry) => void;
   onCreateFile: (dirPath: string, fileName: string) => Promise<void>;
+  onRenameFile: (oldPath: string, newName: string) => Promise<void>;
+  onDeleteFile: (filePath: string) => Promise<void>;
   onRefresh: () => void;
   requestNewFile?: boolean;
   onNewFileDialogDone?: () => void;
 }
 
-export function Sidebar({ rootEntry, activeFilePath, onOpenDirectory, onFileSelect, onCreateFile, onRefresh, requestNewFile, onNewFileDialogDone }: SidebarProps) {
+export function Sidebar({ rootEntry, activeFilePath, onOpenDirectory, onFileSelect, onCreateFile, onRenameFile, onDeleteFile, onRefresh, requestNewFile, onNewFileDialogDone }: SidebarProps) {
   const [newFileDialog, setNewFileDialog] = useState<{ dirPath: string } | null>(null);
-  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; dirPath: string } | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; dirPath: string; fileEntry?: FileEntry } | null>(null);
+  const [renamingPath, setRenamingPath] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ path: string; name: string } | null>(null);
 
   // Open dialog when parent requests it (e.g. Ctrl+N)
   useEffect(() => {
@@ -31,12 +35,46 @@ export function Sidebar({ rootEntry, activeFilePath, onOpenDirectory, onFileSele
     setCtxMenu({ x: e.clientX, y: e.clientY, dirPath });
   }, []);
 
+  const handleFileContextMenu = useCallback((e: React.MouseEvent, fileEntry: FileEntry) => {
+    const dirPath = fileEntry.path.substring(0, fileEntry.path.lastIndexOf('/'));
+    setCtxMenu({ x: e.clientX, y: e.clientY, dirPath, fileEntry });
+  }, []);
+
   const handleNewFileFromCtx = () => {
     if (ctxMenu) {
       setNewFileDialog({ dirPath: ctxMenu.dirPath });
       setCtxMenu(null);
     }
   };
+
+  const handleRenameFromCtx = () => {
+    if (ctxMenu?.fileEntry) {
+      setRenamingPath(ctxMenu.fileEntry.path);
+      setCtxMenu(null);
+    }
+  };
+
+  const handleDeleteFromCtx = () => {
+    if (ctxMenu?.fileEntry) {
+      setDeleteConfirm({ path: ctxMenu.fileEntry.path, name: ctxMenu.fileEntry.name });
+      setCtxMenu(null);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm) return;
+    await onDeleteFile(deleteConfirm.path);
+    setDeleteConfirm(null);
+  };
+
+  const handleConfirmRename = useCallback(async (oldPath: string, newName: string) => {
+    setRenamingPath(null);
+    await onRenameFile(oldPath, newName);
+  }, [onRenameFile]);
+
+  const handleCancelRename = useCallback(() => {
+    setRenamingPath(null);
+  }, []);
 
   const handleCreateConfirm = async (fileName: string) => {
     if (!newFileDialog) return;
@@ -111,8 +149,13 @@ export function Sidebar({ rootEntry, activeFilePath, onOpenDirectory, onFileSele
           <FileTree
             entry={rootEntry}
             activeFilePath={activeFilePath}
+            renamingPath={renamingPath}
             onFileSelect={onFileSelect}
             onDirContextMenu={handleDirContextMenu}
+            onFileContextMenu={handleFileContextMenu}
+            onStartRename={(path) => setRenamingPath(path)}
+            onConfirmRename={handleConfirmRename}
+            onCancelRename={handleCancelRename}
           />
         ) : (
           <div className={styles.empty}>
@@ -133,6 +176,19 @@ export function Sidebar({ rootEntry, activeFilePath, onOpenDirectory, onFileSele
               <Icon icon="codicon:new-file" width={14} />
               New File
             </div>
+            {ctxMenu.fileEntry && (
+              <>
+                <div className={styles.ctxItem} onClick={handleRenameFromCtx}>
+                  <Icon icon="codicon:edit" width={14} />
+                  Rename
+                </div>
+                <div className={styles.ctxDivider} />
+                <div className={`${styles.ctxItem} ${styles.ctxItemDanger}`} onClick={handleDeleteFromCtx}>
+                  <Icon icon="codicon:trash" width={14} />
+                  Delete
+                </div>
+              </>
+            )}
           </div>
         </>
       )}
@@ -144,6 +200,32 @@ export function Sidebar({ rootEntry, activeFilePath, onOpenDirectory, onFileSele
           onConfirm={handleCreateConfirm}
           onCancel={handleDialogCancel}
         />
+      )}
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className={styles.dialogOverlay} onClick={() => setDeleteConfirm(null)}>
+          <div className={styles.dialog} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.dialogTitle}>Delete File</div>
+            <p className={styles.deleteMessage}>
+              Are you sure you want to delete <strong>{deleteConfirm.name}</strong>?
+            </p>
+            <p className={styles.deleteWarning}>This action cannot be undone.</p>
+            <div className={styles.dialogActions}>
+              <button
+                className={`${styles.dialogButton} ${styles.dialogButtonCancel}`}
+                onClick={() => setDeleteConfirm(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className={`${styles.dialogButton} ${styles.dialogButtonDanger}`}
+                onClick={handleConfirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
