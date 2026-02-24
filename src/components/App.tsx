@@ -4,6 +4,7 @@ import type { ViewMode, FormatAction, FileEntry } from '../types';
 
 import { useFileSystem } from '../hooks/useFileSystem';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { ActivityBar } from './ActivityBar/ActivityBar';
 import { Sidebar } from './Sidebar/Sidebar';
 import { Toolbar } from './Toolbar/Toolbar';
 import { Editor } from './Editor/Editor';
@@ -85,6 +86,7 @@ export function App() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [scratchContent, setScratchContent] = useState('');
   const [requestNewFile, setRequestNewFile] = useState(false);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
 
   // Apply theme to document root and persist
   useEffect(() => {
@@ -126,16 +128,24 @@ export function App() {
     }
   }, [activeTabId, saveFile]);
 
+  const toggleSidebar = useCallback(() => {
+    setSidebarVisible(prev => !prev);
+  }, []);
+
   useKeyboardShortcuts({
     onSave: handleSave,
     onCommandPalette: () => setShowCommandPalette(true),
     onFind: () => setShowFind(true),
     onNewFile: () => {
-      if (rootEntry) setRequestNewFile(true);
+      if (rootEntry) {
+        setSidebarVisible(true);
+        setRequestNewFile(true);
+      }
     },
     onTogglePreview: () => {
       setViewMode(prev => prev === 'editor' ? 'preview' : 'editor');
     },
+    onToggleSidebar: toggleSidebar,
   });
 
   // Context menu
@@ -173,9 +183,15 @@ export function App() {
       style={{ display: 'flex', height: '100vh', width: '100vw' }}
       onContextMenu={handleContextMenu}
     >
+      <ActivityBar
+        sidebarVisible={sidebarVisible}
+        onToggleSidebar={toggleSidebar}
+      />
+
       <Sidebar
         rootEntry={rootEntry}
         activeFilePath={activeTab?.path ?? null}
+        collapsed={!sidebarVisible}
         onOpenDirectory={openDirectory}
         onFileSelect={openFile}
         onCreateFile={createFile}
