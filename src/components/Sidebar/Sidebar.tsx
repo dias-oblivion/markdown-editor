@@ -9,6 +9,7 @@ import styles from './Sidebar.module.css';
 interface SidebarProps {
   rootEntry: FileEntry | null;
   activeFilePath: string | null;
+  collapsed?: boolean;
   onOpenDirectory: () => void;
   onFileSelect: (entry: FileEntry) => void;
   onCreateFile: (dirPath: string, fileName: string) => Promise<void>;
@@ -22,7 +23,7 @@ interface SidebarProps {
   onNewFileDialogDone?: () => void;
 }
 
-export function Sidebar({ rootEntry, activeFilePath, onOpenDirectory, onFileSelect, onCreateFile, onRenameFile, onDeleteFile, onCreateDirectory, onRenameDirectory, onDeleteDirectory, onRefresh, requestNewFile, onNewFileDialogDone }: SidebarProps) {
+export function Sidebar({ rootEntry, activeFilePath, collapsed, onOpenDirectory, onFileSelect, onCreateFile, onRenameFile, onDeleteFile, onCreateDirectory, onRenameDirectory, onDeleteDirectory, onRefresh, requestNewFile, onNewFileDialogDone }: SidebarProps) {
   const [newFileDialog, setNewFileDialog] = useState<{ dirPath: string } | null>(null);
   const [newFolderDialog, setNewFolderDialog] = useState<{ dirPath: string } | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; dirPath: string; fileEntry?: FileEntry; isDirTarget?: boolean } | null>(null);
@@ -159,7 +160,7 @@ export function Sidebar({ rootEntry, activeFilePath, onOpenDirectory, onFileSele
 
   return (
     <div
-      className={styles.sidebar}
+      className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}
       onContextMenu={(e) => {
         // Right-click on empty area of tree = create in root
         if (rootEntry && e.target === e.currentTarget) {
