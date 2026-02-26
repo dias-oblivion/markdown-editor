@@ -9,8 +9,11 @@ import {
   findFileByPath,
   getInitialWorkspace,
   createNewFile,
+  createNewDirectory,
   renameFile,
   deleteFile,
+  renameDirectory,
+  deleteDirectory,
   refreshDirectoryTree,
 } from '../utils/fileSystem';
 import { saveSession, getSession, clearSession } from '../utils/sessionStorage';
@@ -334,6 +337,86 @@ export function useFileSystem() {
     }
   }, [rootEntry, activeTabId]);
 
+  const handleCreateDirectory = useCallback(async (dirPath: string, folderName: string) => {
+    const root = rootEntry;
+    if (!root) return;
+
+    const targetDir = dirPath === root.path
+      ? root
+      : findDirByPath(root, dirPath);
+    if (!targetDir) return;
+
+    await createNewDirectory(targetDir, folderName);
+
+    const refreshed = await refreshDirectoryTree(root);
+    if (refreshed) {
+      setRootEntry(refreshed);
+      rootPathRef.current = refreshed.path;
+    }
+  }, [rootEntry]);
+
+  const handleRenameDirectory = useCallback(async (oldPath: string, newName: string) => {
+    const root = rootEntry;
+    if (!root) return;
+
+    const dirEntry = findDirByPath(root, oldPath);
+    if (!dirEntry) return;
+
+    const parentPath = oldPath.substring(0, oldPath.lastIndexOf('/'));
+    const parentDir = parentPath === root.path
+      ? root
+      : findDirByPath(root, parentPath);
+
+    const newPath = await renameDirectory(dirEntry, newName, parentDir ?? undefined);
+
+    // Update any open tabs whose paths were inside the renamed directory
+    setTabs(prev =>
+      prev.map(t =>
+        t.path.startsWith(oldPath + '/')
+          ? { ...t, path: t.path.replace(oldPath, newPath), handle: undefined }
+          : t
+      )
+    );
+
+    const refreshed = await refreshDirectoryTree(root);
+    if (refreshed) {
+      setRootEntry(refreshed);
+      rootPathRef.current = refreshed.path;
+    }
+  }, [rootEntry]);
+
+  const handleDeleteDirectory = useCallback(async (dirPath: string) => {
+    const root = rootEntry;
+    if (!root) return;
+
+    const dirEntry = findDirByPath(root, dirPath);
+    if (!dirEntry) return;
+
+    const parentPath = dirPath.substring(0, dirPath.lastIndexOf('/'));
+    const parentDir = parentPath === root.path
+      ? root
+      : findDirByPath(root, parentPath);
+
+    await deleteDirectory(dirEntry, parentDir ?? undefined);
+
+    // Close any open tabs whose paths were inside the deleted directory
+    setTabs(prev => {
+      const remaining = prev.filter(t => !t.path.startsWith(dirPath + '/'));
+      if (remaining.length === 0) {
+        setActiveTabId(null);
+      } else if (!remaining.find(t => t.id === activeTabId)) {
+        setActiveTabId(remaining[remaining.length - 1].id);
+      }
+      return remaining;
+    });
+
+    const refreshed = await refreshDirectoryTree(root);
+    if (refreshed) {
+      setRootEntry(refreshed);
+      rootPathRef.current = refreshed.path;
+    }
+  }, [rootEntry, activeTabId]);
+
   const handleRefresh = useCallback(async () => {
     const root = rootEntry;
     if (!root) return;
@@ -360,6 +443,9 @@ export function useFileSystem() {
     createFile: handleCreateFile,
     renameFile: handleRenameFile,
     deleteFile: handleDeleteFile,
+    createDirectory: handleCreateDirectory,
+    renameDirectory: handleRenameDirectory,
+    deleteDirectory: handleDeleteDirectory,
     refreshTree: handleRefresh,
   };
 }

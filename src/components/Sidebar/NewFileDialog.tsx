@@ -5,10 +5,12 @@ interface NewFileDialogProps {
   dirPath: string;
   onConfirm: (fileName: string) => void;
   onCancel: () => void;
+  mode?: 'file' | 'folder' | 'rename-folder';
+  initialValue?: string;
 }
 
-export function NewFileDialog({ dirPath, onConfirm, onCancel }: NewFileDialogProps) {
-  const [fileName, setFileName] = useState('');
+export function NewFileDialog({ dirPath, onConfirm, onCancel, mode = 'file', initialValue = '' }: NewFileDialogProps) {
+  const [fileName, setFileName] = useState(initialValue);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -16,10 +18,13 @@ export function NewFileDialog({ dirPath, onConfirm, onCancel }: NewFileDialogPro
     inputRef.current?.focus();
   }, []);
 
+  const isFolder = mode === 'folder' || mode === 'rename-folder';
+  const isRename = mode === 'rename-folder';
+
   function validate(name: string): string | null {
     const trimmed = name.trim();
-    if (!trimmed) return 'File name is required';
-    if (/[<>:"/\\|?*]/.test(trimmed)) return 'Invalid characters in file name';
+    if (!trimmed) return isFolder ? 'Folder name is required' : 'File name is required';
+    if (/[<>:"/\\|?*]/.test(trimmed)) return isFolder ? 'Invalid characters in folder name' : 'Invalid characters in file name';
     return null;
   }
 
@@ -30,8 +35,8 @@ export function NewFileDialog({ dirPath, onConfirm, onCancel }: NewFileDialogPro
       setError(validationError);
       return;
     }
-    // Auto-append .md if no extension
-    if (!name.includes('.')) {
+    // Auto-append .md if no extension (files only)
+    if (!isFolder && !name.includes('.')) {
       name += '.md';
     }
     onConfirm(name);
@@ -52,26 +57,30 @@ export function NewFileDialog({ dirPath, onConfirm, onCancel }: NewFileDialogPro
   return (
     <div className={styles.dialogOverlay} onClick={onCancel}>
       <div className={styles.dialog} onClick={e => e.stopPropagation()}>
-        <div className={styles.dialogTitle}>New File</div>
+        <div className={styles.dialogTitle}>{isRename ? 'Rename Folder' : isFolder ? 'New Folder' : 'New File'}</div>
 
         <div className={styles.dialogField}>
-          <div className={styles.dialogLabel}>
-            Create in <strong>{folderName}/</strong>
-          </div>
+          {!isRename && (
+            <div className={styles.dialogLabel}>
+              Create in <strong>{folderName}/</strong>
+            </div>
+          )}
           <input
             ref={inputRef}
             className={styles.dialogInput}
             value={fileName}
             onChange={e => { setFileName(e.target.value); setError(''); }}
             onKeyDown={handleKeyDown}
-            placeholder="my-note.md"
+            placeholder={isFolder ? 'my-folder' : 'my-note.md'}
           />
           {error && <div className={styles.dialogError}>{error}</div>}
         </div>
 
-        <div className={styles.dialogHint}>
-          Extension <code>.md</code> will be added automatically if omitted
-        </div>
+        {!isFolder && (
+          <div className={styles.dialogHint}>
+            Extension <code>.md</code> will be added automatically if omitted
+          </div>
+        )}
 
         <div className={styles.dialogActions}>
           <button
@@ -84,7 +93,7 @@ export function NewFileDialog({ dirPath, onConfirm, onCancel }: NewFileDialogPro
             className={`${styles.dialogButton} ${styles.dialogButtonPrimary}`}
             onClick={handleConfirm}
           >
-            Create
+            {isRename ? 'Rename' : 'Create'}
           </button>
         </div>
       </div>

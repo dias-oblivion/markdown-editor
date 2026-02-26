@@ -1,0 +1,96 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  min-width: 380px;
+  max-width: 90vw;
+  box-shadow: var(--shadow-lg);
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.message {
+  font-size: 13px;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+.warning {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.btn {
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  border: none;
+}
+
+.btnCancel {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.btnCancel:hover,
+.btnCancel:focus {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.btnDanger {
+  background: #e55;
+  color: #fff;
+  outline: none;
+}
+
+.btnDanger:focus {
+  box-shadow: 0 0 0 2px rgba(238, 85, 85, 0.4);
+}
+
+.btnDanger:hover {
+  background: #d33;
+}
+
+.btnPrimary {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  outline: none;
+}
+
+.btnPrimary:focus {
+  box-shadow: 0 0 0 2px var(--accent-muted);
+}
+
+.btnPrimary:hover {
+  background: var(--accent-hover);
+}

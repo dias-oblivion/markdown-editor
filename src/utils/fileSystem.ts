@@ -10,6 +10,9 @@ interface ElectronAPI {
   createFile: (dirPath: string, name: string) => Promise<string>;
   renameFile: (oldPath: string, newName: string) => Promise<string>;
   deleteFile: (filePath: string) => Promise<void>;
+  createDirectory: (parentPath: string, name: string) => Promise<string>;
+  renameDirectory: (oldPath: string, newName: string) => Promise<string>;
+  deleteDirectory: (dirPath: string) => Promise<void>;
   getInitialWorkspace: () => Promise<string | null>;
 }
 
@@ -221,6 +224,62 @@ export async function deleteFile(
     return;
   }
   throw new Error('Cannot delete file: no handle or Electron API');
+}
+
+/** Create a new directory. */
+export async function createNewDirectory(
+  dirEntry: FileEntry,
+  folderName: string,
+): Promise<{ dirPath: string; handle?: FileSystemDirectoryHandle }> {
+  const api = getElectronAPI();
+  if (api) {
+    const dirPath = await api.createDirectory(dirEntry.path, folderName);
+    return { dirPath };
+  }
+  if (dirEntry.handle) {
+    const parentHandle = dirEntry.handle as FileSystemDirectoryHandle;
+    const newDirHandle = await parentHandle.getDirectoryHandle(folderName, { create: true });
+    return { dirPath: `${dirEntry.path}/${folderName}`, handle: newDirHandle };
+  }
+  throw new Error('Cannot create directory: no handle or Electron API');
+}
+
+/** Rename a directory. Returns the new path. */
+export async function renameDirectory(
+  entry: FileEntry,
+  newName: string,
+  parentDirEntry?: FileEntry,
+): Promise<string> {
+  const api = getElectronAPI();
+  if (api) {
+    return api.renameDirectory(entry.path, newName);
+  }
+  // Browser: File System Access API does not support renaming directories directly.
+  // We would need to recursively copy and delete, which is complex.
+  // For now, throw if no Electron API.
+  if (parentDirEntry?.handle) {
+    throw new Error('Renaming directories is not supported in browser mode');
+  }
+  throw new Error('Cannot rename directory: no handle or Electron API');
+}
+
+/** Delete a directory recursively. */
+export async function deleteDirectory(
+  entry: FileEntry,
+  parentDirEntry?: FileEntry,
+): Promise<void> {
+  const api = getElectronAPI();
+  if (api) {
+    await api.deleteDirectory(entry.path);
+    return;
+  }
+  // Browser: use File System Access API
+  if (parentDirEntry?.handle) {
+    const dirHandle = parentDirEntry.handle as FileSystemDirectoryHandle;
+    await dirHandle.removeEntry(entry.name, { recursive: true });
+    return;
+  }
+  throw new Error('Cannot delete directory: no handle or Electron API');
 }
 
 /** Re-read the full directory tree from root. */
