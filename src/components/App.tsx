@@ -11,6 +11,7 @@ import { Editor } from './Editor/Editor';
 import { CommandPalette } from './CommandPalette/CommandPalette';
 import { ContextMenu } from './ContextMenu/ContextMenu';
 import { SettingsMenu } from './SettingsPanel/SettingsPanel';
+import { ClaudeChat } from './ClaudeChat/ClaudeChat';
 
 type Theme = 'light' | 'dark';
 
@@ -93,11 +94,16 @@ export function App() {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showFind, setShowFind] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
-  const [scratchContent, setScratchContent] = useState('');
+  const MOCK_CONTENT = USE_MOCK_DATA ? `# Projeto de Documentação\n\nBem-vindo ao **Markdown Editor**! Este é um editor moderno para documentação técnica.\n\n## Funcionalidades\n\n- Edição com syntax highlighting\n- Preview em tempo real\n- Integração com Claude AI\n- Suporte a tabelas e blocos de código\n\n## Exemplo de Código\n\n\`\`\`typescript\nfunction greet(name: string): string {\n  return \`Hello, \${name}!\`;\n}\n\`\`\`\n\n## Tabela de Conteúdo\n\n| Seção | Descrição |\n|-------|----------|\n| Intro | Visão geral |\n| API   | Referência |\n| Guia  | Tutoriais |\n\n> **Dica:** Use Ctrl+Shift+C para abrir o chat do Claude!\n` : '';
+
+  const [scratchContent, setScratchContent] = useState(MOCK_CONTENT);
   const [requestNewFile, setRequestNewFile] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [colorTheme, setColorTheme] = useState<ColorTheme>(getInitialColorTheme);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [chatVisible, setChatVisible] = useState(false);
+  // Pending content to insert after a new file is created and opened
+  const [pendingInsert, setPendingInsert] = useState<string | null>(null);
 
   // Apply theme to document root and persist
   useEffect(() => {
@@ -153,6 +159,36 @@ export function App() {
     setSidebarVisible(prev => !prev);
   }, []);
 
+  const toggleChat = useCallback(() => {
+    setChatVisible(prev => !prev);
+  }, []);
+
+  // When a pending insert is queued and the active tab changes, set the tab content directly
+  useEffect(() => {
+    if (pendingInsert !== null && activeTab) {
+      updateContent(activeTab.id, pendingInsert);
+      setPendingInsert(null);
+    }
+  }, [activeTab?.id, pendingInsert, updateContent]);
+
+  // Save Claude response as a new file in the workspace root, then insert content
+  const handleSaveAsNewFile = useCallback(async (content: string, suggestedName: string) => {
+    if (!rootEntry) {
+      // No workspace: just insert into editor
+      handleInsertText(content);
+      return;
+    }
+    try {
+      await createFile(rootEntry.path, suggestedName);
+      // After createFile, the new file becomes the active tab.
+      // Queue content insertion to fire after the tab state updates.
+      setPendingInsert(content);
+    } catch {
+      // File creation failed — fall back to inserting in current editor
+      handleInsertText(content);
+    }
+  }, [rootEntry, createFile, handleInsertText]);
+
   useKeyboardShortcuts({
     onSave: handleSave,
     onCommandPalette: () => setShowCommandPalette(true),
@@ -167,6 +203,7 @@ export function App() {
       setViewMode(prev => prev === 'editor' ? 'preview' : 'editor');
     },
     onToggleSidebar: toggleSidebar,
+    onToggleChat: toggleChat,
   });
 
   // Context menu
@@ -197,7 +234,7 @@ export function App() {
     editorApplyFormat(prefix, suffix);
   }, []);
 
-  const showEmptyState = !activeTab && tabs.length === 0;
+  const showEmptyState = !activeTab && tabs.length === 0 && !USE_MOCK_DATA;
 
   return (
     <div
@@ -238,7 +275,7 @@ export function App() {
         />
       )}
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         <Toolbar
           viewMode={viewMode}
           theme={theme}
@@ -250,167 +287,186 @@ export function App() {
           onTabSelect={setActiveTabId}
           onTabClose={closeTab}
           onFind={() => setShowFind(true)}
+          chatVisible={chatVisible}
+          onToggleChat={toggleChat}
         />
 
-        {showEmptyState ? (
-          rootEntry ? (
-            // Simplified empty state when folder is open
-            <div style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 16,
-              color: 'var(--text-muted)',
-              userSelect: 'none',
-              padding: '40px',
-            }}>
-              <Icon icon="codicon:file" width={48} style={{ opacity: 0.3 }} />
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>
-                Select a file from the sidebar
-              </p>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
-                or press <kbd style={{
-                  background: 'var(--bg-tertiary)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: 4,
-                  padding: '2px 6px',
-                  fontSize: 11,
-                  fontFamily: 'var(--font-mono)',
-                }}>Ctrl+N</kbd> to create a new file
-              </p>
-            </div>
-          ) : (
-            // Full welcome screen when no folder is open
-            <div style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 32,
-              color: 'var(--text-muted)',
-              userSelect: 'none',
-              padding: '40px',
-            }}>
-              {/* Logo */}
-              <div style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                gap: 12,
-                animation: 'fadeIn 0.5s ease-out',
-              }}>
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          {/* Editor or empty state */}
+          <div style={{ flex: 1, overflow: 'hidden', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            {showEmptyState ? (
+              rootEntry ? (
+                // Simplified empty state when folder is open
                 <div style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 20,
-                  background: 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%)',
+                  height: '100%',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 8px 32px rgba(232, 168, 56, 0.2)',
+                  gap: 16,
+                  color: 'var(--text-muted)',
+                  userSelect: 'none',
+                  padding: '40px',
                 }}>
-                  <Icon icon="codicon:markdown" width={40} style={{ color: 'var(--bg-primary)' }} />
-                </div>
-                <h1 style={{ 
-                  fontSize: 28, 
-                  fontWeight: 700, 
-                  color: 'var(--text-primary)',
-                  letterSpacing: '-0.02em',
-                  margin: 0,
-                }}>
-                  Markdown Editor
-                </h1>
-                <p style={{ 
-                  fontSize: 14, 
-                  color: 'var(--text-secondary)', 
-                  margin: 0,
-                  letterSpacing: '0.01em',
-                }}>
-                  A minimal Markdown editor
-                </p>
-              </div>
-
-              {/* Quick Actions */}
-              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
-                <button
-                  onClick={openDirectory}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: '14px 28px',
-                    background: 'var(--accent-primary)',
-                    color: 'var(--bg-primary)',
-                    borderRadius: 10,
-                    fontSize: 14,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 4px 16px rgba(232, 168, 56, 0.25)',
-                    border: 'none',
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 6px 24px rgba(232, 168, 56, 0.35)';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(232, 168, 56, 0.25)';
-                  }}
-                >
-                  <Icon icon="codicon:folder-opened" width={18} />
-                  Open Folder
-                </button>
-              </div>
-
-              {/* Keyboard Shortcuts */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px 32px',
-                marginTop: 16,
-                padding: '24px 32px',
-                background: 'var(--bg-secondary)',
-                borderRadius: 12,
-                border: '1px solid var(--border-color)',
-              }}>
-                {[
-                  { key: 'Ctrl+P', desc: 'Quick Open' },
-                  { key: 'Ctrl+S', desc: 'Save File' },
-                  { key: 'Ctrl+N', desc: 'New File' },
-                  { key: 'Ctrl+F', desc: 'Find & Replace' },
-                ].map(({ key, desc }) => (
-                  <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <kbd style={{
+                  <Icon icon="codicon:file" width={48} style={{ opacity: 0.3 }} />
+                  <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>
+                    Select a file from the sidebar
+                  </p>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>
+                    or press <kbd style={{
                       background: 'var(--bg-tertiary)',
                       border: '1px solid var(--border-color)',
-                      borderRadius: 6,
-                      padding: '4px 10px',
+                      borderRadius: 4,
+                      padding: '2px 6px',
                       fontSize: 11,
                       fontFamily: 'var(--font-mono)',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    }}>{key}</kbd>
-                    <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{desc}</span>
+                    }}>Ctrl+N</kbd> to create a new file
+                  </p>
+                </div>
+              ) : (
+                // Full welcome screen when no folder is open
+                <div style={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 32,
+                  color: 'var(--text-muted)',
+                  userSelect: 'none',
+                  padding: '40px',
+                }}>
+                  {/* Logo */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 12,
+                    animation: 'fadeIn 0.5s ease-out',
+                  }}>
+                    <div style={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: 20,
+                      background: 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 8px 32px rgba(232, 168, 56, 0.2)',
+                    }}>
+                      <Icon icon="codicon:markdown" width={40} style={{ color: 'var(--bg-primary)' }} />
+                    </div>
+                    <h1 style={{
+                      fontSize: 28,
+                      fontWeight: 700,
+                      color: 'var(--text-primary)',
+                      letterSpacing: '-0.02em',
+                      margin: 0,
+                    }}>
+                      Markdown Editor
+                    </h1>
+                    <p style={{
+                      fontSize: 14,
+                      color: 'var(--text-secondary)',
+                      margin: 0,
+                      letterSpacing: '0.01em',
+                    }}>
+                      A minimal Markdown editor
+                    </p>
                   </div>
-                ))}
-              </div>
-            </div>
-          )
-        ) : (
-          <Editor
-            content={currentContent}
-            viewMode={viewMode}
-            theme={theme}
-            colorTheme={colorTheme}
-            onChange={handleContentChange}
-            onInsertRef={insertRef}
-            showFind={showFind}
-            onCloseFind={() => setShowFind(false)}
+
+                  {/* Quick Actions */}
+                  <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <button
+                      onClick={openDirectory}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        padding: '14px 28px',
+                        background: 'var(--accent-primary)',
+                        color: 'var(--bg-primary)',
+                        borderRadius: 10,
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 4px 16px rgba(232, 168, 56, 0.25)',
+                        border: 'none',
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 6px 24px rgba(232, 168, 56, 0.35)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(232, 168, 56, 0.25)';
+                      }}
+                    >
+                      <Icon icon="codicon:folder-opened" width={18} />
+                      Open Folder
+                    </button>
+                  </div>
+
+                  {/* Keyboard Shortcuts */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px 32px',
+                    marginTop: 16,
+                    padding: '24px 32px',
+                    background: 'var(--bg-secondary)',
+                    borderRadius: 12,
+                    border: '1px solid var(--border-color)',
+                  }}>
+                    {[
+                      { key: 'Ctrl+P', desc: 'Quick Open' },
+                      { key: 'Ctrl+S', desc: 'Save File' },
+                      { key: 'Ctrl+N', desc: 'New File' },
+                      { key: 'Ctrl+F', desc: 'Find & Replace' },
+                      { key: 'Ctrl+Shift+C', desc: 'Claude Chat' },
+                    ].map(({ key, desc }) => (
+                      <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <kbd style={{
+                          background: 'var(--bg-tertiary)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: 6,
+                          padding: '4px 10px',
+                          fontSize: 11,
+                          fontFamily: 'var(--font-mono)',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        }}>{key}</kbd>
+                        <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{desc}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            ) : (
+              <Editor
+                content={currentContent}
+                viewMode={viewMode}
+                theme={theme}
+                colorTheme={colorTheme}
+                onChange={handleContentChange}
+                onInsertRef={insertRef}
+                showFind={showFind}
+                onCloseFind={() => setShowFind(false)}
+              />
+            )}
+          </div>
+
+          {/* Claude Chat sidebar */}
+          <ClaudeChat
+            visible={chatVisible}
+            onClose={() => setChatVisible(false)}
+            activeContent={currentContent}
+            activeFileName={activeTab?.name ?? (USE_MOCK_DATA ? 'README.md' : '')}
+            workspacePath={rootEntry?.path}
+            onInsertToEditor={handleInsertText}
+            onSaveAsNewFile={handleSaveAsNewFile}
           />
-        )}
+        </div>
       </div>
 
       {/* Command Palette */}

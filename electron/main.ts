@@ -264,6 +264,29 @@ rm -f "${promptPath}" "${scriptPath}"
   });
 }
 
+// ── Claude Chat (streaming) ──
+
+ipcMain.on('claude:chat-message', (event, { prompt, workspaceDir }: { prompt: string; workspaceDir?: string }) => {
+  const cwd = workspaceDir || process.cwd();
+
+  const claude = spawn('claude', ['-p', '--dangerously-skip-permissions', prompt], {
+    cwd,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+
+  claude.stdout.on('data', (data: Buffer) => {
+    event.sender.send('claude:stream-token', data.toString());
+  });
+
+  claude.on('close', (code: number) => {
+    event.sender.send('claude:stream-done', { success: code === 0 });
+  });
+
+  claude.on('error', () => {
+    event.sender.send('claude:stream-done', { success: false });
+  });
+});
+
 ipcMain.handle('claude:assist', async (_event, action: string, _content: string, filePath: string, useTerminal: boolean) => {
   const workspaceDir = path.dirname(filePath);
   const fileName = path.basename(filePath);

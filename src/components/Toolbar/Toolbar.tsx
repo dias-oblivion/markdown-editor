@@ -4,8 +4,6 @@ import type { ViewMode, EditorTab, CodeBlockConfig, TableConfig } from '../../ty
 import { generateCodeBlock, generateTable } from '../../utils/markdown';
 import { CodeBlockDialog } from './CodeBlockDialog';
 import { TableDialog } from './TableDialog';
-import { ClaudeAssistDialog } from './ClaudeAssistDialog';
-import { ClaudeIcon } from './ClaudeIcon';
 import styles from './Toolbar.module.css';
 
 interface ToolbarProps {
@@ -19,6 +17,8 @@ interface ToolbarProps {
   onTabSelect: (id: string) => void;
   onTabClose: (id: string) => void;
   onFind: () => void;
+  chatVisible: boolean;
+  onToggleChat: () => void;
 }
 
 export function Toolbar({
@@ -32,11 +32,11 @@ export function Toolbar({
   onTabSelect,
   onTabClose,
   onFind,
+  chatVisible,
+  onToggleChat,
 }: ToolbarProps) {
-  const activeTab = tabs.find(t => t.id === activeTabId) ?? null;
   const [showCodeDialog, setShowCodeDialog] = useState(false);
   const [showTableDialog, setShowTableDialog] = useState(false);
-  const [showClaudeDialog, setShowClaudeDialog] = useState(false);
 
   function handleInsertCode(config: CodeBlockConfig) {
     onInsertText(generateCodeBlock(config));
@@ -58,6 +58,7 @@ export function Toolbar({
   function insertLinePrefix(prefix: string) {
     onInsertText(prefix);
   }
+
 
   return (
     <>
@@ -88,7 +89,7 @@ export function Toolbar({
         </div>
       )}
 
-      {/* Top bar - minimal with view controls */}
+      {/* Top bar */}
       <div className={styles.topBar}>
         <div className={styles.topBarLeft}>
           <span className={styles.appTitle}>Markdown Editor</span>
@@ -194,15 +195,9 @@ export function Toolbar({
               <Icon icon="codicon:search" width={14} />
             </button>
 
-            <button
-              className={styles.headerClaudeBtn}
-              onClick={() => setShowClaudeDialog(true)}
-              title="Claude"
-            >
-              <ClaudeIcon width={14} height={14} />
-            </button>
           </div>
         </div>
+
         <div className={styles.topBarRight}>
           {/* View mode toggle */}
           <div className={styles.viewToggle}>
@@ -224,6 +219,8 @@ export function Toolbar({
             </button>
           </div>
 
+          <div className={styles.topBarSep} />
+
           {/* Theme toggle */}
           <button
             className={styles.themeToggle}
@@ -232,8 +229,30 @@ export function Toolbar({
           >
             <Icon icon={theme === 'dark' ? 'ph:sun-bold' : 'ph:moon-bold'} width={16} />
           </button>
+
+          <div className={styles.topBarSep} />
+
+          {/* Claude Chat toggle */}
+          <button
+            className={`${styles.claudeToggleBtn} ${chatVisible ? styles.claudeToggleActive : ''}`}
+            onClick={onToggleChat}
+            title="Claude Chat (Ctrl+Shift+C)"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M17.304 1.273c-1.26-.407-2.656-.125-3.656.782L6.895 8.427c-.984.893-1.328 2.278-.868 3.521l1.618 4.437c.336.92.188 1.945-.394 2.726l-1.782 2.38a.75.75 0 0 0 1.199.899l1.782-2.38c.863-1.152 1.092-2.668.61-4.02L7.442 11.57c-.293-.803-.077-1.699.547-2.27l6.753-6.372a2.44 2.44 0 0 1 2.308-.494c.795.257 1.375.937 1.5 1.766l.977 6.419c.165 1.088-.237 2.18-1.057 2.9L11.22 19.6a.75.75 0 0 0 1.007 1.113l7.25-6.08c1.194-1.001 1.79-2.568 1.551-4.123l-.977-6.42a3.937 3.937 0 0 0-2.747-2.817Z"
+                fill="currentColor"
+              />
+              <path
+                d="M4.577 6.289a.75.75 0 0 0-1.154.955l2.165 2.617a2.44 2.44 0 0 1 .494 2.308l-2.013 6.22a3.937 3.937 0 0 0 2.014 4.75c1.165.563 2.556.47 3.634-.24l7.03-4.618a.75.75 0 1 0-.816-1.26l-7.03 4.618a2.44 2.44 0 0 1-2.255.15 2.437 2.437 0 0 1-1.247-2.943l2.013-6.22c.386-1.192.065-2.5-.826-3.578L4.577 6.29Z"
+                fill="currentColor"
+              />
+            </svg>
+            <span>Claude</span>
+          </button>
         </div>
       </div>
+
 
       {/* Dialogs */}
       {showCodeDialog && (
@@ -246,14 +265,6 @@ export function Toolbar({
         <TableDialog
           onInsert={handleInsertTable}
           onCancel={() => setShowTableDialog(false)}
-        />
-      )}
-      {showClaudeDialog && (
-        <ClaudeAssistDialog
-          content={activeTab?.content ?? ''}
-          fileName={activeTab?.path ?? activeTab?.name ?? ''}
-          onInsertResult={onInsertText}
-          onCancel={() => setShowClaudeDialog(false)}
         />
       )}
     </>

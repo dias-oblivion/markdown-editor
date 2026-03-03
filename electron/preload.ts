@@ -14,4 +14,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getInitialWorkspace: () => ipcRenderer.invoke('app:getInitialWorkspace'),
   claudeAssist: (action: string, content: string, fileName: string, useTerminal: boolean) =>
     ipcRenderer.invoke('claude:assist', action, content, fileName, useTerminal),
+  sendChatMessage: (prompt: string, workspaceDir?: string) => {
+    ipcRenderer.send('claude:chat-message', { prompt, workspaceDir });
+  },
+  onChatToken: (callback: (token: string) => void) => {
+    ipcRenderer.on('claude:stream-token', (_event, token: string) => callback(token));
+  },
+  onChatDone: (callback: (result: { success: boolean }) => void) => {
+    ipcRenderer.on('claude:stream-done', (_event, result: { success: boolean }) => callback(result));
+  },
+  removeChatListeners: () => {
+    ipcRenderer.removeAllListeners('claude:stream-token');
+    ipcRenderer.removeAllListeners('claude:stream-done');
+  },
 });

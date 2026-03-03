@@ -41,3 +41,12 @@ export interface CodeBlockConfig {
 export type ColorTheme = 'matte-black' | 'github-dark';
 
 export type ClaudeAssistAction = 'rewriter' | 'diagram' | 'brainstorm' | 'tasks';
+
+export type ChatRole = 'user' | 'assistant';
+
+export interface ChatMessage {
+  id: string;
+  role: ChatRole;
+  content: string;
+  timestamp: number;
+}

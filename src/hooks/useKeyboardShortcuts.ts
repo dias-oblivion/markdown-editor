@@ -7,6 +7,7 @@ interface ShortcutHandlers {
   onNewFile?: () => void;
   onTogglePreview?: () => void;
   onToggleSidebar?: () => void;
+  onToggleChat?: () => void;
 }
 
 export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
@@ -42,6 +43,11 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       if (ctrl && e.key === 'b') {
         e.preventDefault();
         handlers.onToggleSidebar?.();
+      }
+
+      if (ctrl && e.shiftKey && (e.key === 'c' || e.key === 'C')) {
+        e.preventDefault();
+        handlers.onToggleChat?.();
       }
     }
 
