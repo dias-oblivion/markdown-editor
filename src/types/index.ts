@@ -38,4 +38,6 @@ export interface CodeBlockConfig {
   useTabs: boolean;
 }
 
+export type ColorTheme = 'matte-black' | 'github-dark';
+
 export type ClaudeAssistAction = 'rewriter' | 'diagram' | 'brainstorm' | 'tasks';

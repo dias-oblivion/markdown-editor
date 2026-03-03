@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Icon } from '@iconify/react';
-import type { ViewMode, FormatAction, FileEntry } from '../types';
+import type { ViewMode, FormatAction, FileEntry, ColorTheme } from '../types';
 
 import { useFileSystem } from '../hooks/useFileSystem';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
@@ -10,6 +10,7 @@ import { Toolbar } from './Toolbar/Toolbar';
 import { Editor } from './Editor/Editor';
 import { CommandPalette } from './CommandPalette/CommandPalette';
 import { ContextMenu } from './ContextMenu/ContextMenu';
+import { SettingsMenu } from './SettingsPanel/SettingsPanel';
 
 type Theme = 'light' | 'dark';
 
@@ -19,6 +20,14 @@ function getInitialTheme(): Theme {
     if (saved === 'light' || saved === 'dark') return saved;
   } catch { /* ignore */ }
   return 'dark';
+}
+
+function getInitialColorTheme(): ColorTheme {
+  try {
+    const saved = localStorage.getItem('markdown-editor-color-theme');
+    if (saved === 'matte-black' || saved === 'github-dark') return saved;
+  } catch { /* ignore */ }
+  return 'matte-black';
 }
 
 // ── Mock data for development/preview ──
@@ -87,12 +96,24 @@ export function App() {
   const [scratchContent, setScratchContent] = useState('');
   const [requestNewFile, setRequestNewFile] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [colorTheme, setColorTheme] = useState<ColorTheme>(getInitialColorTheme);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Apply theme to document root and persist
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('markdown-editor-theme', theme);
   }, [theme]);
+
+  // Apply color theme to document root and persist
+  useEffect(() => {
+    if (colorTheme === 'matte-black') {
+      document.documentElement.removeAttribute('data-color-theme');
+    } else {
+      document.documentElement.setAttribute('data-color-theme', colorTheme);
+    }
+    localStorage.setItem('markdown-editor-color-theme', colorTheme);
+  }, [colorTheme]);
 
   // Auto-refresh file tree when window gains focus (to detect external file changes)
   useEffect(() => {
@@ -185,7 +206,9 @@ export function App() {
     >
       <ActivityBar
         sidebarVisible={sidebarVisible}
-        onToggleSidebar={toggleSidebar}
+        settingsOpen={settingsOpen}
+        onToggleSidebar={() => { setSettingsOpen(false); toggleSidebar(); }}
+        onOpenSettings={() => setSettingsOpen(prev => !prev)}
       />
 
       <Sidebar
@@ -204,6 +227,16 @@ export function App() {
         requestNewFile={requestNewFile}
         onNewFileDialogDone={() => setRequestNewFile(false)}
       />
+
+      {settingsOpen && (
+        <SettingsMenu
+          colorTheme={colorTheme}
+          onColorThemeChange={setColorTheme}
+          onClose={() => setSettingsOpen(false)}
+          anchorLeft={52}
+          anchorBottom={12}
+        />
+      )}
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Toolbar
@@ -371,6 +404,7 @@ export function App() {
             content={currentContent}
             viewMode={viewMode}
             theme={theme}
+            colorTheme={colorTheme}
             onChange={handleContentChange}
             onInsertRef={insertRef}
             showFind={showFind}

@@ -48,8 +48,15 @@ export function Toolbar({
     setShowTableDialog(false);
   }
 
-  function toggleViewMode() {
-    onViewModeChange(viewMode === 'editor' ? 'preview' : 'editor');
+  function applyInlineFormat(prefix: string, suffix: string) {
+    const applyFormat = (window as unknown as Record<string, unknown>).__editorApplyFormat as ((p: string, s: string) => void) | undefined;
+    if (applyFormat) {
+      applyFormat(prefix, suffix);
+    }
+  }
+
+  function insertLinePrefix(prefix: string) {
+    onInsertText(prefix);
   }
 
   return (
@@ -85,6 +92,116 @@ export function Toolbar({
       <div className={styles.topBar}>
         <div className={styles.topBarLeft}>
           <span className={styles.appTitle}>Markdown Editor</span>
+
+          <div className={styles.headerDivider} />
+
+          {/* Formatting buttons */}
+          <div className={styles.headerActions}>
+            <button
+              className={styles.headerBtn}
+              onClick={() => applyInlineFormat('**', '**')}
+              title="Bold"
+            >
+              <Icon icon="codicon:bold" width={14} />
+            </button>
+
+            <button
+              className={styles.headerBtn}
+              onClick={() => applyInlineFormat('_', '_')}
+              title="Italic"
+            >
+              <Icon icon="codicon:italic" width={14} />
+            </button>
+
+            <button
+              className={styles.headerBtn}
+              onClick={() => applyInlineFormat('<u>', '</u>')}
+              title="Underline"
+            >
+              <Icon icon="lucide:underline" width={14} />
+            </button>
+
+            <button
+              className={styles.headerBtn}
+              onClick={() => applyInlineFormat('~~', '~~')}
+              title="Strikethrough"
+            >
+              <Icon icon="codicon:strikethrough" width={14} />
+            </button>
+          </div>
+
+          <div className={styles.headerDivider} />
+
+          <div className={styles.headerActions}>
+            <button
+              className={styles.headerBtn}
+              onClick={() => applyInlineFormat('[', '](url)')}
+              title="Link"
+            >
+              <Icon icon="codicon:link" width={14} />
+            </button>
+
+            <button
+              className={styles.headerBtn}
+              onClick={() => insertLinePrefix('1. ')}
+              title="Ordered List"
+            >
+              <Icon icon="codicon:list-ordered" width={14} />
+            </button>
+
+            <button
+              className={styles.headerBtn}
+              onClick={() => insertLinePrefix('- ')}
+              title="Bulleted List"
+            >
+              <Icon icon="codicon:list-unordered" width={14} />
+            </button>
+
+            <button
+              className={styles.headerBtn}
+              onClick={() => insertLinePrefix('> ')}
+              title="Blockquote"
+            >
+              <Icon icon="codicon:quote" width={14} />
+            </button>
+          </div>
+
+          <div className={styles.headerDivider} />
+
+          {/* Tool buttons */}
+          <div className={styles.headerActions}>
+            <button
+              className={styles.headerBtn}
+              onClick={() => setShowCodeDialog(true)}
+              title="Code"
+            >
+              <Icon icon="codicon:code" width={14} />
+            </button>
+
+            <button
+              className={styles.headerBtn}
+              onClick={() => setShowTableDialog(true)}
+              title="Table"
+            >
+              <Icon icon="codicon:table" width={14} />
+            </button>
+
+            <button
+              className={styles.headerBtn}
+              onClick={onFind}
+              title="Find (Ctrl+F)"
+            >
+              <Icon icon="codicon:search" width={14} />
+            </button>
+
+            <button
+              className={styles.headerClaudeBtn}
+              onClick={() => setShowClaudeDialog(true)}
+              title="Claude"
+            >
+              <ClaudeIcon width={14} height={14} />
+            </button>
+          </div>
         </div>
         <div className={styles.topBarRight}>
           {/* View mode toggle */}
@@ -116,51 +233,6 @@ export function Toolbar({
             <Icon icon={theme === 'dark' ? 'ph:sun-bold' : 'ph:moon-bold'} width={16} />
           </button>
         </div>
-      </div>
-
-      {/* Floating Action Bar - Right side */}
-      <div className={styles.floatingBar}>
-        {/* Insert Tools */}
-        <div className={styles.floatingGroup}>
-          <button
-            className={styles.floatingBtn}
-            onClick={() => setShowCodeDialog(true)}
-            title="Insert Code Block"
-          >
-            <Icon icon="codicon:code" width={18} />
-            <span className={styles.floatingLabel}>Code</span>
-          </button>
-
-          <button
-            className={styles.floatingBtn}
-            onClick={() => setShowTableDialog(true)}
-            title="Insert Table"
-          >
-            <Icon icon="codicon:table" width={18} />
-            <span className={styles.floatingLabel}>Table</span>
-          </button>
-
-          <button
-            className={styles.floatingBtn}
-            onClick={onFind}
-            title="Find & Replace (Ctrl+F)"
-          >
-            <Icon icon="codicon:search" width={18} />
-            <span className={styles.floatingLabel}>Find</span>
-          </button>
-        </div>
-
-        <div className={styles.floatingDivider} />
-
-        {/* Claude AI - Special Button */}
-        <button
-          className={styles.claudeFloatingBtn}
-          onClick={() => setShowClaudeDialog(true)}
-          title="Claude AI Assistant"
-        >
-          <ClaudeIcon width={20} height={20} />
-          <span className={styles.claudeLabel}>Claude</span>
-        </button>
       </div>
 
       {/* Dialogs */}

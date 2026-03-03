@@ -355,6 +355,68 @@ input:focus, textarea:focus {
 [data-theme="light"] .token.important,
 [data-theme="light"] .token.variable { color: #c48820; }
 
+/* GitHub Dark mode Prism overrides */
+[data-color-theme="github-dark"] .token.comment,
+[data-color-theme="github-dark"] .token.prolog,
+[data-color-theme="github-dark"] .token.doctype,
+[data-color-theme="github-dark"] .token.cdata { color: #8b949e; }
+[data-color-theme="github-dark"] .token.punctuation { color: #e6edf3; }
+[data-color-theme="github-dark"] .token.property,
+[data-color-theme="github-dark"] .token.tag { color: #7ee787; }
+[data-color-theme="github-dark"] .token.boolean,
+[data-color-theme="github-dark"] .token.number,
+[data-color-theme="github-dark"] .token.constant,
+[data-color-theme="github-dark"] .token.symbol { color: #79c0ff; }
+[data-color-theme="github-dark"] .token.deleted { color: #ffa198; }
+[data-color-theme="github-dark"] .token.selector,
+[data-color-theme="github-dark"] .token.attr-name,
+[data-color-theme="github-dark"] .token.string,
+[data-color-theme="github-dark"] .token.char,
+[data-color-theme="github-dark"] .token.builtin { color: #a5d6ff; }
+[data-color-theme="github-dark"] .token.inserted { color: #7ee787; }
+[data-color-theme="github-dark"] .token.operator,
+[data-color-theme="github-dark"] .token.entity,
+[data-color-theme="github-dark"] .token.url { color: #ff7b72; }
+[data-color-theme="github-dark"] .token.atrule,
+[data-color-theme="github-dark"] .token.attr-value,
+[data-color-theme="github-dark"] .token.keyword { color: #ff7b72; }
+[data-color-theme="github-dark"] .token.function,
+[data-color-theme="github-dark"] .token.class-name { color: #d2a8ff; }
+[data-color-theme="github-dark"] .token.regex,
+[data-color-theme="github-dark"] .token.important,
+[data-color-theme="github-dark"] .token.variable { color: #ffa657; }
+
+/* GitHub Light mode Prism overrides */
+[data-color-theme="github-dark"][data-theme="light"] .token.comment,
+[data-color-theme="github-dark"][data-theme="light"] .token.prolog,
+[data-color-theme="github-dark"][data-theme="light"] .token.doctype,
+[data-color-theme="github-dark"][data-theme="light"] .token.cdata { color: #6e7781; }
+[data-color-theme="github-dark"][data-theme="light"] .token.punctuation { color: #1f2328; }
+[data-color-theme="github-dark"][data-theme="light"] .token.property,
+[data-color-theme="github-dark"][data-theme="light"] .token.tag { color: #116329; }
+[data-color-theme="github-dark"][data-theme="light"] .token.boolean,
+[data-color-theme="github-dark"][data-theme="light"] .token.number,
+[data-color-theme="github-dark"][data-theme="light"] .token.constant,
+[data-color-theme="github-dark"][data-theme="light"] .token.symbol { color: #0550ae; }
+[data-color-theme="github-dark"][data-theme="light"] .token.deleted { color: #82071e; }
+[data-color-theme="github-dark"][data-theme="light"] .token.selector,
+[data-color-theme="github-dark"][data-theme="light"] .token.attr-name,
+[data-color-theme="github-dark"][data-theme="light"] .token.string,
+[data-color-theme="github-dark"][data-theme="light"] .token.char,
+[data-color-theme="github-dark"][data-theme="light"] .token.builtin { color: #0a3069; }
+[data-color-theme="github-dark"][data-theme="light"] .token.inserted { color: #116329; }
+[data-color-theme="github-dark"][data-theme="light"] .token.operator,
+[data-color-theme="github-dark"][data-theme="light"] .token.entity,
+[data-color-theme="github-dark"][data-theme="light"] .token.url { color: #cf222e; }
+[data-color-theme="github-dark"][data-theme="light"] .token.atrule,
+[data-color-theme="github-dark"][data-theme="light"] .token.attr-value,
+[data-color-theme="github-dark"][data-theme="light"] .token.keyword { color: #cf222e; }
+[data-color-theme="github-dark"][data-theme="light"] .token.function,
+[data-color-theme="github-dark"][data-theme="light"] .token.class-name { color: #8250df; }
+[data-color-theme="github-dark"][data-theme="light"] .token.regex,
+[data-color-theme="github-dark"][data-theme="light"] .token.important,
+[data-color-theme="github-dark"][data-theme="light"] .token.variable { color: #953800; }
+
 /* Animations */
 @keyframes fadeIn {
   from {

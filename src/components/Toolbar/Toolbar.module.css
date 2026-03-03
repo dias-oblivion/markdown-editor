@@ -24,6 +24,58 @@
   letter-spacing: 0.02em;
 }
 
+.headerDivider {
+  width: 1px;
+  height: 16px;
+  background: var(--border-color);
+  opacity: 0.5;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.headerBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.headerBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.headerClaudeBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  background: linear-gradient(145deg, rgba(232, 168, 56, 0.1) 0%, rgba(232, 168, 56, 0.03) 100%);
+  border: 1px solid rgba(232, 168, 56, 0.2);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.headerClaudeBtn:hover {
+  background: linear-gradient(145deg, rgba(232, 168, 56, 0.2) 0%, rgba(232, 168, 56, 0.08) 100%);
+  border-color: rgba(232, 168, 56, 0.4);
+  box-shadow: 0 2px 8px rgba(232, 168, 56, 0.15);
+}
+
 .topBarRight {
   display: flex;
   align-items: center;
@@ -79,121 +131,7 @@
   color: var(--text-primary);
 }
 
-/* ========================================
-   FLOATING ACTION BAR - Right side vertical
-   ======================================== */
-.floatingBar {
-  position: fixed;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 8px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
-  z-index: 100;
-}
-
-.floatingGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.floatingBtn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: 56px;
-  height: 52px;
-  padding: 8px 4px;
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  transition: all var(--transition-fast);
-  position: relative;
-}
-
-.floatingBtn:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-  transform: scale(1.05);
-}
-
-.floatingBtn:active {
-  transform: scale(0.98);
-}
-
-.floatingLabel {
-  font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  opacity: 0.8;
-}
-
-.floatingDivider {
-  width: 32px;
-  height: 1px;
-  background: var(--border-color);
-  margin: 4px 0;
-}
-
-/* Claude Special Button */
-.claudeFloatingBtn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: 56px;
-  height: 56px;
-  padding: 8px 4px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(145deg, rgba(232, 168, 56, 0.15) 0%, rgba(232, 168, 56, 0.05) 100%);
-  border: 1px solid rgba(232, 168, 56, 0.3);
-  color: var(--accent-primary);
-  transition: all var(--transition-fast);
-  position: relative;
-  overflow: hidden;
-}
-
-.claudeFloatingBtn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(232, 168, 56, 0.2) 0%, transparent 70%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.claudeFloatingBtn:hover {
-  background: linear-gradient(145deg, rgba(232, 168, 56, 0.25) 0%, rgba(232, 168, 56, 0.1) 100%);
-  border-color: rgba(232, 168, 56, 0.5);
-  transform: scale(1.08);
-  box-shadow: 0 4px 16px rgba(232, 168, 56, 0.25);
-}
-
-.claudeFloatingBtn:hover::before {
-  opacity: 1;
-}
-
-.claudeFloatingBtn:active {
-  transform: scale(1.02);
-}
-
-.claudeLabel {
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
+/* Floating bar removed - buttons moved to header */
 
 /* Legacy toolbar (hidden but kept for compatibility) */
 .toolbar {

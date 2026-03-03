@@ -7,7 +7,7 @@ import { languages } from '@codemirror/language-data';
 import { syntaxHighlighting, HighlightStyle } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import { searchKeymap } from '@codemirror/search';
-import type { ViewMode } from '../../types';
+import type { ViewMode, ColorTheme } from '../../types';
 import { getWordCount, getCharCount, getFileSize, getReadTime } from '../../utils/markdown';
 import { MarkdownPreview } from './MarkdownPreview';
 import styles from './Editor.module.css';
@@ -56,17 +56,67 @@ const lightHighlight = HighlightStyle.define([
   { tag: tags.processingInstruction, color: '#1976d2' },
 ]);
 
+const githubDarkHighlight = HighlightStyle.define([
+  { tag: tags.comment, color: '#8b949e' },
+  { tag: tags.keyword, color: '#ff7b72' },
+  { tag: tags.string, color: '#a5d6ff' },
+  { tag: tags.number, color: '#79c0ff' },
+  { tag: tags.bool, color: '#79c0ff' },
+  { tag: tags.operator, color: '#ff7b72' },
+  { tag: tags.function(tags.variableName), color: '#d2a8ff' },
+  { tag: tags.definition(tags.variableName), color: '#ffa657' },
+  { tag: tags.typeName, color: '#ffa657' },
+  { tag: tags.propertyName, color: '#79c0ff' },
+  { tag: tags.heading, color: '#79c0ff', fontWeight: 'bold' },
+  { tag: tags.emphasis, fontStyle: 'italic' },
+  { tag: tags.strong, fontWeight: 'bold' },
+  { tag: tags.link, color: '#a5d6ff', textDecoration: 'underline' },
+  { tag: tags.url, color: '#a5d6ff' },
+  { tag: tags.strikethrough, textDecoration: 'line-through' },
+  { tag: tags.meta, color: '#d2a8ff' },
+  { tag: tags.processingInstruction, color: '#ff7b72' },
+]);
+
+const githubLightHighlight = HighlightStyle.define([
+  { tag: tags.comment, color: '#6e7781' },
+  { tag: tags.keyword, color: '#cf222e' },
+  { tag: tags.string, color: '#0a3069' },
+  { tag: tags.number, color: '#0550ae' },
+  { tag: tags.bool, color: '#0550ae' },
+  { tag: tags.operator, color: '#cf222e' },
+  { tag: tags.function(tags.variableName), color: '#8250df' },
+  { tag: tags.definition(tags.variableName), color: '#953800' },
+  { tag: tags.typeName, color: '#953800' },
+  { tag: tags.propertyName, color: '#0550ae' },
+  { tag: tags.heading, color: '#0550ae', fontWeight: 'bold' },
+  { tag: tags.emphasis, fontStyle: 'italic' },
+  { tag: tags.strong, fontWeight: 'bold' },
+  { tag: tags.link, color: '#0a3069', textDecoration: 'underline' },
+  { tag: tags.url, color: '#0a3069' },
+  { tag: tags.strikethrough, textDecoration: 'line-through' },
+  { tag: tags.meta, color: '#8250df' },
+  { tag: tags.processingInstruction, color: '#cf222e' },
+]);
+
+function getHighlightStyle(theme: 'light' | 'dark', colorTheme: ColorTheme): HighlightStyle {
+  if (colorTheme === 'github-dark') {
+    return theme === 'dark' ? githubDarkHighlight : githubLightHighlight;
+  }
+  return theme === 'dark' ? darkHighlight : lightHighlight;
+}
+
 interface EditorProps {
   content: string;
   viewMode: ViewMode;
   theme: 'light' | 'dark';
+  colorTheme: ColorTheme;
   onChange: (content: string) => void;
   onInsertRef: React.MutableRefObject<((text: string) => void) | null>;
   showFind: boolean;
   onCloseFind: () => void;
 }
 
-export function Editor({ content, viewMode, theme, onChange, onInsertRef, showFind, onCloseFind }: EditorProps) {
+export function Editor({ content, viewMode, theme, colorTheme, onChange, onInsertRef, showFind, onCloseFind }: EditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
@@ -87,7 +137,7 @@ export function Editor({ content, viewMode, theme, onChange, onInsertRef, showFi
   useEffect(() => {
     if (!editorRef.current) return;
 
-    const initialStyle = theme === 'dark' ? darkHighlight : lightHighlight;
+    const initialStyle = getHighlightStyle(theme, colorTheme);
 
     const state = EditorState.create({
       doc: content,
@@ -163,11 +213,11 @@ export function Editor({ content, viewMode, theme, onChange, onInsertRef, showFi
     const view = viewRef.current;
     if (!view) return;
 
-    const style = theme === 'dark' ? darkHighlight : lightHighlight;
+    const style = getHighlightStyle(theme, colorTheme);
     view.dispatch({
       effects: highlightCompartment.current.reconfigure(syntaxHighlighting(style)),
     });
-  }, [theme]);
+  }, [theme, colorTheme]);
 
   // Sync external content changes
   useEffect(() => {
