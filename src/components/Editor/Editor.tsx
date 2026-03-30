@@ -423,7 +423,7 @@ export function Editor({ content, viewMode, theme, colorTheme, onChange, onInser
           <div className={styles.previewContent}>
             <MarkdownPreview
               source={content}
-              onToggleCheckbox={viewMode === 'preview' ? (newSource) => onChange(newSource) : undefined}
+              onToggleCheckbox={viewMode === 'preview' ? (newSource) => onChangeRef.current(newSource) : undefined}
             />
           </div>
         </div>
