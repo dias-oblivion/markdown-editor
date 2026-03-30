@@ -46,9 +46,11 @@ export function MarkdownPreview({ source, onToggleCheckbox }: MarkdownPreviewPro
     if (!ref.current || !onToggleCheckbox) return;
 
     const checkboxes = ref.current.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    const handlers: Array<() => void> = [];
+
     checkboxes.forEach((checkbox, index) => {
       checkbox.removeAttribute('disabled');
-      checkbox.addEventListener('change', () => {
+      const handler = () => {
         const matches = [...source.matchAll(/^[ \t]*[-*+] \[[ xX]\]/gm)];
         const match = matches[index];
         if (!match || match.index === undefined) return;
@@ -62,8 +64,16 @@ export function MarkdownPreview({ source, onToggleCheckbox }: MarkdownPreviewPro
           source.slice(bracketClose + 1);
 
         onToggleCheckbox(newSource);
-      });
+      };
+      handlers.push(handler);
+      checkbox.addEventListener('change', handler);
     });
+
+    return () => {
+      checkboxes.forEach((checkbox, index) => {
+        checkbox.removeEventListener('change', handlers[index]);
+      });
+    };
   }, [html, source, onToggleCheckbox]);
 
   return (
