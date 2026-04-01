@@ -50,7 +50,7 @@ function createWindow() {
   // In development, load from Vite dev server
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
-    mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools();
   } else {
     // In production, load from built files
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
@@ -133,6 +133,13 @@ ipcMain.handle('fs:renameDirectory', async (_event, oldPath: string, newName: st
 
 ipcMain.handle('fs:deleteDirectory', async (_event, dirPath: string) => {
   await fs.promises.rm(dirPath, { recursive: true, force: true });
+});
+
+ipcMain.handle('fs:moveFile', async (_event, oldPath: string, targetDirPath: string) => {
+  const fileName = path.basename(oldPath);
+  const newPath = path.join(targetDirPath, fileName);
+  await fs.promises.rename(oldPath, newPath);
+  return newPath;
 });
 
 // ── Claude Assist ──

@@ -84,6 +84,7 @@ export function App() {
     renameDirectory,
     deleteDirectory,
     refreshTree,
+    moveFile,
   } = useFileSystem();
 
   // Use mock data if enabled, otherwise use real data
@@ -94,7 +95,7 @@ export function App() {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showFind, setShowFind] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
-  const MOCK_CONTENT = USE_MOCK_DATA ? `# Projeto de Documentação\n\nBem-vindo ao **Markdown Editor**! Este é um editor moderno para documentação técnica.\n\n## Funcionalidades\n\n- Edição com syntax highlighting\n- Preview em tempo real\n- Integração com Claude AI\n- Suporte a tabelas e blocos de código\n\n## Exemplo de Código\n\n\`\`\`typescript\nfunction greet(name: string): string {\n  return \`Hello, \${name}!\`;\n}\n\`\`\`\n\n## Tabela de Conteúdo\n\n| Seção | Descrição |\n|-------|----------|\n| Intro | Visão geral |\n| API   | Referência |\n| Guia  | Tutoriais |\n\n> **Dica:** Use Ctrl+Shift+C para abrir o chat do Claude!\n` : '';
+  const MOCK_CONTENT = USE_MOCK_DATA ? `# Tarefas\n\n## Sprint Atual\n\n[] - Configurar ambiente de desenvolvimento\n  [] - Instalar dependências do projeto\n  [] - Configurar variáveis de ambiente\n  [] - Testar conexão com banco de dados\n[] - Implementar autenticação\n  [x] - Criar modelo de usuário\n  [] - Implementar login com JWT\n  [] - Adicionar middleware de autorização\n[x] - Revisar pull requests\n` : '';
 
   const [scratchContent, setScratchContent] = useState(MOCK_CONTENT);
   const [requestNewFile, setRequestNewFile] = useState(false);
@@ -204,6 +205,9 @@ export function App() {
     },
     onToggleSidebar: toggleSidebar,
     onToggleChat: toggleChat,
+    onFormatBold: () => handleFormat('bold'),
+    onFormatItalic: () => handleFormat('italic'),
+    onFormatStrikethrough: () => handleFormat('strikethrough'),
   });
 
   // Context menu
@@ -261,6 +265,7 @@ export function App() {
         onRenameDirectory={renameDirectory}
         onDeleteDirectory={deleteDirectory}
         onRefresh={refreshTree}
+        onMoveFile={moveFile}
         requestNewFile={requestNewFile}
         onNewFileDialogDone={() => setRequestNewFile(false)}
       />

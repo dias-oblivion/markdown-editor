@@ -14,14 +14,16 @@ interface FileTreeProps {
   onStartRename: (path: string) => void;
   onConfirmRename: (oldPath: string, newName: string) => void;
   onCancelRename: () => void;
+  onMoveFile: (filePath: string, targetDirPath: string) => void;
 }
 
 export function FileTree({
   entry, depth = 0, activeFilePath, renamingPath,
   onFileSelect, onDirContextMenu, onFileContextMenu,
-  onStartRename, onConfirmRename, onCancelRename,
+  onStartRename, onConfirmRename, onCancelRename, onMoveFile,
 }: FileTreeProps) {
   const [expanded, setExpanded] = useState(depth < 1);
+  const [dragOverPath, setDragOverPath] = useState<string | null>(null);
 
   if (!entry.isDirectory) {
     const isActive = entry.path === activeFilePath;
@@ -32,6 +34,11 @@ export function FileTree({
       <div
         className={`${styles.treeItem} ${isActive ? styles.active : ''}`}
         style={{ '--depth': depth } as React.CSSProperties}
+        draggable={true}
+        onDragStart={(e) => {
+          e.dataTransfer.setData('text/plain', entry.path);
+          e.dataTransfer.effectAllowed = 'move';
+        }}
         onClick={() => { if (!isRenaming) onFileSelect(entry); }}
         onDoubleClick={(e) => { e.stopPropagation(); onStartRename(entry.path); }}
         onContextMenu={(e) => {
@@ -62,7 +69,7 @@ export function FileTree({
   return (
     <div>
       <div
-        className={styles.treeItem}
+        className={`${styles.treeItem} ${dragOverPath === entry.path ? styles.dragOver : ''}`}
         style={{ '--depth': depth } as React.CSSProperties}
         onClick={() => setExpanded(!expanded)}
         onContextMenu={(e) => {
@@ -70,6 +77,26 @@ export function FileTree({
             e.preventDefault();
             e.stopPropagation();
             onDirContextMenu(e, entry.path);
+          }
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          e.dataTransfer.dropEffect = 'move';
+          setDragOverPath(entry.path);
+        }}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setDragOverPath(null);
+          }
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setDragOverPath(null);
+          const filePath = e.dataTransfer.getData('text/plain');
+          if (filePath) {
+            onMoveFile(filePath, entry.path);
           }
         }}
       >
@@ -98,6 +125,7 @@ export function FileTree({
           onStartRename={onStartRename}
           onConfirmRename={onConfirmRename}
           onCancelRename={onCancelRename}
+          onMoveFile={onMoveFile}
         />
       ))}
     </div>

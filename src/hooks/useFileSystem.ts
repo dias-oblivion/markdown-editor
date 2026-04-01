@@ -15,6 +15,7 @@ import {
   renameDirectory,
   deleteDirectory,
   refreshDirectoryTree,
+  moveFile,
 } from '../utils/fileSystem';
 import { saveSession, getSession, clearSession } from '../utils/sessionStorage';
 
@@ -429,6 +430,38 @@ export function useFileSystem() {
     }
   }, [rootEntry]);
 
+  const handleMoveFile = useCallback(async (filePath: string, targetDirPath: string) => {
+    const root = rootEntry;
+    if (!root) return;
+
+    const fileEntry = findFileByPath(root, filePath);
+    const targetDirEntry = findDirByPath(root, targetDirPath);
+    if (!fileEntry || !targetDirEntry) return;
+
+    // No-op: file is already in the target directory
+    const currentDirPath = filePath.substring(0, filePath.lastIndexOf('/'));
+    if (currentDirPath === targetDirPath) return;
+
+    const newPath = await moveFile(fileEntry, targetDirEntry);
+
+    // Update any open tab that was pointing to the moved file
+    const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
+    setTabs(prev =>
+      prev.map(t =>
+        t.path === filePath
+          ? { ...t, path: newPath, name: fileName }
+          : t
+      )
+    );
+
+    // Refresh the directory tree
+    const refreshed = await refreshDirectoryTree(root);
+    if (refreshed) {
+      setRootEntry(refreshed);
+      rootPathRef.current = refreshed.path;
+    }
+  }, [rootEntry]);
+
   return {
     rootEntry,
     tabs,
@@ -447,6 +480,7 @@ export function useFileSystem() {
     renameDirectory: handleRenameDirectory,
     deleteDirectory: handleDeleteDirectory,
     refreshTree: handleRefresh,
+    moveFile: handleMoveFile,
   };
 }
 

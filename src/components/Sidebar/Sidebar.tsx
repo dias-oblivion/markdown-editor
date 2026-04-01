@@ -19,11 +19,12 @@ interface SidebarProps {
   onRenameDirectory: (oldPath: string, newName: string) => Promise<void>;
   onDeleteDirectory: (dirPath: string) => Promise<void>;
   onRefresh: () => void;
+  onMoveFile: (filePath: string, targetDirPath: string) => Promise<void>;
   requestNewFile?: boolean;
   onNewFileDialogDone?: () => void;
 }
 
-export function Sidebar({ rootEntry, activeFilePath, collapsed, onOpenDirectory, onFileSelect, onCreateFile, onRenameFile, onDeleteFile, onCreateDirectory, onRenameDirectory, onDeleteDirectory, onRefresh, requestNewFile, onNewFileDialogDone }: SidebarProps) {
+export function Sidebar({ rootEntry, activeFilePath, collapsed, onOpenDirectory, onFileSelect, onCreateFile, onRenameFile, onDeleteFile, onCreateDirectory, onRenameDirectory, onDeleteDirectory, onRefresh, onMoveFile, requestNewFile, onNewFileDialogDone }: SidebarProps) {
   const [newFileDialog, setNewFileDialog] = useState<{ dirPath: string } | null>(null);
   const [newFolderDialog, setNewFolderDialog] = useState<{ dirPath: string } | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; dirPath: string; fileEntry?: FileEntry; isDirTarget?: boolean } | null>(null);
@@ -229,6 +230,7 @@ export function Sidebar({ rootEntry, activeFilePath, collapsed, onOpenDirectory,
             onStartRename={(path) => setRenamingPath(path)}
             onConfirmRename={handleConfirmRename}
             onCancelRename={handleCancelRename}
+            onMoveFile={onMoveFile}
           />
         ) : (
           <div className={styles.empty}>

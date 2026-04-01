@@ -14,6 +14,7 @@ interface ElectronAPI {
   renameDirectory: (oldPath: string, newName: string) => Promise<string>;
   deleteDirectory: (dirPath: string) => Promise<void>;
   getInitialWorkspace: () => Promise<string | null>;
+  moveFile: (oldPath: string, targetDirPath: string) => Promise<string>;
 }
 
 function getElectronAPI(): ElectronAPI | null {
@@ -292,6 +293,13 @@ export async function refreshDirectoryTree(rootEntry: FileEntry): Promise<FileEn
     return reopenDirectory(rootEntry.handle as FileSystemDirectoryHandle);
   }
   return null;
+}
+
+/** Move a file to a different directory. Returns the new path. Electron-only. */
+export async function moveFile(entry: FileEntry, targetDirEntry: FileEntry): Promise<string> {
+  const api = getElectronAPI();
+  if (!api) throw new Error('moveFile requires Electron');
+  return api.moveFile(entry.path, targetDirEntry.path);
 }
 
 export function flattenFiles(entry: FileEntry): FileEntry[] {

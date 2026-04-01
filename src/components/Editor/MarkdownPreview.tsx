@@ -10,6 +10,68 @@ interface MarkdownPreviewProps {
 
 mermaid.registerLayoutLoaders(elkLayouts);
 
+const CHECKBOX_RE = /^[ \t]*\[[ xX]?\] - /;
+
+function getIndent(line: string): number {
+  return line.match(/^([ \t]*)/)?.[1]?.length ?? 0;
+}
+
+function toggleCheckboxInSource(source: string, index: number, isChecked: boolean): string {
+  const lines = source.split('\n');
+
+  // Collect the line index and indentation of every checkbox line
+  const cbLines: Array<{ lineIdx: number; indent: number }> = [];
+  lines.forEach((line, lineIdx) => {
+    if (CHECKBOX_RE.test(line)) {
+      cbLines.push({ lineIdx, indent: getIndent(line) });
+    }
+  });
+
+  const target = cbLines[index];
+  if (!target) return source;
+
+  const setChecked = (lineIdx: number, checked: boolean) => {
+    lines[lineIdx] = lines[lineIdx].replace(/\[[ xX]?\]/, checked ? '[x]' : '[]');
+  };
+
+  // Toggle the clicked checkbox
+  setChecked(target.lineIdx, isChecked);
+
+  // Cascade to direct children (subsequent entries with strictly greater indent)
+  for (let i = index + 1; i < cbLines.length; i++) {
+    if (cbLines[i].indent <= target.indent) break;
+    setChecked(cbLines[i].lineIdx, isChecked);
+  }
+
+  // Find immediate parent (last entry before this one with strictly less indent)
+  let parentIdx = -1;
+  for (let i = index - 1; i >= 0; i--) {
+    if (cbLines[i].indent < target.indent) {
+      parentIdx = i;
+      break;
+    }
+  }
+
+  if (parentIdx >= 0) {
+    const parent = cbLines[parentIdx];
+    if (isChecked) {
+      // Auto-complete parent if ALL siblings at this indent level are now checked
+      const directSiblings: number[] = [];
+      for (let i = parentIdx + 1; i < cbLines.length; i++) {
+        if (cbLines[i].indent <= parent.indent) break;
+        if (cbLines[i].indent === target.indent) directSiblings.push(i);
+      }
+      const allDone = directSiblings.every(si => /\[x\]/i.test(lines[cbLines[si].lineIdx]));
+      if (allDone) setChecked(parent.lineIdx, true);
+    } else {
+      // Unchecking a child also unchecks the parent
+      setChecked(parent.lineIdx, false);
+    }
+  }
+
+  return lines.join('\n');
+}
+
 function getMermaidTheme(): 'dark' | 'default' {
   return document.documentElement.getAttribute('data-theme') === 'light' ? 'default' : 'dark';
 }
@@ -51,18 +113,8 @@ export function MarkdownPreview({ source, onToggleCheckbox }: MarkdownPreviewPro
     checkboxes.forEach((checkbox, index) => {
       checkbox.removeAttribute('disabled');
       const handler = () => {
-        const matches = [...source.matchAll(/^[ \t]*[-*+] \[[ xX]\]/gm)];
-        const match = matches[index];
-        if (!match || match.index === undefined) return;
-
         const isChecked = checkbox.checked;
-        const bracketOpen = match.index + match[0].indexOf('[');
-        const bracketClose = match.index + match[0].indexOf(']');
-        const newSource =
-          source.slice(0, bracketOpen) +
-          (isChecked ? '[x]' : '[ ]') +
-          source.slice(bracketClose + 1);
-
+        const newSource = toggleCheckboxInSource(source, index, isChecked);
         onToggleCheckbox(newSource);
       };
       handlers.push(handler);

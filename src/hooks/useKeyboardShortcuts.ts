@@ -8,6 +8,9 @@ interface ShortcutHandlers {
   onTogglePreview?: () => void;
   onToggleSidebar?: () => void;
   onToggleChat?: () => void;
+  onFormatBold?: () => void;
+  onFormatItalic?: () => void;
+  onFormatStrikethrough?: () => void;
 }
 
 export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
@@ -48,6 +51,21 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       if (ctrl && e.shiftKey && (e.key === 'c' || e.key === 'C')) {
         e.preventDefault();
         handlers.onToggleChat?.();
+      }
+
+      if (e.altKey && (e.key === 'b' || e.key === 'B')) {
+        e.preventDefault();
+        handlers.onFormatBold?.();
+      }
+
+      if (e.altKey && (e.key === 'i' || e.key === 'I')) {
+        e.preventDefault();
+        handlers.onFormatItalic?.();
+      }
+
+      if (e.altKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        handlers.onFormatStrikethrough?.();
       }
     }
 

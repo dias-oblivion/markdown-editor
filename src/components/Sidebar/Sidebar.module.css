@@ -365,3 +365,19 @@
   background: var(--accent-hover);
 }
 
+/* Drag & Drop */
+.dragOver {
+  background: var(--accent-muted);
+  color: var(--accent-primary);
+  outline: 1px solid var(--accent-primary);
+  border-radius: var(--radius-sm);
+}
+
+.treeItem[draggable='true'] {
+  cursor: grab;
+}
+
+.treeItem[draggable='true']:active {
+  cursor: grabbing;
+}
+
