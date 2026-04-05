@@ -7,7 +7,7 @@ import { languages } from '@codemirror/language-data';
 import { syntaxHighlighting, HighlightStyle } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import { searchKeymap } from '@codemirror/search';
-import type { ViewMode, ColorTheme } from '../../types';
+import type { ViewMode, ThemeId } from '../../types';
 import { getWordCount, getCharCount, getFileSize, getReadTime } from '../../utils/markdown';
 import { MarkdownPreview } from './MarkdownPreview';
 import styles from './Editor.module.css';
@@ -98,25 +98,158 @@ const githubLightHighlight = HighlightStyle.define([
   { tag: tags.processingInstruction, color: '#cf222e' },
 ]);
 
-function getHighlightStyle(theme: 'light' | 'dark', colorTheme: ColorTheme): HighlightStyle {
-  if (colorTheme === 'github-dark') {
-    return theme === 'dark' ? githubDarkHighlight : githubLightHighlight;
+const draculaHighlight = HighlightStyle.define([
+  { tag: tags.comment, color: '#6272a4' },
+  { tag: tags.keyword, color: '#ff79c6' },
+  { tag: tags.string, color: '#f1fa8c' },
+  { tag: tags.number, color: '#bd93f9' },
+  { tag: tags.bool, color: '#bd93f9' },
+  { tag: tags.operator, color: '#ff79c6' },
+  { tag: tags.function(tags.variableName), color: '#50fa7b' },
+  { tag: tags.definition(tags.variableName), color: '#f8f8f2' },
+  { tag: tags.typeName, color: '#8be9fd' },
+  { tag: tags.propertyName, color: '#8be9fd' },
+  { tag: tags.heading, color: '#ff79c6', fontWeight: 'bold' },
+  { tag: tags.emphasis, fontStyle: 'italic' },
+  { tag: tags.strong, fontWeight: 'bold' },
+  { tag: tags.link, color: '#8be9fd', textDecoration: 'underline' },
+  { tag: tags.url, color: '#8be9fd' },
+  { tag: tags.strikethrough, textDecoration: 'line-through' },
+  { tag: tags.meta, color: '#bd93f9' },
+  { tag: tags.processingInstruction, color: '#ff79c6' },
+]);
+
+const monokaiProHighlight = HighlightStyle.define([
+  { tag: tags.comment, color: '#939293' },
+  { tag: tags.keyword, color: '#ff6188' },
+  { tag: tags.string, color: '#ffd866' },
+  { tag: tags.number, color: '#ab9df2' },
+  { tag: tags.bool, color: '#ab9df2' },
+  { tag: tags.operator, color: '#ff6188' },
+  { tag: tags.function(tags.variableName), color: '#a9dc76' },
+  { tag: tags.definition(tags.variableName), color: '#fcfcfa' },
+  { tag: tags.typeName, color: '#78dce8' },
+  { tag: tags.propertyName, color: '#78dce8' },
+  { tag: tags.heading, color: '#ff6188', fontWeight: 'bold' },
+  { tag: tags.emphasis, fontStyle: 'italic' },
+  { tag: tags.strong, fontWeight: 'bold' },
+  { tag: tags.link, color: '#78dce8', textDecoration: 'underline' },
+  { tag: tags.url, color: '#78dce8' },
+  { tag: tags.strikethrough, textDecoration: 'line-through' },
+  { tag: tags.meta, color: '#ab9df2' },
+  { tag: tags.processingInstruction, color: '#ff6188' },
+]);
+
+const ayuDarkHighlight = HighlightStyle.define([
+  { tag: tags.comment, color: '#626a73' },
+  { tag: tags.keyword, color: '#ff8f40' },
+  { tag: tags.string, color: '#aad94c' },
+  { tag: tags.number, color: '#d2a6ff' },
+  { tag: tags.bool, color: '#d2a6ff' },
+  { tag: tags.operator, color: '#f29668' },
+  { tag: tags.function(tags.variableName), color: '#ffb454' },
+  { tag: tags.definition(tags.variableName), color: '#bfbdb6' },
+  { tag: tags.typeName, color: '#59c2ff' },
+  { tag: tags.propertyName, color: '#59c2ff' },
+  { tag: tags.heading, color: '#59c2ff', fontWeight: 'bold' },
+  { tag: tags.emphasis, fontStyle: 'italic' },
+  { tag: tags.strong, fontWeight: 'bold' },
+  { tag: tags.link, color: '#59c2ff', textDecoration: 'underline' },
+  { tag: tags.url, color: '#59c2ff' },
+  { tag: tags.strikethrough, textDecoration: 'line-through' },
+  { tag: tags.meta, color: '#d2a6ff' },
+  { tag: tags.processingInstruction, color: '#ff8f40' },
+]);
+
+const quietLightHighlight = HighlightStyle.define([
+  { tag: tags.comment, color: '#aaaaaa' },
+  { tag: tags.keyword, color: '#325cc0' },
+  { tag: tags.string, color: '#448c27' },
+  { tag: tags.number, color: '#aa3731' },
+  { tag: tags.bool, color: '#aa3731' },
+  { tag: tags.operator, color: '#325cc0' },
+  { tag: tags.function(tags.variableName), color: '#7a3e9d' },
+  { tag: tags.definition(tags.variableName), color: '#333333' },
+  { tag: tags.typeName, color: '#007299' },
+  { tag: tags.propertyName, color: '#007299' },
+  { tag: tags.heading, color: '#325cc0', fontWeight: 'bold' },
+  { tag: tags.emphasis, fontStyle: 'italic' },
+  { tag: tags.strong, fontWeight: 'bold' },
+  { tag: tags.link, color: '#325cc0', textDecoration: 'underline' },
+  { tag: tags.url, color: '#325cc0' },
+  { tag: tags.strikethrough, textDecoration: 'line-through' },
+  { tag: tags.meta, color: '#7a3e9d' },
+  { tag: tags.processingInstruction, color: '#325cc0' },
+]);
+
+const solarizedLightHighlight = HighlightStyle.define([
+  { tag: tags.comment, color: '#93a1a1' },
+  { tag: tags.keyword, color: '#859900' },
+  { tag: tags.string, color: '#2aa198' },
+  { tag: tags.number, color: '#d33682' },
+  { tag: tags.bool, color: '#d33682' },
+  { tag: tags.operator, color: '#657b83' },
+  { tag: tags.function(tags.variableName), color: '#268bd2' },
+  { tag: tags.definition(tags.variableName), color: '#657b83' },
+  { tag: tags.typeName, color: '#6c71c4' },
+  { tag: tags.propertyName, color: '#268bd2' },
+  { tag: tags.heading, color: '#268bd2', fontWeight: 'bold' },
+  { tag: tags.emphasis, fontStyle: 'italic' },
+  { tag: tags.strong, fontWeight: 'bold' },
+  { tag: tags.link, color: '#268bd2', textDecoration: 'underline' },
+  { tag: tags.url, color: '#268bd2' },
+  { tag: tags.strikethrough, textDecoration: 'line-through' },
+  { tag: tags.meta, color: '#6c71c4' },
+  { tag: tags.processingInstruction, color: '#859900' },
+]);
+
+const gruvboxLightHighlight = HighlightStyle.define([
+  { tag: tags.comment, color: '#928374' },
+  { tag: tags.keyword, color: '#9d0006' },
+  { tag: tags.string, color: '#79740e' },
+  { tag: tags.number, color: '#8f3f71' },
+  { tag: tags.bool, color: '#8f3f71' },
+  { tag: tags.operator, color: '#af3a03' },
+  { tag: tags.function(tags.variableName), color: '#076678' },
+  { tag: tags.definition(tags.variableName), color: '#3c3836' },
+  { tag: tags.typeName, color: '#b57614' },
+  { tag: tags.propertyName, color: '#076678' },
+  { tag: tags.heading, color: '#076678', fontWeight: 'bold' },
+  { tag: tags.emphasis, fontStyle: 'italic' },
+  { tag: tags.strong, fontWeight: 'bold' },
+  { tag: tags.link, color: '#076678', textDecoration: 'underline' },
+  { tag: tags.url, color: '#076678' },
+  { tag: tags.strikethrough, textDecoration: 'line-through' },
+  { tag: tags.meta, color: '#8f3f71' },
+  { tag: tags.processingInstruction, color: '#9d0006' },
+]);
+
+function getHighlightStyle(activeTheme: ThemeId): HighlightStyle {
+  switch (activeTheme) {
+    case 'github-dark':     return githubDarkHighlight;
+    case 'dracula':         return draculaHighlight;
+    case 'monokai-pro':     return monokaiProHighlight;
+    case 'ayu-dark':        return ayuDarkHighlight;
+    case 'matte-white':     return lightHighlight;
+    case 'github-light':    return githubLightHighlight;
+    case 'quiet-light':     return quietLightHighlight;
+    case 'solarized-light': return solarizedLightHighlight;
+    case 'gruvbox-light':   return gruvboxLightHighlight;
+    default:                return darkHighlight; // matte-black
   }
-  return theme === 'dark' ? darkHighlight : lightHighlight;
 }
 
 interface EditorProps {
   content: string;
   viewMode: ViewMode;
-  theme: 'light' | 'dark';
-  colorTheme: ColorTheme;
+  activeTheme: ThemeId;
   onChange: (content: string) => void;
   onInsertRef: React.MutableRefObject<((text: string) => void) | null>;
   showFind: boolean;
   onCloseFind: () => void;
 }
 
-export function Editor({ content, viewMode, theme, colorTheme, onChange, onInsertRef, showFind, onCloseFind }: EditorProps) {
+export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, showFind, onCloseFind }: EditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
@@ -137,7 +270,7 @@ export function Editor({ content, viewMode, theme, colorTheme, onChange, onInser
   useEffect(() => {
     if (!editorRef.current) return;
 
-    const initialStyle = getHighlightStyle(theme, colorTheme);
+    const initialStyle = getHighlightStyle(activeTheme);
 
     const state = EditorState.create({
       doc: content,
@@ -213,11 +346,11 @@ export function Editor({ content, viewMode, theme, colorTheme, onChange, onInser
     const view = viewRef.current;
     if (!view) return;
 
-    const style = getHighlightStyle(theme, colorTheme);
+    const style = getHighlightStyle(activeTheme);
     view.dispatch({
       effects: highlightCompartment.current.reconfigure(syntaxHighlighting(style)),
     });
-  }, [theme, colorTheme]);
+  }, [activeTheme]);
 
   // Sync external content changes
   useEffect(() => {
