@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import { Icon } from '@iconify/react';
-import type { ViewMode, EditorTab, CodeBlockConfig, TableConfig } from '../../types';
+import type { ViewMode, EditorTab, CodeBlockConfig, TableConfig, AISettings } from '../../types';
+import { AI_PROVIDER_CONFIGS } from '../../types';
+import { isElectron } from '../../utils/fileSystem';
 import { generateCodeBlock, generateTable } from '../../utils/markdown';
 import { CodeBlockDialog } from './CodeBlockDialog';
 import { TableDialog } from './TableDialog';
@@ -8,9 +9,7 @@ import styles from './Toolbar.module.css';
 
 interface ToolbarProps {
   viewMode: ViewMode;
-  theme: 'light' | 'dark';
   onViewModeChange: (mode: ViewMode) => void;
-  onThemeChange: (theme: 'light' | 'dark') => void;
   onInsertText: (text: string) => void;
   tabs: EditorTab[];
   activeTabId: string | null;
@@ -19,13 +18,16 @@ interface ToolbarProps {
   onFind: () => void;
   chatVisible: boolean;
   onToggleChat: () => void;
+  showCodeDialog: boolean;
+  showTableDialog: boolean;
+  onShowCodeDialog: (show: boolean) => void;
+  onShowTableDialog: (show: boolean) => void;
+  aiSettings: AISettings;
 }
 
 export function Toolbar({
   viewMode,
-  theme,
   onViewModeChange,
-  onThemeChange,
   onInsertText,
   tabs,
   activeTabId,
@@ -34,18 +36,22 @@ export function Toolbar({
   onFind,
   chatVisible,
   onToggleChat,
+  showCodeDialog,
+  showTableDialog,
+  onShowCodeDialog,
+  onShowTableDialog,
+  aiSettings,
 }: ToolbarProps) {
-  const [showCodeDialog, setShowCodeDialog] = useState(false);
-  const [showTableDialog, setShowTableDialog] = useState(false);
+  const providerName = AI_PROVIDER_CONFIGS[aiSettings.provider].name;
 
   function handleInsertCode(config: CodeBlockConfig) {
     onInsertText(generateCodeBlock(config));
-    setShowCodeDialog(false);
+    onShowCodeDialog(false);
   }
 
   function handleInsertTable(config: TableConfig) {
     onInsertText(generateTable(config));
-    setShowTableDialog(false);
+    onShowTableDialog(false);
   }
 
   function applyInlineFormat(prefix: string, suffix: string) {
@@ -101,7 +107,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => applyInlineFormat('**', '**')}
-              title="Bold"
+              title="Bold (Alt+B)"
             >
               <Icon icon="codicon:bold" width={14} />
             </button>
@@ -109,7 +115,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => applyInlineFormat('_', '_')}
-              title="Italic"
+              title="Italic (Alt+I)"
             >
               <Icon icon="codicon:italic" width={14} />
             </button>
@@ -117,7 +123,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => applyInlineFormat('<u>', '</u>')}
-              title="Underline"
+              title="Underline (Alt+U)"
             >
               <Icon icon="lucide:underline" width={14} />
             </button>
@@ -125,7 +131,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => applyInlineFormat('~~', '~~')}
-              title="Strikethrough"
+              title="Strikethrough (Alt+S)"
             >
               <Icon icon="codicon:strikethrough" width={14} />
             </button>
@@ -137,7 +143,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => applyInlineFormat('[', '](url)')}
-              title="Link"
+              title="Link (Alt+K)"
             >
               <Icon icon="codicon:link" width={14} />
             </button>
@@ -145,7 +151,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => insertLinePrefix('1. ')}
-              title="Ordered List"
+              title="Lista Ordenada (Alt+O)"
             >
               <Icon icon="codicon:list-ordered" width={14} />
             </button>
@@ -153,7 +159,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => insertLinePrefix('- ')}
-              title="Bulleted List"
+              title="Lista com bullets (Alt+L)"
             >
               <Icon icon="codicon:list-unordered" width={14} />
             </button>
@@ -161,7 +167,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => insertLinePrefix('> ')}
-              title="Blockquote"
+              title="Blockquote (Alt+Q)"
             >
               <Icon icon="codicon:quote" width={14} />
             </button>
@@ -173,16 +179,16 @@ export function Toolbar({
           <div className={styles.headerActions}>
             <button
               className={styles.headerBtn}
-              onClick={() => setShowCodeDialog(true)}
-              title="Code"
+              onClick={() => onShowCodeDialog(true)}
+              title="Código (Alt+C)"
             >
               <Icon icon="codicon:code" width={14} />
             </button>
 
             <button
               className={styles.headerBtn}
-              onClick={() => setShowTableDialog(true)}
-              title="Table"
+              onClick={() => onShowTableDialog(true)}
+              title="Tabela (Alt+T)"
             >
               <Icon icon="codicon:table" width={14} />
             </button>
@@ -221,35 +227,26 @@ export function Toolbar({
 
           <div className={styles.topBarSep} />
 
-          {/* Theme toggle */}
-          <button
-            className={styles.themeToggle}
-            onClick={() => onThemeChange(theme === 'dark' ? 'light' : 'dark')}
-            title={theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'}
-          >
-            <Icon icon={theme === 'dark' ? 'ph:sun-bold' : 'ph:moon-bold'} width={16} />
-          </button>
-
-          <div className={styles.topBarSep} />
-
-          {/* Claude Chat toggle */}
-          <button
-            className={`${styles.claudeToggleBtn} ${chatVisible ? styles.claudeToggleActive : ''}`}
-            onClick={onToggleChat}
-            title="Claude Chat (Ctrl+Shift+C)"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M17.304 1.273c-1.26-.407-2.656-.125-3.656.782L6.895 8.427c-.984.893-1.328 2.278-.868 3.521l1.618 4.437c.336.92.188 1.945-.394 2.726l-1.782 2.38a.75.75 0 0 0 1.199.899l1.782-2.38c.863-1.152 1.092-2.668.61-4.02L7.442 11.57c-.293-.803-.077-1.699.547-2.27l6.753-6.372a2.44 2.44 0 0 1 2.308-.494c.795.257 1.375.937 1.5 1.766l.977 6.419c.165 1.088-.237 2.18-1.057 2.9L11.22 19.6a.75.75 0 0 0 1.007 1.113l7.25-6.08c1.194-1.001 1.79-2.568 1.551-4.123l-.977-6.42a3.937 3.937 0 0 0-2.747-2.817Z"
-                fill="currentColor"
-              />
-              <path
-                d="M4.577 6.289a.75.75 0 0 0-1.154.955l2.165 2.617a2.44 2.44 0 0 1 .494 2.308l-2.013 6.22a3.937 3.937 0 0 0 2.014 4.75c1.165.563 2.556.47 3.634-.24l7.03-4.618a.75.75 0 1 0-.816-1.26l-7.03 4.618a2.44 2.44 0 0 1-2.255.15 2.437 2.437 0 0 1-1.247-2.943l2.013-6.22c.386-1.192.065-2.5-.826-3.578L4.577 6.29Z"
-                fill="currentColor"
-              />
-            </svg>
-            <span>Claude</span>
-          </button>
+          {/* AI Assistant Chat toggle - only show in Electron */}
+          {isElectron() && (
+            <button
+              className={`${styles.claudeToggleBtn} ${chatVisible ? styles.claudeToggleActive : ''}`}
+              onClick={onToggleChat}
+              title={`${providerName} (Ctrl+Shift+C)`}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M17.304 1.273c-1.26-.407-2.656-.125-3.656.782L6.895 8.427c-.984.893-1.328 2.278-.868 3.521l1.618 4.437c.336.92.188 1.945-.394 2.726l-1.782 2.38a.75.75 0 0 0 1.199.899l1.782-2.38c.863-1.152 1.092-2.668.61-4.02L7.442 11.57c-.293-.803-.077-1.699.547-2.27l6.753-6.372a2.44 2.44 0 0 1 2.308-.494c.795.257 1.375.937 1.5 1.766l.977 6.419c.165 1.088-.237 2.18-1.057 2.9L11.22 19.6a.75.75 0 0 0 1.007 1.113l7.25-6.08c1.194-1.001 1.79-2.568 1.551-4.123l-.977-6.42a3.937 3.937 0 0 0-2.747-2.817Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M4.577 6.289a.75.75 0 0 0-1.154.955l2.165 2.617a2.44 2.44 0 0 1 .494 2.308l-2.013 6.22a3.937 3.937 0 0 0 2.014 4.75c1.165.563 2.556.47 3.634-.24l7.03-4.618a.75.75 0 1 0-.816-1.26l-7.03 4.618a2.44 2.44 0 0 1-2.255.15 2.437 2.437 0 0 1-1.247-2.943l2.013-6.22c.386-1.192.065-2.5-.826-3.578L4.577 6.29Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span>{providerName}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -258,13 +255,13 @@ export function Toolbar({
       {showCodeDialog && (
         <CodeBlockDialog
           onInsert={handleInsertCode}
-          onCancel={() => setShowCodeDialog(false)}
+          onCancel={() => onShowCodeDialog(false)}
         />
       )}
       {showTableDialog && (
         <TableDialog
           onInsert={handleInsertTable}
-          onCancel={() => setShowTableDialog(false)}
+          onCancel={() => onShowTableDialog(false)}
         />
       )}
     </>

@@ -1,32 +1,28 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Icon } from '@iconify/react';
-import type { ViewMode, FormatAction, FileEntry, ColorTheme } from '../types';
+import type { ViewMode, FormatAction, FileEntry, ThemeId, AISettings } from '../types';
 
 import { useFileSystem } from '../hooks/useFileSystem';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { getAISettings, saveAISettings } from '../utils/aiSettings';
 import { ActivityBar } from './ActivityBar/ActivityBar';
 import { Sidebar } from './Sidebar/Sidebar';
 import { Toolbar } from './Toolbar/Toolbar';
 import { Editor } from './Editor/Editor';
 import { CommandPalette } from './CommandPalette/CommandPalette';
 import { ContextMenu } from './ContextMenu/ContextMenu';
-import { SettingsMenu } from './SettingsPanel/SettingsPanel';
+import { SettingsDialog } from './SettingsDialog/SettingsDialog';
 import { ClaudeChat } from './ClaudeChat/ClaudeChat';
 
-type Theme = 'light' | 'dark';
+const VALID_THEMES: ThemeId[] = [
+  'matte-black', 'github-dark', 'dracula', 'monokai-pro', 'ayu-dark',
+  'matte-white', 'github-light', 'quiet-light', 'solarized-light', 'gruvbox-light',
+];
 
-function getInitialTheme(): Theme {
+function getInitialTheme(): ThemeId {
   try {
-    const saved = localStorage.getItem('markdown-editor-theme');
-    if (saved === 'light' || saved === 'dark') return saved;
-  } catch { /* ignore */ }
-  return 'dark';
-}
-
-function getInitialColorTheme(): ColorTheme {
-  try {
-    const saved = localStorage.getItem('markdown-editor-color-theme');
-    if (saved === 'matte-black' || saved === 'github-dark') return saved;
+    const saved = localStorage.getItem('markdown-editor-theme') as ThemeId;
+    if (VALID_THEMES.includes(saved)) return saved;
   } catch { /* ignore */ }
   return 'matte-black';
 }
@@ -91,36 +87,52 @@ export function App() {
   const rootEntry = USE_MOCK_DATA ? MOCK_ROOT_ENTRY : realRootEntry;
 
   const [viewMode, setViewMode] = useState<ViewMode>('editor');
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [activeTheme, setActiveTheme] = useState<ThemeId>(getInitialTheme);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showFind, setShowFind] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
-  const MOCK_CONTENT = USE_MOCK_DATA ? `# Tarefas\n\n## Sprint Atual\n\n[] - Configurar ambiente de desenvolvimento\n  [] - Instalar dependências do projeto\n  [] - Configurar variáveis de ambiente\n  [] - Testar conexão com banco de dados\n[] - Implementar autenticação\n  [x] - Criar modelo de usuário\n  [] - Implementar login com JWT\n  [] - Adicionar middleware de autorização\n[x] - Revisar pull requests\n` : '';
+  const MOCK_CONTENT = USE_MOCK_DATA ? `# Teste Mermaid
+
+\`\`\`mermaid
+mindmap
+  root((Projetos))
+    Frontend
+      React
+      Vue
+      Angular
+    Backend
+      Node.js
+      Python
+      Java
+    Mobile
+      React Native
+      Flutter
+\`\`\`
+
+Esse é um teste de diagrama mermaid.
+` : '';
 
   const [scratchContent, setScratchContent] = useState(MOCK_CONTENT);
   const [requestNewFile, setRequestNewFile] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(true);
-  const [colorTheme, setColorTheme] = useState<ColorTheme>(getInitialColorTheme);
+  const [aiSettings, setAISettings] = useState<AISettings>(getAISettings);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [chatVisible, setChatVisible] = useState(false);
+  const [showCodeDialog, setShowCodeDialog] = useState(false);
+  const [showTableDialog, setShowTableDialog] = useState(false);
   // Pending content to insert after a new file is created and opened
   const [pendingInsert, setPendingInsert] = useState<string | null>(null);
 
   // Apply theme to document root and persist
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('markdown-editor-theme', theme);
-  }, [theme]);
+    document.documentElement.setAttribute('data-theme', activeTheme);
+    localStorage.setItem('markdown-editor-theme', activeTheme);
+  }, [activeTheme]);
 
-  // Apply color theme to document root and persist
+  // Persist AI settings changes
   useEffect(() => {
-    if (colorTheme === 'matte-black') {
-      document.documentElement.removeAttribute('data-color-theme');
-    } else {
-      document.documentElement.setAttribute('data-color-theme', colorTheme);
-    }
-    localStorage.setItem('markdown-editor-color-theme', colorTheme);
-  }, [colorTheme]);
+    saveAISettings(aiSettings);
+  }, [aiSettings]);
 
   // Auto-refresh file tree when window gains focus (to detect external file changes)
   useEffect(() => {
@@ -172,24 +184,6 @@ export function App() {
     }
   }, [activeTab?.id, pendingInsert, updateContent]);
 
-  // Save Claude response as a new file in the workspace root, then insert content
-  const handleSaveAsNewFile = useCallback(async (content: string, suggestedName: string) => {
-    if (!rootEntry) {
-      // No workspace: just insert into editor
-      handleInsertText(content);
-      return;
-    }
-    try {
-      await createFile(rootEntry.path, suggestedName);
-      // After createFile, the new file becomes the active tab.
-      // Queue content insertion to fire after the tab state updates.
-      setPendingInsert(content);
-    } catch {
-      // File creation failed — fall back to inserting in current editor
-      handleInsertText(content);
-    }
-  }, [rootEntry, createFile, handleInsertText]);
-
   useKeyboardShortcuts({
     onSave: handleSave,
     onCommandPalette: () => setShowCommandPalette(true),
@@ -208,6 +202,19 @@ export function App() {
     onFormatBold: () => handleFormat('bold'),
     onFormatItalic: () => handleFormat('italic'),
     onFormatStrikethrough: () => handleFormat('strikethrough'),
+    onFormatUnderline: () => {
+      const editorApplyFormat = (window as unknown as Record<string, unknown>).__editorApplyFormat as ((prefix: string, suffix: string) => void) | undefined;
+      editorApplyFormat?.('<u>', '</u>');
+    },
+    onFormatLink: () => {
+      const editorApplyFormat = (window as unknown as Record<string, unknown>).__editorApplyFormat as ((prefix: string, suffix: string) => void) | undefined;
+      editorApplyFormat?.('[', '](url)');
+    },
+    onInsertOrderedList: () => handleInsertText('1. '),
+    onInsertBulletedList: () => handleInsertText('- '),
+    onInsertBlockquote: () => handleInsertText('> '),
+    onOpenCodeDialog: () => setShowCodeDialog(true),
+    onOpenTableDialog: () => setShowTableDialog(true),
   });
 
   // Context menu
@@ -271,21 +278,19 @@ export function App() {
       />
 
       {settingsOpen && (
-        <SettingsMenu
-          colorTheme={colorTheme}
-          onColorThemeChange={setColorTheme}
+        <SettingsDialog
+          activeTheme={activeTheme}
+          onThemeChange={setActiveTheme}
+          aiSettings={aiSettings}
+          onAISettingsChange={setAISettings}
           onClose={() => setSettingsOpen(false)}
-          anchorLeft={52}
-          anchorBottom={12}
         />
       )}
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         <Toolbar
           viewMode={viewMode}
-          theme={theme}
           onViewModeChange={setViewMode}
-          onThemeChange={setTheme}
           onInsertText={handleInsertText}
           tabs={tabs}
           activeTabId={activeTabId}
@@ -294,6 +299,11 @@ export function App() {
           onFind={() => setShowFind(true)}
           chatVisible={chatVisible}
           onToggleChat={toggleChat}
+          showCodeDialog={showCodeDialog}
+          showTableDialog={showTableDialog}
+          aiSettings={aiSettings}
+          onShowCodeDialog={setShowCodeDialog}
+          onShowTableDialog={setShowTableDialog}
         />
 
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
@@ -451,8 +461,7 @@ export function App() {
               <Editor
                 content={currentContent}
                 viewMode={viewMode}
-                theme={theme}
-                colorTheme={colorTheme}
+                activeTheme={activeTheme}
                 onChange={handleContentChange}
                 onInsertRef={insertRef}
                 showFind={showFind}
@@ -468,8 +477,7 @@ export function App() {
             activeContent={currentContent}
             activeFileName={activeTab?.name ?? (USE_MOCK_DATA ? 'README.md' : '')}
             workspacePath={rootEntry?.path}
-            onInsertToEditor={handleInsertText}
-            onSaveAsNewFile={handleSaveAsNewFile}
+            aiSettings={aiSettings}
           />
         </div>
       </div>
