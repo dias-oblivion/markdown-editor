@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 import elkLayouts from '@mermaid-js/layout-elk';
 import { useMarkdown } from '../../hooks/useMarkdown';
@@ -72,19 +72,31 @@ function toggleCheckboxInSource(source: string, index: number, isChecked: boolea
   return lines.join('\n');
 }
 
+const LIGHT_THEMES = new Set([
+  'matte-white', 'github-light', 'quiet-light', 'solarized-light', 'gruvbox-light',
+]);
+
 function getMermaidTheme(): 'dark' | 'default' {
-  return document.documentElement.getAttribute('data-theme') === 'light' ? 'default' : 'dark';
+  const t = document.documentElement.getAttribute('data-theme') ?? '';
+  return LIGHT_THEMES.has(t) ? 'default' : 'dark';
 }
 
 export function MarkdownPreview({ source, onToggleCheckbox }: MarkdownPreviewProps) {
   const html = useMarkdown(source);
   const ref = useRef<HTMLDivElement>(null);
+  const [processedHtml, setProcessedHtml] = useState<string>('');
 
   useEffect(() => {
     if (!ref.current || !html) return;
 
+    // Set the HTML first
+    ref.current.innerHTML = html;
+
     const blocks = ref.current.querySelectorAll<HTMLElement>('pre code.language-mermaid');
-    if (!blocks.length) return;
+    if (!blocks.length) {
+      setProcessedHtml(html);
+      return;
+    }
 
     mermaid.initialize({ startOnLoad: false, theme: getMermaidTheme(), layout: 'elk' });
 
@@ -99,13 +111,20 @@ export function MarkdownPreview({ source, onToggleCheckbox }: MarkdownPreviewPro
       pre.replaceWith(container);
     });
 
+    const mermaidNodes = ref.current.querySelectorAll<HTMLElement>('.mermaid');
+
     mermaid
-      .run({ nodes: Array.from(ref.current.querySelectorAll<HTMLElement>('.mermaid')) })
+      .run({ nodes: Array.from(mermaidNodes) })
+      .then(() => {
+        if (ref.current) {
+          setProcessedHtml(ref.current.innerHTML);
+        }
+      })
       .catch(console.error);
   }, [html]);
 
   useEffect(() => {
-    if (!ref.current || !onToggleCheckbox) return;
+    if (!ref.current || !onToggleCheckbox || !processedHtml) return;
 
     const checkboxes = ref.current.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
     const handlers: Array<() => void> = [];
@@ -126,13 +145,12 @@ export function MarkdownPreview({ source, onToggleCheckbox }: MarkdownPreviewPro
         checkbox.removeEventListener('change', handlers[index]);
       });
     };
-  }, [html, source, onToggleCheckbox]);
+  }, [processedHtml, source, onToggleCheckbox]);
 
   return (
     <div
       ref={ref}
       className="markdown-preview"
-      dangerouslySetInnerHTML={{ __html: html }}
     />
   );
 }
