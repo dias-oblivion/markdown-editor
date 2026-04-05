@@ -29,4 +29,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.removeAllListeners('claude:stream-token');
     ipcRenderer.removeAllListeners('claude:stream-done');
   },
+  updateAISettings: (settings: { provider: string; terminalVisible: boolean }) => {
+    ipcRenderer.send('ai:updateSettings', settings);
+  },
 });

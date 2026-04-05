@@ -1,0 +1,314 @@
+<h2>Mockup: Settings Dialog</h2>
+<p class="subtitle">Como o novo dialog de configurações poderia ficar. Clique em temas para ver a seleção.</p>
+
+<style>
+.mockup-wrapper {
+  display: flex;
+  gap: 32px;
+  margin-top: 20px;
+  align-items: flex-start;
+}
+.dialog-mockup {
+  background: #1a1a1a;
+  border: 1px solid #2e2e2e;
+  border-radius: 10px;
+  width: 560px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.dialog-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid #2a2a2a;
+}
+.dialog-titlebar h3 { margin:0; font-size:15px; color:#d4d4d4; font-weight:600; }
+.dialog-close {
+  width:22px; height:22px; border-radius:50%;
+  background:#2e2e2e; border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  color:#888; font-size:12px;
+}
+.dialog-tabs {
+  display:flex; gap:0; border-bottom:1px solid #2a2a2a;
+  padding: 0 20px;
+}
+.dialog-tab {
+  padding: 9px 14px; font-size:12px; color:#888; cursor:pointer;
+  border-bottom:2px solid transparent; margin-bottom:-1px;
+  transition: color 0.15s;
+}
+.dialog-tab.active { color:#e8a838; border-bottom-color:#e8a838; font-weight:500; }
+.dialog-body { padding: 20px; }
+
+.section-title {
+  font-size:11px; font-weight:600; letter-spacing:0.08em;
+  text-transform:uppercase; color:#666; margin:0 0 14px;
+}
+.theme-grid-mock {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.theme-swatch {
+  border-radius: 7px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.12s;
+  position: relative;
+}
+.theme-swatch:hover { border-color: rgba(255,255,255,0.2); }
+.theme-swatch.sel { border-color: #e8a838; }
+.swatch-colors {
+  height: 36px;
+  display: flex;
+}
+.sc { flex:1; }
+.swatch-label {
+  padding: 5px 6px;
+  font-size: 9.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+.check-badge {
+  position:absolute; top:4px; right:4px;
+  width:14px; height:14px; border-radius:50%;
+  background:#e8a838; color:#000;
+  font-size:8px; display:none;
+  align-items:center; justify-content:center;
+}
+.theme-swatch.sel .check-badge { display:flex; }
+
+.setting-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 10px 0; border-bottom:1px solid #232323;
+}
+.setting-row:last-child { border-bottom:none; }
+.setting-label { font-size:13px; color:#c0c0c0; }
+.setting-desc { font-size:11px; color:#666; margin-top:2px; }
+.select-mock {
+  background:#2a2a2a; border:1px solid #333; border-radius:5px;
+  padding:5px 28px 5px 10px; font-size:12px; color:#d4d4d4;
+  cursor:pointer; appearance:none; min-width:120px;
+}
+.toggle-mock {
+  width:32px; height:18px; background:#e8a838; border-radius:9px;
+  position:relative; cursor:pointer; flex-shrink:0;
+}
+.toggle-mock::after {
+  content:''; position:absolute; top:2px; right:2px;
+  width:14px; height:14px; background:#fff; border-radius:50%;
+}
+.toggle-off { background:#333; }
+.toggle-off::after { right:auto; left:2px; }
+
+/* dialog overlay bg illusion */
+.overlay-bg {
+  position:relative; background:rgba(0,0,0,0.45);
+  border-radius:8px; padding:32px 24px;
+  border:1px solid #222;
+}
+.overlay-bg::before {
+  content:'App running behind…';
+  position:absolute; top:12px; left:16px;
+  font-size:10px; color:#333;
+}
+</style>
+
+<div class="mockup-wrapper">
+  <div class="overlay-bg">
+    <div class="dialog-mockup">
+      <div class="dialog-titlebar">
+        <h3>⚙ Configurações</h3>
+        <button class="dialog-close">✕</button>
+      </div>
+      <div class="dialog-tabs">
+        <div class="dialog-tab active" onclick="switchTab(this,'appearance')">Aparência</div>
+        <div class="dialog-tab" onclick="switchTab(this,'ai')">AI Provider</div>
+        <div class="dialog-tab" onclick="switchTab(this,'editor')">Editor</div>
+      </div>
+      <div class="dialog-body" id="tab-appearance">
+        <div class="section-title">Tema</div>
+        <div class="theme-grid-mock" id="theme-grid">
+          <!-- Dark themes -->
+          <div class="theme-swatch sel" onclick="pickTheme(this)" title="Matte Black">
+            <div class="check-badge">✓</div>
+            <div class="swatch-colors">
+              <div class="sc" style="background:#111"></div>
+              <div class="sc" style="background:#1e1e1e"></div>
+              <div class="sc" style="background:#e8a838"></div>
+              <div class="sc" style="background:#5c9ce6"></div>
+            </div>
+            <div class="swatch-label" style="background:#141414;color:#888">Matte Black</div>
+          </div>
+          <div class="theme-swatch" onclick="pickTheme(this)" title="GitHub Dark">
+            <div class="check-badge">✓</div>
+            <div class="swatch-colors">
+              <div class="sc" style="background:#0d1117"></div>
+              <div class="sc" style="background:#161b22"></div>
+              <div class="sc" style="background:#2f81f7"></div>
+              <div class="sc" style="background:#3fb950"></div>
+            </div>
+            <div class="swatch-label" style="background:#0d1117;color:#666">GitHub Dark</div>
+          </div>
+          <div class="theme-swatch" onclick="pickTheme(this)" title="Dracula">
+            <div class="check-badge">✓</div>
+            <div class="swatch-colors">
+              <div class="sc" style="background:#282a36"></div>
+              <div class="sc" style="background:#1e1f29"></div>
+              <div class="sc" style="background:#bd93f9"></div>
+              <div class="sc" style="background:#ff79c6"></div>
+            </div>
+            <div class="swatch-label" style="background:#1e1f29;color:#6272a4">Dracula</div>
+          </div>
+          <div class="theme-swatch" onclick="pickTheme(this)" title="Monokai Pro">
+            <div class="check-badge">✓</div>
+            <div class="swatch-colors">
+              <div class="sc" style="background:#2d2a2e"></div>
+              <div class="sc" style="background:#221f22"></div>
+              <div class="sc" style="background:#ff6188"></div>
+              <div class="sc" style="background:#ffd866"></div>
+            </div>
+            <div class="swatch-label" style="background:#221f22;color:#5b595c">Monokai Pro</div>
+          </div>
+          <div class="theme-swatch" onclick="pickTheme(this)" title="Ayu Dark">
+            <div class="check-badge">✓</div>
+            <div class="swatch-colors">
+              <div class="sc" style="background:#0d1017"></div>
+              <div class="sc" style="background:#090e14"></div>
+              <div class="sc" style="background:#ffb454"></div>
+              <div class="sc" style="background:#59c2ff"></div>
+            </div>
+            <div class="swatch-label" style="background:#090e14;color:#3d4751">Ayu Dark</div>
+          </div>
+          <!-- Light themes -->
+          <div class="theme-swatch" onclick="pickTheme(this)" title="GitHub Light">
+            <div class="check-badge">✓</div>
+            <div class="swatch-colors">
+              <div class="sc" style="background:#ffffff"></div>
+              <div class="sc" style="background:#f6f8fa"></div>
+              <div class="sc" style="background:#0969da"></div>
+              <div class="sc" style="background:#1a7f37"></div>
+            </div>
+            <div class="swatch-label" style="background:#f6f8fa;color:#888">GitHub Light</div>
+          </div>
+          <div class="theme-swatch" onclick="pickTheme(this)" title="Quiet Light">
+            <div class="check-badge">✓</div>
+            <div class="swatch-colors">
+              <div class="sc" style="background:#f5f5f0"></div>
+              <div class="sc" style="background:#e8e8e3"></div>
+              <div class="sc" style="background:#325cc0"></div>
+              <div class="sc" style="background:#448c27"></div>
+            </div>
+            <div class="swatch-label" style="background:#e8e8e3;color:#999">Quiet Light</div>
+          </div>
+          <div class="theme-swatch" onclick="pickTheme(this)" title="Solarized Light">
+            <div class="check-badge">✓</div>
+            <div class="swatch-colors">
+              <div class="sc" style="background:#fdf6e3"></div>
+              <div class="sc" style="background:#eee8d5"></div>
+              <div class="sc" style="background:#268bd2"></div>
+              <div class="sc" style="background:#859900"></div>
+            </div>
+            <div class="swatch-label" style="background:#eee8d5;color:#aaa">Solarized Light</div>
+          </div>
+          <div class="theme-swatch" onclick="pickTheme(this)" title="Gruvbox Light">
+            <div class="check-badge">✓</div>
+            <div class="swatch-colors">
+              <div class="sc" style="background:#fbf1c7"></div>
+              <div class="sc" style="background:#ebdbb2"></div>
+              <div class="sc" style="background:#076678"></div>
+              <div class="sc" style="background:#79740e"></div>
+            </div>
+            <div class="swatch-label" style="background:#ebdbb2;color:#a89984">Gruvbox Light</div>
+          </div>
+          <div class="theme-swatch" onclick="pickTheme(this)" title="Matte White">
+            <div class="check-badge">✓</div>
+            <div class="swatch-colors">
+              <div class="sc" style="background:#ffffff"></div>
+              <div class="sc" style="background:#f5f5f5"></div>
+              <div class="sc" style="background:#d49520"></div>
+              <div class="sc" style="background:#5c9ce6"></div>
+            </div>
+            <div class="swatch-label" style="background:#f5f5f5;color:#999">Matte White</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:8px">Fonte do Editor</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Família da fonte</div>
+            <div class="setting-desc">Fonte usada no editor de markdown</div>
+          </div>
+          <select class="select-mock">
+            <option>JetBrains Mono</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Tamanho da fonte</div>
+          </div>
+          <select class="select-mock" style="min-width:80px">
+            <option>14px</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="dialog-body" id="tab-ai" style="display:none">
+        <div class="section-title">Provedor de AI</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Provider</div>
+            <div class="setting-desc">Serviço de AI para assistente de escrita</div>
+          </div>
+          <select class="select-mock">
+            <option>Claude</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Terminal</div>
+            <div class="setting-desc">Mostrar terminal integrado</div>
+          </div>
+          <div class="toggle-mock"></div>
+        </div>
+      </div>
+
+      <div class="dialog-body" id="tab-editor" style="display:none">
+        <div class="section-title" style="color:#666">Em breve...</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:200px">
+    <div class="section-title">O que muda</div>
+    <ul style="font-size:12px;color:#888;line-height:1.8;padding-left:16px;margin:0">
+      <li>Toggle sun/moon <strong style="color:#e8a838">removido</strong> da toolbar</li>
+      <li>Menu de engrenagem → abre dialog</li>
+      <li>10 temas com swatches visuais</li>
+      <li>Tabs: Aparência / AI / Editor</li>
+      <li>Fundo escurecido (overlay)</li>
+      <li>Fecha com Esc ou ✕</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+function pickTheme(el) {
+  document.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('sel'));
+  el.classList.add('sel');
+  toggleSelect(el);
+}
+function switchTab(btn, tab) {
+  document.querySelectorAll('.dialog-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.dialog-body').forEach(b => b.style.display = 'none');
+  document.getElementById('tab-' + tab).style.display = 'block';
+}
+</script>

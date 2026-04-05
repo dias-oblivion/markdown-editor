@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@iconify/react';
 import { useClaudeChat } from '../../hooks/useClaudeChat';
-import type { ChatMessage } from '../../types';
+import type { AISettings, ChatMessage } from '../../types';
+import { AI_PROVIDER_CONFIGS } from '../../types';
 import styles from './ClaudeChat.module.css';
 
 interface ClaudeChatProps {
@@ -10,8 +11,7 @@ interface ClaudeChatProps {
   activeContent: string;
   activeFileName: string;
   workspacePath?: string;
-  onInsertToEditor: (content: string) => void;
-  onSaveAsNewFile: (content: string, suggestedName: string) => void;
+  aiSettings?: AISettings;
 }
 
 const SUGGESTIONS = [
@@ -40,7 +40,7 @@ const PRESETS = [
     label: 'Diagrama',
     icon: 'codicon:type-hierarchy-sub',
     prompt: (content: string) =>
-      `Analise este conteúdo e gere um diagrama Mermaid representando os conceitos-chave:\n\n${content}`,
+      `Analise este conteúdo e gere um diagrama de sequência Mermaid representando os conceitos-chave:\n\n${content}`,
   },
   {
     id: 'tasks',
@@ -136,6 +136,62 @@ function RenderLine({ line }: { line: string }) {
   return <InlineText text={line} />;
 }
 
+// Component for rendering individual content blocks with copy buttons
+function ContentBlock({
+  content,
+  type,
+  language
+}: {
+  content: string;
+  type: 'code' | 'mermaid' | 'text';
+  language?: string;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  // Para blocos de texto, não mostrar botão de copiar
+  if (type === 'text') {
+    const lines = content.split('\n');
+    return (
+      <div className={styles.textSegment}>
+        {lines.map((line, j) => {
+          if (!line.trim()) {
+            return j < lines.length - 1 ? <div key={j} className={styles.msgEmptyLine} /> : null;
+          }
+          return (
+            <div key={j} className={styles.msgLine}>
+              <RenderLine line={line} />
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Para blocos de código/diagrama
+  return (
+    <div className={styles.contentBlock}>
+      <button
+        className={`${styles.copyBlockBtn} ${copied ? styles.copyBlockBtnSuccess : ''}`}
+        onClick={handleCopy}
+        title={copied ? 'Copiado!' : 'Copiar bloco'}
+      >
+        <Icon icon={copied ? 'codicon:check' : 'codicon:copy'} width={11} />
+      </button>
+
+      <div className={styles.codeBlock}>
+        {language && <div className={styles.codeLang}>{language}</div>}
+        <pre className={styles.codePre}><code>{content}</code></pre>
+      </div>
+    </div>
+  );
+}
+
 // Renders message content — handles fenced code blocks and block-level markdown
 function MessageContent({ content }: { content: string }) {
   if (!content) {
@@ -155,29 +211,20 @@ function MessageContent({ content }: { content: string }) {
         if (part.startsWith('```')) {
           const firstLine = part.slice(3).split('\n')[0].trim();
           const code = part.slice(3 + firstLine.length).trimStart().replace(/```$/, '').trimEnd();
+          const isMermaid = firstLine.toLowerCase() === 'mermaid';
+
           return (
-            <div key={i} className={styles.codeBlock}>
-              {firstLine && <div className={styles.codeLang}>{firstLine}</div>}
-              <pre className={styles.codePre}><code>{code}</code></pre>
-            </div>
+            <ContentBlock
+              key={i}
+              content={code}
+              type={isMermaid ? 'mermaid' : 'code'}
+              language={firstLine || undefined}
+            />
           );
         }
-        // Render line-by-line with block-level formatting
-        const lines = part.split('\n');
-        return (
-          <div key={i} className={styles.textSegment}>
-            {lines.map((line, j) => {
-              if (!line.trim()) {
-                return j < lines.length - 1 ? <div key={j} className={styles.msgEmptyLine} /> : null;
-              }
-              return (
-                <div key={j} className={styles.msgLine}>
-                  <RenderLine line={line} />
-                </div>
-              );
-            })}
-          </div>
-        );
+
+        // Text content
+        return <ContentBlock key={i} content={part} type="text" />;
       })}
     </div>
   );
@@ -187,25 +234,8 @@ function formatTime(ts: number): string {
   return new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
-function MessageBubble({
-  message,
-  onInsert,
-  onSaveAsNew,
-  suggestedName,
-}: {
-  message: ChatMessage;
-  onInsert: (content: string) => void;
-  onSaveAsNew: (content: string, name: string) => void;
-  suggestedName: string;
-}) {
-  const [copied, setCopied] = useState(false);
+function MessageBubble({ message, providerName }: { message: ChatMessage; providerName: string }) {
   const isUser = message.role === 'user';
-
-  function handleCopy() {
-    navigator.clipboard.writeText(message.content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
 
   return (
     <div className={`${styles.messageWrapper} ${isUser ? styles.userWrapper : styles.assistantWrapper}`}>
@@ -221,7 +251,7 @@ function MessageBubble({
         {/* Header: role + time */}
         <div className={styles.messageHeader}>
           <span className={`${styles.messageRole} ${isUser ? styles.userRole : styles.claudeRole}`}>
-            {isUser ? 'Você' : 'Claude'}
+            {isUser ? 'Você' : providerName}
           </span>
           <span className={styles.messageTime}>{formatTime(message.timestamp)}</span>
         </div>
@@ -234,24 +264,6 @@ function MessageBubble({
         ].filter(Boolean).join(' ')}>
           <MessageContent content={message.content} />
         </div>
-
-        {/* Actions (only for successful assistant messages) */}
-        {!isUser && message.content && !message.content.startsWith('❌') && (
-          <div className={styles.messageActions}>
-            <button className={styles.actionBtn} onClick={() => onInsert(message.content)} title="Inserir no editor">
-              <Icon icon="codicon:insert" width={11} />
-              Inserir
-            </button>
-            <button className={styles.actionBtn} onClick={() => onSaveAsNew(message.content, suggestedName)} title="Salvar como novo arquivo">
-              <Icon icon="codicon:save" width={11} />
-              Salvar como
-            </button>
-            <button className={`${styles.actionBtn} ${copied ? styles.actionBtnSuccess : ''}`} onClick={handleCopy} title="Copiar">
-              <Icon icon={copied ? 'codicon:check' : 'codicon:copy'} width={11} />
-              {copied ? 'Copiado!' : 'Copiar'}
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -263,10 +275,10 @@ export function ClaudeChat({
   activeContent,
   activeFileName,
   workspacePath,
-  onInsertToEditor,
-  onSaveAsNewFile,
+  aiSettings,
 }: ClaudeChatProps) {
   const { messages, isLoading, sendMessage, clearHistory } = useClaudeChat({ workspacePath });
+  const providerName = aiSettings ? AI_PROVIDER_CONFIGS[aiSettings.provider].name : 'Claude Chat';
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -284,13 +296,6 @@ export function ClaudeChat({
     }
   }, [visible]);
 
-  // Auto-resize textarea
-  useEffect(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
-  }, [input]);
 
   function handleSend() {
     const text = input.trim();
@@ -316,17 +321,13 @@ export function ClaudeChat({
     sendMessage(prompt);
   }
 
-  const baseName = activeFileName
-    ? activeFileName.replace(/\.md$/, '')
-    : 'claude-response';
-
   return (
     <div className={`${styles.chatSidebar} ${!visible ? styles.collapsed : ''}`}>
       {/* Header */}
       <div className={styles.chatHeader}>
         <div className={styles.chatHeaderTitle}>
           <ClaudeIconSvg size={16} className={styles.chatHeaderIcon} />
-          <span>Claude Chat</span>
+          <span>Assistente de IA</span>
         </div>
         <div className={styles.chatHeaderActions}>
           {messages.length > 0 && (
@@ -410,16 +411,14 @@ export function ClaudeChat({
               <MessageBubble
                 key={message.id}
                 message={message}
-                onInsert={onInsertToEditor}
-                onSaveAsNew={onSaveAsNewFile}
-                suggestedName={`${baseName}-claude.md`}
+                providerName={providerName}
               />
             ))}
             {isLoading && messages[messages.length - 1]?.role === 'assistant' &&
               messages[messages.length - 1]?.content === '' && (
               <div className={styles.thinkingRow}>
                 <div className={styles.thinkingDot} />
-                <span>Claude está pensando…</span>
+                <span>{providerName} está pensando…</span>
               </div>
             )}
           </>
@@ -436,8 +435,8 @@ export function ClaudeChat({
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isLoading ? 'Aguardando resposta…' : 'Mensagem para o Claude…'}
-            rows={1}
+            placeholder={isLoading ? 'Aguardando resposta…' : `Mensagem para ${providerName}…`}
+            rows={3}
             disabled={isLoading}
           />
         </div>

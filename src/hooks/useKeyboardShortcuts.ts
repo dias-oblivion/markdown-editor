@@ -11,6 +11,13 @@ interface ShortcutHandlers {
   onFormatBold?: () => void;
   onFormatItalic?: () => void;
   onFormatStrikethrough?: () => void;
+  onFormatUnderline?: () => void;
+  onFormatLink?: () => void;
+  onInsertOrderedList?: () => void;
+  onInsertBulletedList?: () => void;
+  onInsertBlockquote?: () => void;
+  onOpenCodeDialog?: () => void;
+  onOpenTableDialog?: () => void;
 }
 
 export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
@@ -66,6 +73,41 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       if (e.altKey && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
         handlers.onFormatStrikethrough?.();
+      }
+
+      if (e.altKey && (e.key === 'u' || e.key === 'U')) {
+        e.preventDefault();
+        handlers.onFormatUnderline?.();
+      }
+
+      if (e.altKey && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        handlers.onFormatLink?.();
+      }
+
+      if (e.altKey && (e.key === 'o' || e.key === 'O')) {
+        e.preventDefault();
+        handlers.onInsertOrderedList?.();
+      }
+
+      if (e.altKey && (e.key === 'l' || e.key === 'L')) {
+        e.preventDefault();
+        handlers.onInsertBulletedList?.();
+      }
+
+      if (e.altKey && (e.key === 'q' || e.key === 'Q')) {
+        e.preventDefault();
+        handlers.onInsertBlockquote?.();
+      }
+
+      if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+        e.preventDefault();
+        handlers.onOpenCodeDialog?.();
+      }
+
+      if (e.altKey && (e.key === 't' || e.key === 'T')) {
+        e.preventDefault();
+        handlers.onOpenTableDialog?.();
       }
     }
 

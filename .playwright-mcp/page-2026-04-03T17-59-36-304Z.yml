@@ -1,0 +1,149 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - button "Explorer (Ctrl+B)" [ref=e5] [cursor=pointer]:
+      - img [ref=e139]
+      - text: Explorer (Ctrl+B)
+    - button "Settings" [ref=e7] [cursor=pointer]:
+      - img [ref=e141]
+      - text: Settings
+  - generic [ref=e8]:
+    - generic [ref=e9]:
+      - generic [ref=e10]: Explorer
+      - generic [ref=e11]:
+        - button "New File (Ctrl+N)" [ref=e12] [cursor=pointer]:
+          - img [ref=e143]
+        - button "New Folder" [ref=e13] [cursor=pointer]:
+          - img [ref=e145]
+        - button "Refresh Explorer" [ref=e14] [cursor=pointer]:
+          - img [ref=e147]
+        - button "Open Folder" [ref=e15] [cursor=pointer]:
+          - img [ref=e149]
+    - generic [ref=e17]:
+      - generic [ref=e18] [cursor=pointer]:
+        - img [ref=e151]
+        - img [ref=e153]
+        - generic [ref=e21]: my-project
+      - generic [ref=e23] [cursor=pointer]:
+        - img [ref=e155]
+        - img [ref=e157]
+        - generic [ref=e26]: docs
+      - generic [ref=e28] [cursor=pointer]:
+        - img [ref=e159]
+        - img [ref=e161]
+        - generic [ref=e31]: notes
+      - generic "/mock/my-project/README.md" [ref=e32]:
+        - img [ref=e163]
+        - generic [ref=e34]: README.md
+      - generic "/mock/my-project/CONTRIBUTING.md" [ref=e35]:
+        - img [ref=e167]
+        - generic [ref=e37]: CONTRIBUTING.md
+      - generic "/mock/my-project/LICENSE" [ref=e38]:
+        - img [ref=e171]
+        - generic [ref=e40]: LICENSE
+  - generic [ref=e41]:
+    - generic [ref=e42]:
+      - generic [ref=e43]:
+        - generic [ref=e44]: Markdown Editor
+        - generic [ref=e46]:
+          - button "Bold" [ref=e47] [cursor=pointer]:
+            - img [ref=e232]
+          - button "Italic" [ref=e48] [cursor=pointer]:
+            - img [ref=e234]
+          - button "Underline" [ref=e49] [cursor=pointer]:
+            - img [ref=e236]
+          - button "Strikethrough" [ref=e50] [cursor=pointer]:
+            - img [ref=e238]
+        - generic [ref=e52]:
+          - button "Link" [ref=e53] [cursor=pointer]:
+            - img [ref=e240]
+          - button "Ordered List" [ref=e54] [cursor=pointer]:
+            - img [ref=e242]
+          - button "Bulleted List" [ref=e55] [cursor=pointer]:
+            - img [ref=e244]
+          - button "Blockquote" [ref=e56] [cursor=pointer]:
+            - img [ref=e246]
+        - generic [ref=e58]:
+          - button "Code" [ref=e59] [cursor=pointer]:
+            - img [ref=e248]
+          - button "Table" [ref=e60] [cursor=pointer]:
+            - img [ref=e250]
+          - button "Find (Ctrl+F)" [ref=e61] [cursor=pointer]:
+            - img [ref=e252]
+      - generic [ref=e62]:
+        - generic [ref=e63]:
+          - button "Edit" [ref=e64] [cursor=pointer]:
+            - img [ref=e254]
+            - generic [ref=e65]: Edit
+          - button "Preview" [active] [ref=e66] [cursor=pointer]:
+            - img [ref=e256]
+            - generic [ref=e67]: Preview
+        - button "Switch to Light" [ref=e69] [cursor=pointer]:
+          - img [ref=e258]
+        - button "Claude" [ref=e71] [cursor=pointer]:
+          - img [ref=e72]
+          - generic [ref=e75]: Claude
+    - generic [ref=e76]:
+      - generic [ref=e78]:
+        - generic [ref=e260]:
+          - generic [ref=e261]: Preview
+          - generic [ref=e263]:
+            - heading "Teste Mermaid" [level=1] [ref=e264]
+            - code [ref=e266]:
+              - text: mindmap
+              - generic [ref=e267]: root((Projetos))
+              - text: Frontend React Vue Angular Backend Node.js Python Java Mobile React Native Flutter
+            - paragraph [ref=e268]: Esse é um teste de diagrama mermaid.
+        - generic [ref=e127]:
+          - generic [ref=e128]:
+            - generic [ref=e129]: "26"
+            - text: words
+          - generic [ref=e131]:
+            - generic [ref=e132]: "240"
+            - text: chars
+          - generic [ref=e133]: 241 B
+          - generic [ref=e135]: 1 min read
+          - generic [ref=e137]:
+            - text: Ln
+            - generic [ref=e138]: "1"
+      - generic:
+        - generic:
+          - generic:
+            - img
+            - generic: Claude Chat
+          - generic:
+            - button "Fechar (Ctrl+Shift+C)":
+              - img
+        - generic:
+          - generic: README.md
+          - generic: 26 palavras
+        - generic:
+          - button "Reescrever":
+            - img
+            - generic: Reescrever
+          - button "Brainstorm":
+            - img
+            - generic: Brainstorm
+          - button "Diagrama":
+            - img
+            - generic: Diagrama
+          - button "Tarefas":
+            - img
+            - generic: Tarefas
+        - generic:
+          - generic:
+            - generic:
+              - img
+            - paragraph: Como posso ajudar?
+            - paragraph: Faça perguntas sobre o conteúdo, peça para reescrever, gerar tarefas ou brainstorm de ideias.
+            - generic:
+              - button "Resuma os pontos principais": Resuma os pontos principais
+              - button "O que posso melhorar neste texto?": O que posso melhorar neste texto?
+              - button "Explique este conteúdo": Explique este conteúdo
+        - generic:
+          - generic:
+            - textbox "Mensagem para o Claude…"
+          - generic:
+            - generic: Enter enviar · Shift+Enter nova linha
+            - button "Enviar" [disabled]:
+              - img
+              - text: Enviar

@@ -1,0 +1,169 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - button "Explorer (Ctrl+B)" [ref=e5] [cursor=pointer]: Explorer (Ctrl+B)
+    - button "Settings" [ref=e7] [cursor=pointer]: Settings
+  - generic [ref=e8]:
+    - generic [ref=e9]:
+      - generic [ref=e10]: Explorer
+      - generic [ref=e11]:
+        - button "New File (Ctrl+N)" [ref=e12] [cursor=pointer]
+        - button "New Folder" [ref=e13] [cursor=pointer]
+        - button "Refresh Explorer" [ref=e14] [cursor=pointer]
+        - button "Open Folder" [ref=e15] [cursor=pointer]
+    - generic [ref=e17]:
+      - generic [ref=e21] [cursor=pointer]: my-project
+      - generic [ref=e26] [cursor=pointer]: docs
+      - generic [ref=e31] [cursor=pointer]: notes
+      - generic "/mock/my-project/README.md" [ref=e32]:
+        - generic [ref=e34]: README.md
+      - generic "/mock/my-project/CONTRIBUTING.md" [ref=e35]:
+        - generic [ref=e37]: CONTRIBUTING.md
+      - generic "/mock/my-project/LICENSE" [ref=e38]:
+        - generic [ref=e40]: LICENSE
+  - generic [ref=e41]:
+    - generic [ref=e42]:
+      - generic [ref=e43]:
+        - generic [ref=e44]: Markdown Editor
+        - generic [ref=e46]:
+          - button "Bold" [ref=e47] [cursor=pointer]
+          - button "Italic" [ref=e48] [cursor=pointer]
+          - button "Underline" [ref=e49] [cursor=pointer]
+          - button "Strikethrough" [ref=e50] [cursor=pointer]
+        - generic [ref=e52]:
+          - button "Link" [ref=e53] [cursor=pointer]
+          - button "Ordered List" [ref=e54] [cursor=pointer]
+          - button "Bulleted List" [ref=e55] [cursor=pointer]
+          - button "Blockquote" [ref=e56] [cursor=pointer]
+        - generic [ref=e58]:
+          - button "Code" [ref=e59] [cursor=pointer]
+          - button "Table" [ref=e60] [cursor=pointer]
+          - button "Find (Ctrl+F)" [ref=e61] [cursor=pointer]
+      - generic [ref=e62]:
+        - generic [ref=e63]:
+          - button "Edit" [ref=e64] [cursor=pointer]:
+            - generic [ref=e65]: Edit
+          - button "Preview" [ref=e66] [cursor=pointer]:
+            - generic [ref=e67]: Preview
+        - button "Switch to Light" [ref=e69] [cursor=pointer]
+        - button "Claude" [ref=e71] [cursor=pointer]:
+          - img [ref=e72]
+          - generic [ref=e75]: Claude
+    - generic [ref=e76]:
+      - generic [ref=e78]:
+        - generic [ref=e83]:
+          - generic [ref=e85]:
+            - generic [ref=e86]: "1"
+            - generic [ref=e87]: "2"
+            - generic [ref=e88]: "3"
+            - generic [ref=e89]: "4"
+            - generic [ref=e90]: "5"
+            - generic [ref=e91]: "6"
+            - generic [ref=e92]: "7"
+            - generic [ref=e93]: "8"
+            - generic [ref=e94]: "9"
+            - generic [ref=e95]: "10"
+            - generic [ref=e96]: "11"
+            - generic [ref=e97]: "12"
+            - generic [ref=e98]: "13"
+            - generic [ref=e99]: "14"
+            - generic [ref=e100]: "15"
+            - generic [ref=e101]: "16"
+            - generic [ref=e102]: "17"
+            - generic [ref=e103]: "18"
+            - generic [ref=e104]: "19"
+            - generic [ref=e105]: "20"
+            - generic [ref=e106]: "21"
+            - generic [ref=e107]: "22"
+            - generic [ref=e108]: "23"
+            - generic [ref=e109]: "24"
+            - generic [ref=e110]: "25"
+            - generic [ref=e111]: "26"
+            - generic [ref=e112]: "27"
+            - generic [ref=e113]: "28"
+            - generic [ref=e114]: "29"
+            - generic [ref=e115]: "30"
+            - generic [ref=e116]: "31"
+            - generic [ref=e117]: "32"
+            - generic [ref=e118]: "33"
+            - generic [ref=e119]: "34"
+            - generic [ref=e120]: "35"
+          - textbox [ref=e121]:
+            - generic [ref=e122]: "# Anotações Q1 Abril"
+            - generic [ref=e124]: "```mermaid"
+            - generic [ref=e125]: mindmap
+            - generic [ref=e126]: root((Anotações Q1 Abril))
+            - generic [ref=e127]: Saúde & Cuidados Pessoais
+            - generic [ref=e128]: "[x] Comprar mx-01 Principia"
+            - generic [ref=e129]: "[ ] Manipular minoxidil"
+            - generic [ref=e130]: "[x] Comprar creme Eucerin anti-pigment"
+            - generic [ref=e131]: "[x] Comprar pente"
+            - generic [ref=e132]: "[x] Comprar pomada modeladora e spray de sal"
+            - generic [ref=e133]: Educação
+            - generic [ref=e134]: "[ ] Estudar para Univesp"
+            - generic [ref=e135]: "[ ] Curso de Java"
+            - generic [ref=e136]: Fitness
+            - generic [ref=e137]: "[x] Voltar a treinar"
+            - generic [ref=e138]: Assinaturas & Serviços
+            - generic [ref=e139]: "[ ] Assinar a Manual"
+            - generic [ref=e140]: "[ ] Tokens Claude"
+            - generic [ref=e141]: Limpeza
+            - generic [ref=e142]: "[ ] Comprar luvas"
+            - generic [ref=e143]: Tarefas do Dia
+            - generic [ref=e144]: "[x] Fazer arroz"
+            - generic [ref=e145]: "[x] Almoçar"
+            - generic [ref=e146]: Planejamento Financeiro
+            - generic [ref=e147]: "[x] Verificar Cruzeiro"
+            - generic [ref=e148]: "[x] Olhar contas e faturas"
+            - generic [ref=e149]: "[x] Fazer compras"
+            - generic [ref=e150]: Lazer
+            - generic [ref=e151]: "[ ] Leitura e música com whisky"
+            - generic [ref=e152]: "[ ] 3 Partidas de League"
+            - generic [ref=e153]: "```"
+            - generic [ref=e155]: Esse é um mindmap das minhas tarefas e objetivos para o primeiro trimestre de abril.
+        - generic [ref=e157]:
+          - generic [ref=e158]:
+            - generic [ref=e159]: "121"
+            - text: words
+          - generic [ref=e161]:
+            - generic [ref=e162]: "855"
+            - text: chars
+          - generic [ref=e163]: 866 B
+          - generic [ref=e165]: 1 min read
+          - generic [ref=e167]:
+            - text: Ln
+            - generic [ref=e168]: "1"
+      - generic:
+        - generic:
+          - generic:
+            - img
+            - generic: Claude Chat
+          - generic:
+            - button "Fechar (Ctrl+Shift+C)"
+        - generic:
+          - generic: README.md
+          - generic: 121 palavras
+        - generic:
+          - button "Reescrever":
+            - generic: Reescrever
+          - button "Brainstorm":
+            - generic: Brainstorm
+          - button "Diagrama":
+            - generic: Diagrama
+          - button "Tarefas":
+            - generic: Tarefas
+        - generic:
+          - generic:
+            - generic:
+              - img
+            - paragraph: Como posso ajudar?
+            - paragraph: Faça perguntas sobre o conteúdo, peça para reescrever, gerar tarefas ou brainstorm de ideias.
+            - generic:
+              - button "Resuma os pontos principais": Resuma os pontos principais
+              - button "O que posso melhorar neste texto?": O que posso melhorar neste texto?
+              - button "Explique este conteúdo": Explique este conteúdo
+        - generic:
+          - generic:
+            - textbox "Mensagem para o Claude…"
+          - generic:
+            - generic: Enter enviar · Shift+Enter nova linha
+            - button "Enviar" [disabled]: Enviar

@@ -479,6 +479,52 @@
   color: var(--text-primary);
 }
 
+/* Content block wrapper with copy button */
+.contentBlock {
+  position: relative;
+  margin: 0.75em 0;
+}
+
+.copyBlockBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--transition-fast);
+  z-index: 10;
+}
+
+.contentBlock:hover .copyBlockBtn {
+  opacity: 1;
+}
+
+.copyBlockBtn:hover {
+  border-color: #d9773e;
+  color: #d9773e;
+  background: var(--bg-tertiary);
+}
+
+.copyBlockBtn:active {
+  transform: scale(0.95);
+}
+
+.copyBlockBtnSuccess {
+  border-color: #22c55e !important;
+  color: #22c55e !important;
+  background: rgba(34, 197, 94, 0.1) !important;
+  opacity: 1 !important;
+}
+
 /* Typing dots */
 .typingDots {
   display: inline-flex;
@@ -584,8 +630,7 @@
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   box-sizing: border-box;
   display: block;
-  min-height: 38px;
-  max-height: 120px;
+  height: 66px;
   overflow-y: auto;
 }
 

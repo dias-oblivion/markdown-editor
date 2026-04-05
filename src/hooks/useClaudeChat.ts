@@ -115,12 +115,12 @@ export function useClaudeChat({ workspacePath }: UseClaudeChatOptions = {}): Use
           updateAssistant(token);
         });
 
-        api.onChatDone((result: { success: boolean }) => {
+        api.onChatDone((result: { success: boolean; error?: string }) => {
           api.removeChatListeners();
           if (result.success) {
             resolve();
           } else {
-            reject(new Error('Claude CLI finalizou com erro'));
+            reject(new Error(result.error || 'AI CLI finalizou com erro'));
           }
         });
 

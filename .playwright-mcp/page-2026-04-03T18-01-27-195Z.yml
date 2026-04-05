@@ -1,0 +1,139 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - button "Explorer (Ctrl+B)" [ref=e5] [cursor=pointer]: Explorer (Ctrl+B)
+    - button "Settings" [ref=e7] [cursor=pointer]: Settings
+  - generic [ref=e8]:
+    - generic [ref=e9]:
+      - generic [ref=e10]: Explorer
+      - generic [ref=e11]:
+        - button "New File (Ctrl+N)" [ref=e12] [cursor=pointer]
+        - button "New Folder" [ref=e13] [cursor=pointer]
+        - button "Refresh Explorer" [ref=e14] [cursor=pointer]
+        - button "Open Folder" [ref=e15] [cursor=pointer]
+    - generic [ref=e17]:
+      - generic [ref=e21] [cursor=pointer]: my-project
+      - generic [ref=e26] [cursor=pointer]: docs
+      - generic [ref=e31] [cursor=pointer]: notes
+      - generic "/mock/my-project/README.md" [ref=e32]:
+        - generic [ref=e34]: README.md
+      - generic "/mock/my-project/CONTRIBUTING.md" [ref=e35]:
+        - generic [ref=e37]: CONTRIBUTING.md
+      - generic "/mock/my-project/LICENSE" [ref=e38]:
+        - generic [ref=e40]: LICENSE
+  - generic [ref=e41]:
+    - generic [ref=e42]:
+      - generic [ref=e43]:
+        - generic [ref=e44]: Markdown Editor
+        - generic [ref=e46]:
+          - button "Bold" [ref=e47] [cursor=pointer]
+          - button "Italic" [ref=e48] [cursor=pointer]
+          - button "Underline" [ref=e49] [cursor=pointer]
+          - button "Strikethrough" [ref=e50] [cursor=pointer]
+        - generic [ref=e52]:
+          - button "Link" [ref=e53] [cursor=pointer]
+          - button "Ordered List" [ref=e54] [cursor=pointer]
+          - button "Bulleted List" [ref=e55] [cursor=pointer]
+          - button "Blockquote" [ref=e56] [cursor=pointer]
+        - generic [ref=e58]:
+          - button "Code" [ref=e59] [cursor=pointer]
+          - button "Table" [ref=e60] [cursor=pointer]
+          - button "Find (Ctrl+F)" [ref=e61] [cursor=pointer]
+      - generic [ref=e62]:
+        - generic [ref=e63]:
+          - button "Edit" [ref=e64] [cursor=pointer]:
+            - generic [ref=e65]: Edit
+          - button "Preview" [ref=e66] [cursor=pointer]:
+            - generic [ref=e67]: Preview
+        - button "Switch to Light" [ref=e69] [cursor=pointer]
+        - button "Claude" [ref=e71] [cursor=pointer]:
+          - img [ref=e72]
+          - generic [ref=e75]: Claude
+    - generic [ref=e76]:
+      - generic [ref=e78]:
+        - generic [ref=e83]:
+          - generic [ref=e85]:
+            - generic [ref=e86]: "1"
+            - generic [ref=e87]: "2"
+            - generic [ref=e88]: "3"
+            - generic [ref=e89]: "4"
+            - generic [ref=e90]: "5"
+            - generic [ref=e91]: "6"
+            - generic [ref=e92]: "7"
+            - generic [ref=e93]: "8"
+            - generic [ref=e94]: "9"
+            - generic [ref=e95]: "10"
+            - generic [ref=e96]: "11"
+            - generic [ref=e97]: "12"
+            - generic [ref=e98]: "13"
+            - generic [ref=e99]: "14"
+            - generic [ref=e100]: "15"
+            - generic [ref=e101]: "16"
+            - generic [ref=e102]: "17"
+            - generic [ref=e103]: "18"
+            - generic [ref=e104]: "19"
+            - generic [ref=e105]: "20"
+          - textbox [ref=e106]:
+            - generic [ref=e107]: "# Teste Mermaid"
+            - generic [ref=e109]: "```mermaid"
+            - generic [ref=e110]: mindmap
+            - generic [ref=e111]: root((Projetos))
+            - generic [ref=e112]: Frontend
+            - generic [ref=e113]: React
+            - generic [ref=e114]: Vue
+            - generic [ref=e115]: Angular
+            - generic [ref=e116]: Backend
+            - generic [ref=e117]: Node.js
+            - generic [ref=e118]: Python
+            - generic [ref=e119]: Java
+            - generic [ref=e120]: Mobile
+            - generic [ref=e121]: React Native
+            - generic [ref=e122]: Flutter
+            - generic [ref=e123]: "```"
+            - generic [ref=e125]: Esse é um teste de diagrama mermaid.
+        - generic [ref=e127]:
+          - generic [ref=e128]:
+            - generic [ref=e129]: "26"
+            - text: words
+          - generic [ref=e131]:
+            - generic [ref=e132]: "240"
+            - text: chars
+          - generic [ref=e133]: 241 B
+          - generic [ref=e135]: 1 min read
+          - generic [ref=e137]:
+            - text: Ln
+            - generic [ref=e138]: "1"
+      - generic:
+        - generic:
+          - generic:
+            - img
+            - generic: Claude Chat
+          - generic:
+            - button "Fechar (Ctrl+Shift+C)"
+        - generic:
+          - generic: README.md
+          - generic: 26 palavras
+        - generic:
+          - button "Reescrever":
+            - generic: Reescrever
+          - button "Brainstorm":
+            - generic: Brainstorm
+          - button "Diagrama":
+            - generic: Diagrama
+          - button "Tarefas":
+            - generic: Tarefas
+        - generic:
+          - generic:
+            - generic:
+              - img
+            - paragraph: Como posso ajudar?
+            - paragraph: Faça perguntas sobre o conteúdo, peça para reescrever, gerar tarefas ou brainstorm de ideias.
+            - generic:
+              - button "Resuma os pontos principais": Resuma os pontos principais
+              - button "O que posso melhorar neste texto?": O que posso melhorar neste texto?
+              - button "Explique este conteúdo": Explique este conteúdo
+        - generic:
+          - generic:
+            - textbox "Mensagem para o Claude…"
+          - generic:
+            - generic: Enter enviar · Shift+Enter nova linha
+            - button "Enviar" [disabled]: Enviar

@@ -1,0 +1,174 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - button "Explorer (Ctrl+B)" [ref=e5] [cursor=pointer]:
+      - img [ref=e169]
+      - text: Explorer (Ctrl+B)
+    - button "Settings" [ref=e7] [cursor=pointer]:
+      - img [ref=e171]
+      - text: Settings
+  - generic [ref=e8]:
+    - generic [ref=e9]:
+      - generic [ref=e10]: Explorer
+      - generic [ref=e11]:
+        - button "New File (Ctrl+N)" [ref=e12] [cursor=pointer]:
+          - img [ref=e173]
+        - button "New Folder" [ref=e13] [cursor=pointer]:
+          - img [ref=e175]
+        - button "Refresh Explorer" [ref=e14] [cursor=pointer]:
+          - img [ref=e177]
+        - button "Open Folder" [ref=e15] [cursor=pointer]:
+          - img [ref=e179]
+    - generic [ref=e17]:
+      - generic [ref=e18] [cursor=pointer]:
+        - img [ref=e181]
+        - img [ref=e183]
+        - generic [ref=e21]: my-project
+      - generic [ref=e23] [cursor=pointer]:
+        - img [ref=e185]
+        - img [ref=e187]
+        - generic [ref=e26]: docs
+      - generic [ref=e28] [cursor=pointer]:
+        - img [ref=e189]
+        - img [ref=e191]
+        - generic [ref=e31]: notes
+      - generic "/mock/my-project/README.md" [ref=e32]:
+        - img [ref=e193]
+        - generic [ref=e34]: README.md
+      - generic "/mock/my-project/CONTRIBUTING.md" [ref=e35]:
+        - img [ref=e197]
+        - generic [ref=e37]: CONTRIBUTING.md
+      - generic "/mock/my-project/LICENSE" [ref=e38]:
+        - img [ref=e201]
+        - generic [ref=e40]: LICENSE
+  - generic [ref=e41]:
+    - generic [ref=e42]:
+      - generic [ref=e43]:
+        - generic [ref=e44]: Markdown Editor
+        - generic [ref=e46]:
+          - button "Bold" [ref=e47] [cursor=pointer]:
+            - img [ref=e262]
+          - button "Italic" [ref=e48] [cursor=pointer]:
+            - img [ref=e264]
+          - button "Underline" [ref=e49] [cursor=pointer]:
+            - img [ref=e266]
+          - button "Strikethrough" [ref=e50] [cursor=pointer]:
+            - img [ref=e268]
+        - generic [ref=e52]:
+          - button "Link" [ref=e53] [cursor=pointer]:
+            - img [ref=e270]
+          - button "Ordered List" [ref=e54] [cursor=pointer]:
+            - img [ref=e272]
+          - button "Bulleted List" [ref=e55] [cursor=pointer]:
+            - img [ref=e274]
+          - button "Blockquote" [ref=e56] [cursor=pointer]:
+            - img [ref=e276]
+        - generic [ref=e58]:
+          - button "Code" [ref=e59] [cursor=pointer]:
+            - img [ref=e278]
+          - button "Table" [ref=e60] [cursor=pointer]:
+            - img [ref=e280]
+          - button "Find (Ctrl+F)" [ref=e61] [cursor=pointer]:
+            - img [ref=e282]
+      - generic [ref=e62]:
+        - generic [ref=e63]:
+          - button "Edit" [ref=e64] [cursor=pointer]:
+            - img [ref=e284]
+            - generic [ref=e65]: Edit
+          - button "Preview" [active] [ref=e66] [cursor=pointer]:
+            - img [ref=e286]
+            - generic [ref=e67]: Preview
+        - button "Switch to Light" [ref=e69] [cursor=pointer]:
+          - img [ref=e288]
+        - button "Claude" [ref=e71] [cursor=pointer]:
+          - img [ref=e72]
+          - generic [ref=e75]: Claude
+    - generic [ref=e76]:
+      - generic [ref=e78]:
+        - generic [ref=e290]:
+          - generic [ref=e291]: Preview
+          - generic [ref=e293]:
+            - heading "Anotações Q1 Abril" [level=1] [ref=e294]
+            - code [ref=e296]:
+              - text: mindmap
+              - generic [ref=e297]: root((Anotações Q1 Abril))
+              - generic [ref=e298]: Saúde & Cuidados Pessoais
+              - generic [ref=e299]: "[x] Comprar mx-01 Principia"
+              - generic [ref=e300]: "[ ] Manipular minoxidil"
+              - generic [ref=e301]: "[x] Comprar creme Eucerin anti-pigment"
+              - generic [ref=e302]: "[x] Comprar pente"
+              - generic [ref=e303]: "[x] Comprar pomada modeladora e spray de sal"
+              - text: Educação
+              - generic [ref=e304]: "[ ] Estudar para Univesp"
+              - generic [ref=e305]: "[ ] Curso de Java"
+              - text: Fitness
+              - generic [ref=e306]: "[x] Voltar a treinar"
+              - generic [ref=e307]: Assinaturas & Serviços
+              - generic [ref=e308]: "[ ] Assinar a Manual"
+              - generic [ref=e309]: "[ ] Tokens Claude"
+              - text: Limpeza
+              - generic [ref=e310]: "[ ] Comprar luvas"
+              - text: Tarefas do Dia
+              - generic [ref=e311]: "[x] Fazer arroz"
+              - generic [ref=e312]: "[x] Almoçar"
+              - text: Planejamento Financeiro
+              - generic [ref=e313]: "[x] Verificar Cruzeiro"
+              - generic [ref=e314]: "[x] Olhar contas e faturas"
+              - generic [ref=e315]: "[x] Fazer compras"
+              - text: Lazer
+              - generic [ref=e316]: "[ ] Leitura e música com whisky"
+              - generic [ref=e317]: "[ ] 3 Partidas de League"
+            - paragraph [ref=e318]: Esse é um mindmap das minhas tarefas e objetivos para o primeiro trimestre de abril.
+        - generic [ref=e157]:
+          - generic [ref=e158]:
+            - generic [ref=e159]: "121"
+            - text: words
+          - generic [ref=e161]:
+            - generic [ref=e162]: "855"
+            - text: chars
+          - generic [ref=e163]: 866 B
+          - generic [ref=e165]: 1 min read
+          - generic [ref=e167]:
+            - text: Ln
+            - generic [ref=e168]: "1"
+      - generic:
+        - generic:
+          - generic:
+            - img
+            - generic: Claude Chat
+          - generic:
+            - button "Fechar (Ctrl+Shift+C)":
+              - img
+        - generic:
+          - generic: README.md
+          - generic: 121 palavras
+        - generic:
+          - button "Reescrever":
+            - img
+            - generic: Reescrever
+          - button "Brainstorm":
+            - img
+            - generic: Brainstorm
+          - button "Diagrama":
+            - img
+            - generic: Diagrama
+          - button "Tarefas":
+            - img
+            - generic: Tarefas
+        - generic:
+          - generic:
+            - generic:
+              - img
+            - paragraph: Como posso ajudar?
+            - paragraph: Faça perguntas sobre o conteúdo, peça para reescrever, gerar tarefas ou brainstorm de ideias.
+            - generic:
+              - button "Resuma os pontos principais": Resuma os pontos principais
+              - button "O que posso melhorar neste texto?": O que posso melhorar neste texto?
+              - button "Explique este conteúdo": Explique este conteúdo
+        - generic:
+          - generic:
+            - textbox "Mensagem para o Claude…"
+          - generic:
+            - generic: Enter enviar · Shift+Enter nova linha
+            - button "Enviar" [disabled]:
+              - img
+              - text: Enviar
