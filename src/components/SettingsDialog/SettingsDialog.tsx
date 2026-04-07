@@ -101,6 +101,17 @@ export function SettingsDialog({
                   </button>
                 ))}
               </div>
+
+              <p className={styles.sectionTitle} style={{ marginTop: 24 }}>Fonte do Editor</p>
+              <div className={styles.settingRow}>
+                <div>
+                  <div className={styles.settingLabel}>Família da fonte</div>
+                  <div className={styles.settingDesc}>Fonte usada no editor de markdown</div>
+                </div>
+                <select className={styles.settingSelect} value="jetbrains-mono" disabled>
+                  <option value="jetbrains-mono">JetBrains Mono</option>
+                </select>
+              </div>
             </>
           )}
 
