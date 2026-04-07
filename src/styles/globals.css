@@ -415,94 +415,94 @@ input:focus, textarea:focus {
 .token.important,
 .token.variable { color: #e8a838; }
 
-/* Light mode Prism overrides */
-[data-theme="light"] .token.punctuation { color: #333333; }
-[data-theme="light"] .token.property,
-[data-theme="light"] .token.tag,
-[data-theme="light"] .token.boolean,
-[data-theme="light"] .token.number,
-[data-theme="light"] .token.constant,
-[data-theme="light"] .token.symbol,
-[data-theme="light"] .token.deleted { color: #d32f2f; }
-[data-theme="light"] .token.selector,
-[data-theme="light"] .token.attr-name,
-[data-theme="light"] .token.string,
-[data-theme="light"] .token.char,
-[data-theme="light"] .token.builtin,
-[data-theme="light"] .token.inserted { color: #388e3c; }
-[data-theme="light"] .token.operator,
-[data-theme="light"] .token.entity,
-[data-theme="light"] .token.url { color: #c48820; }
-[data-theme="light"] .token.atrule,
-[data-theme="light"] .token.attr-value,
-[data-theme="light"] .token.keyword { color: #1976d2; }
-[data-theme="light"] .token.function,
-[data-theme="light"] .token.class-name { color: #c48820; }
-[data-theme="light"] .token.regex,
-[data-theme="light"] .token.important,
-[data-theme="light"] .token.variable { color: #c48820; }
+/* ── Light themes Prism overrides (matte-white, quiet-light, solarized-light, gruvbox-light) ── */
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.punctuation { color: #333333; }
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.property,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.tag,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.boolean,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.number,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.constant,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.symbol,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.deleted { color: #d32f2f; }
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.selector,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.attr-name,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.string,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.char,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.builtin,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.inserted { color: #388e3c; }
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.operator,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.entity,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.url { color: #c48820; }
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.atrule,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.attr-value,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.keyword { color: #1976d2; }
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.function,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.class-name { color: #c48820; }
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.regex,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.important,
+:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.variable { color: #c48820; }
 
-/* GitHub Dark mode Prism overrides */
-[data-color-theme="github-dark"] .token.comment,
-[data-color-theme="github-dark"] .token.prolog,
-[data-color-theme="github-dark"] .token.doctype,
-[data-color-theme="github-dark"] .token.cdata { color: #8b949e; }
-[data-color-theme="github-dark"] .token.punctuation { color: #e6edf3; }
-[data-color-theme="github-dark"] .token.property,
-[data-color-theme="github-dark"] .token.tag { color: #7ee787; }
-[data-color-theme="github-dark"] .token.boolean,
-[data-color-theme="github-dark"] .token.number,
-[data-color-theme="github-dark"] .token.constant,
-[data-color-theme="github-dark"] .token.symbol { color: #79c0ff; }
-[data-color-theme="github-dark"] .token.deleted { color: #ffa198; }
-[data-color-theme="github-dark"] .token.selector,
-[data-color-theme="github-dark"] .token.attr-name,
-[data-color-theme="github-dark"] .token.string,
-[data-color-theme="github-dark"] .token.char,
-[data-color-theme="github-dark"] .token.builtin { color: #a5d6ff; }
-[data-color-theme="github-dark"] .token.inserted { color: #7ee787; }
-[data-color-theme="github-dark"] .token.operator,
-[data-color-theme="github-dark"] .token.entity,
-[data-color-theme="github-dark"] .token.url { color: #ff7b72; }
-[data-color-theme="github-dark"] .token.atrule,
-[data-color-theme="github-dark"] .token.attr-value,
-[data-color-theme="github-dark"] .token.keyword { color: #ff7b72; }
-[data-color-theme="github-dark"] .token.function,
-[data-color-theme="github-dark"] .token.class-name { color: #d2a8ff; }
-[data-color-theme="github-dark"] .token.regex,
-[data-color-theme="github-dark"] .token.important,
-[data-color-theme="github-dark"] .token.variable { color: #ffa657; }
+/* ── GitHub Dark Prism overrides ── */
+[data-theme="github-dark"] .token.comment,
+[data-theme="github-dark"] .token.prolog,
+[data-theme="github-dark"] .token.doctype,
+[data-theme="github-dark"] .token.cdata { color: #8b949e; }
+[data-theme="github-dark"] .token.punctuation { color: #e6edf3; }
+[data-theme="github-dark"] .token.property,
+[data-theme="github-dark"] .token.tag { color: #7ee787; }
+[data-theme="github-dark"] .token.boolean,
+[data-theme="github-dark"] .token.number,
+[data-theme="github-dark"] .token.constant,
+[data-theme="github-dark"] .token.symbol { color: #79c0ff; }
+[data-theme="github-dark"] .token.deleted { color: #ffa198; }
+[data-theme="github-dark"] .token.selector,
+[data-theme="github-dark"] .token.attr-name,
+[data-theme="github-dark"] .token.string,
+[data-theme="github-dark"] .token.char,
+[data-theme="github-dark"] .token.builtin { color: #a5d6ff; }
+[data-theme="github-dark"] .token.inserted { color: #7ee787; }
+[data-theme="github-dark"] .token.operator,
+[data-theme="github-dark"] .token.entity,
+[data-theme="github-dark"] .token.url { color: #ff7b72; }
+[data-theme="github-dark"] .token.atrule,
+[data-theme="github-dark"] .token.attr-value,
+[data-theme="github-dark"] .token.keyword { color: #ff7b72; }
+[data-theme="github-dark"] .token.function,
+[data-theme="github-dark"] .token.class-name { color: #d2a8ff; }
+[data-theme="github-dark"] .token.regex,
+[data-theme="github-dark"] .token.important,
+[data-theme="github-dark"] .token.variable { color: #ffa657; }
 
-/* GitHub Light mode Prism overrides */
-[data-color-theme="github-dark"][data-theme="light"] .token.comment,
-[data-color-theme="github-dark"][data-theme="light"] .token.prolog,
-[data-color-theme="github-dark"][data-theme="light"] .token.doctype,
-[data-color-theme="github-dark"][data-theme="light"] .token.cdata { color: #6e7781; }
-[data-color-theme="github-dark"][data-theme="light"] .token.punctuation { color: #1f2328; }
-[data-color-theme="github-dark"][data-theme="light"] .token.property,
-[data-color-theme="github-dark"][data-theme="light"] .token.tag { color: #116329; }
-[data-color-theme="github-dark"][data-theme="light"] .token.boolean,
-[data-color-theme="github-dark"][data-theme="light"] .token.number,
-[data-color-theme="github-dark"][data-theme="light"] .token.constant,
-[data-color-theme="github-dark"][data-theme="light"] .token.symbol { color: #0550ae; }
-[data-color-theme="github-dark"][data-theme="light"] .token.deleted { color: #82071e; }
-[data-color-theme="github-dark"][data-theme="light"] .token.selector,
-[data-color-theme="github-dark"][data-theme="light"] .token.attr-name,
-[data-color-theme="github-dark"][data-theme="light"] .token.string,
-[data-color-theme="github-dark"][data-theme="light"] .token.char,
-[data-color-theme="github-dark"][data-theme="light"] .token.builtin { color: #0a3069; }
-[data-color-theme="github-dark"][data-theme="light"] .token.inserted { color: #116329; }
-[data-color-theme="github-dark"][data-theme="light"] .token.operator,
-[data-color-theme="github-dark"][data-theme="light"] .token.entity,
-[data-color-theme="github-dark"][data-theme="light"] .token.url { color: #cf222e; }
-[data-color-theme="github-dark"][data-theme="light"] .token.atrule,
-[data-color-theme="github-dark"][data-theme="light"] .token.attr-value,
-[data-color-theme="github-dark"][data-theme="light"] .token.keyword { color: #cf222e; }
-[data-color-theme="github-dark"][data-theme="light"] .token.function,
-[data-color-theme="github-dark"][data-theme="light"] .token.class-name { color: #8250df; }
-[data-color-theme="github-dark"][data-theme="light"] .token.regex,
-[data-color-theme="github-dark"][data-theme="light"] .token.important,
-[data-color-theme="github-dark"][data-theme="light"] .token.variable { color: #953800; }
+/* ── GitHub Light Prism overrides ── */
+[data-theme="github-light"] .token.comment,
+[data-theme="github-light"] .token.prolog,
+[data-theme="github-light"] .token.doctype,
+[data-theme="github-light"] .token.cdata { color: #6e7781; }
+[data-theme="github-light"] .token.punctuation { color: #1f2328; }
+[data-theme="github-light"] .token.property,
+[data-theme="github-light"] .token.tag { color: #116329; }
+[data-theme="github-light"] .token.boolean,
+[data-theme="github-light"] .token.number,
+[data-theme="github-light"] .token.constant,
+[data-theme="github-light"] .token.symbol { color: #0550ae; }
+[data-theme="github-light"] .token.deleted { color: #82071e; }
+[data-theme="github-light"] .token.selector,
+[data-theme="github-light"] .token.attr-name,
+[data-theme="github-light"] .token.string,
+[data-theme="github-light"] .token.char,
+[data-theme="github-light"] .token.builtin { color: #0a3069; }
+[data-theme="github-light"] .token.inserted { color: #116329; }
+[data-theme="github-light"] .token.operator,
+[data-theme="github-light"] .token.entity,
+[data-theme="github-light"] .token.url { color: #cf222e; }
+[data-theme="github-light"] .token.atrule,
+[data-theme="github-light"] .token.attr-value,
+[data-theme="github-light"] .token.keyword { color: #cf222e; }
+[data-theme="github-light"] .token.function,
+[data-theme="github-light"] .token.class-name { color: #8250df; }
+[data-theme="github-light"] .token.regex,
+[data-theme="github-light"] .token.important,
+[data-theme="github-light"] .token.variable { color: #953800; }
 
 /* Animations */
 @keyframes fadeIn {

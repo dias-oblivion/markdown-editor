@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import type { ViewMode, FormatAction, FileEntry, ThemeId, AISettings } from '../types';
+import { THEMES } from '../types';
 
 import { useFileSystem } from '../hooks/useFileSystem';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
@@ -14,15 +15,12 @@ import { ContextMenu } from './ContextMenu/ContextMenu';
 import { SettingsDialog } from './SettingsDialog/SettingsDialog';
 import { ClaudeChat } from './ClaudeChat/ClaudeChat';
 
-const VALID_THEMES: ThemeId[] = [
-  'matte-black', 'github-dark', 'dracula', 'monokai-pro', 'ayu-dark',
-  'matte-white', 'github-light', 'quiet-light', 'solarized-light', 'gruvbox-light',
-];
+const VALID_THEMES = new Set(THEMES.map(t => t.id));
 
 function getInitialTheme(): ThemeId {
   try {
     const saved = localStorage.getItem('markdown-editor-theme') as ThemeId;
-    if (VALID_THEMES.includes(saved)) return saved;
+    if (VALID_THEMES.has(saved)) return saved;
   } catch { /* ignore */ }
   return 'matte-black';
 }
