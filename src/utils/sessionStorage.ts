@@ -4,6 +4,7 @@ export interface SessionData {
   directoryPath: string | null;
   openTabPaths: string[];
   activeTabPath: string | null;
+  dirtyContent?: Record<string, string>;
 }
 
 export function saveSession(data: SessionData): void {
