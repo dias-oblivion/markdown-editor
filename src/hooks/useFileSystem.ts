@@ -84,7 +84,7 @@ export function useFileSystem() {
           rootPathRef.current = session.directoryPath;
           setRootEntry(entry);
 
-          await restoreTabs(entry, session.openTabPaths, session.activeTabPath, cancelled);
+          await restoreTabs(entry, session.openTabPaths, session.activeTabPath, session.dirtyContent ?? {}, cancelled);
         }
         // Browser fallback: can't reliably restore without handle permissions
       } catch {
@@ -97,6 +97,7 @@ export function useFileSystem() {
       entry: FileEntry,
       tabPaths: string[],
       activeTabPath: string | null,
+      dirtyContent: Record<string, string>,
       isCancelled: boolean,
     ) {
       if (tabPaths.length === 0) return;
@@ -110,13 +111,14 @@ export function useFileSystem() {
 
         try {
           const content = await readFileContent(fileEntry);
+          const savedDirty = dirtyContent[tabPath];
           restoredTabs.push({
             id: crypto.randomUUID(),
             name: fileEntry.name,
             path: fileEntry.path,
-            content,
+            content: savedDirty ?? content,
             handle: fileEntry.handle as FileSystemFileHandle | undefined,
-            isDirty: false,
+            isDirty: savedDirty !== undefined,
           });
 
           if (tabPath === activeTabPath) {
