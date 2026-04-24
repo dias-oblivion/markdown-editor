@@ -6,6 +6,7 @@ import { THEMES } from '../types';
 import { useFileSystem } from '../hooks/useFileSystem';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { getAISettings, saveAISettings } from '../utils/aiSettings';
+import { getSession, saveSession } from '../utils/sessionStorage';
 import { ActivityBar } from './ActivityBar/ActivityBar';
 import { Sidebar } from './Sidebar/Sidebar';
 import { Toolbar } from './Toolbar/Toolbar';
@@ -14,6 +15,7 @@ import { CommandPalette } from './CommandPalette/CommandPalette';
 import { ContextMenu } from './ContextMenu/ContextMenu';
 import { SettingsDialog } from './SettingsDialog/SettingsDialog';
 import { ClaudeChat } from './ClaudeChat/ClaudeChat';
+import { UnsavedChangesDialog } from './UnsavedChangesDialog/UnsavedChangesDialog';
 
 const VALID_THEMES = new Set(THEMES.map(t => t.id));
 
@@ -118,6 +120,7 @@ Esse é um teste de diagrama mermaid.
   const [chatVisible, setChatVisible] = useState(false);
   const [showCodeDialog, setShowCodeDialog] = useState(false);
   const [showTableDialog, setShowTableDialog] = useState(false);
+  const [closeRequestTabId, setCloseRequestTabId] = useState<string | null>(null);
   // Pending content to insert after a new file is created and opened
   const [pendingInsert, setPendingInsert] = useState<string | null>(null);
 
@@ -131,6 +134,20 @@ Esse é um teste de diagrama mermaid.
   useEffect(() => {
     saveAISettings(aiSettings);
   }, [aiSettings]);
+
+  // Hot exit: persist unsaved content before the window closes
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const dirtyContent: Record<string, string> = {};
+      for (const tab of tabs) {
+        if (tab.isDirty) dirtyContent[tab.path] = tab.content;
+      }
+      const existing = getSession();
+      if (existing) saveSession({ ...existing, dirtyContent });
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [tabs]);
 
   // Auto-refresh file tree when window gains focus (to detect external file changes)
   useEffect(() => {
@@ -165,6 +182,44 @@ Esse é um teste de diagrama mermaid.
       saveFile(activeTabId);
     }
   }, [activeTabId, saveFile]);
+
+  const handleTabCloseRequest = useCallback((tabId: string) => {
+    const tab = tabs.find(t => t.id === tabId);
+    if (tab?.isDirty) {
+      setCloseRequestTabId(tabId);
+    } else {
+      closeTab(tabId);
+    }
+  }, [tabs, closeTab]);
+
+  const handleUnsavedSave = useCallback(async () => {
+    if (!closeRequestTabId) return;
+    const tab = tabs.find(t => t.id === closeRequestTabId);
+    await saveFile(closeRequestTabId);
+    if (tab) {
+      const session = getSession();
+      if (session?.dirtyContent) {
+        const { [tab.path]: _, ...rest } = session.dirtyContent;
+        saveSession({ ...session, dirtyContent: rest });
+      }
+    }
+    closeTab(closeRequestTabId);
+    setCloseRequestTabId(null);
+  }, [closeRequestTabId, tabs, saveFile, closeTab]);
+
+  const handleUnsavedDiscard = useCallback(() => {
+    if (!closeRequestTabId) return;
+    const tab = tabs.find(t => t.id === closeRequestTabId);
+    if (tab) {
+      const session = getSession();
+      if (session?.dirtyContent) {
+        const { [tab.path]: _, ...rest } = session.dirtyContent;
+        saveSession({ ...session, dirtyContent: rest });
+      }
+    }
+    closeTab(closeRequestTabId);
+    setCloseRequestTabId(null);
+  }, [closeRequestTabId, tabs, closeTab]);
 
   const toggleSidebar = useCallback(() => {
     setSidebarVisible(prev => !prev);
@@ -293,7 +348,7 @@ Esse é um teste de diagrama mermaid.
           tabs={tabs}
           activeTabId={activeTabId}
           onTabSelect={setActiveTabId}
-          onTabClose={closeTab}
+          onTabClose={handleTabCloseRequest}
           onFind={() => setShowFind(true)}
           chatVisible={chatVisible}
           onToggleChat={toggleChat}
@@ -498,6 +553,19 @@ Esse é um teste de diagrama mermaid.
           onClose={() => setContextMenu(null)}
         />
       )}
+
+      {/* Unsaved Changes Dialog */}
+      {closeRequestTabId && (() => {
+        const tab = tabs.find(t => t.id === closeRequestTabId);
+        return tab ? (
+          <UnsavedChangesDialog
+            fileName={tab.name}
+            onSave={handleUnsavedSave}
+            onDiscard={handleUnsavedDiscard}
+            onCancel={() => setCloseRequestTabId(null)}
+          />
+        ) : null;
+      })()}
     </div>
   );
 }
