@@ -3,11 +3,13 @@ import type { FileEntry, EditorTab } from '../types';
 import {
   isElectron,
   openDirectory,
+  openDirectoryByPath,
   reopenDirectoryByPath,
   readFileContent,
   writeFileContent,
   findFileByPath,
   getInitialWorkspace,
+  getHomeDir,
   createNewFile,
   createNewDirectory,
   renameFile,
@@ -149,6 +151,16 @@ export function useFileSystem() {
   // ── Directory picker ──
   const handleOpenDirectory = useCallback(async () => {
     const entry = await openDirectory();
+    if (entry) {
+      setRootEntry(entry);
+      rootPathRef.current = entry.path;
+    }
+  }, []);
+
+  const handleOpenClaudePlans = useCallback(async () => {
+    const home = await getHomeDir();
+    if (!home) return;
+    const entry = await openDirectoryByPath(`${home}/.claude/plans`);
     if (entry) {
       setRootEntry(entry);
       rootPathRef.current = entry.path;
@@ -471,6 +483,7 @@ export function useFileSystem() {
     activeTabId,
     setActiveTabId,
     openDirectory: handleOpenDirectory,
+    openClaudePlans: handleOpenClaudePlans,
     openFile: handleOpenFile,
     closeTab: handleCloseTab,
     updateContent: handleUpdateContent,

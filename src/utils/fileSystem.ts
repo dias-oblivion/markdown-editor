@@ -15,6 +15,7 @@ interface ElectronAPI {
   deleteDirectory: (dirPath: string) => Promise<void>;
   getInitialWorkspace: () => Promise<string | null>;
   moveFile: (oldPath: string, targetDirPath: string) => Promise<string>;
+  homeDir: () => Promise<string>;
 }
 
 function getElectronAPI(): ElectronAPI | null {
@@ -50,6 +51,22 @@ export async function openDirectory(): Promise<FileEntry | null> {
   } catch {
     return null;
   }
+}
+
+export async function openDirectoryByPath(dirPath: string): Promise<FileEntry | null> {
+  const api = getElectronAPI();
+  if (!api) return null;
+  try {
+    return await api.readDirectory(dirPath);
+  } catch {
+    return null;
+  }
+}
+
+export async function getHomeDir(): Promise<string | null> {
+  const api = getElectronAPI();
+  if (!api) return null;
+  return api.homeDir();
 }
 
 export async function reopenDirectoryByPath(dirPath: string): Promise<FileEntry | null> {

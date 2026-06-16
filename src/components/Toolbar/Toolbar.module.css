@@ -310,28 +310,57 @@
   overflow-x: auto;
   overflow-y: hidden;
   gap: 1px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
 }
 
 .tabsBar::-webkit-scrollbar {
-  height: 0;
+  height: 6px;
+}
+
+.tabsBar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tabsBar::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.tabsBar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 .tab {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   height: 100%;
-  padding: 0 16px;
+  padding: 0 6px 0 12px;
   font-size: 12px;
   color: var(--text-muted);
   background: transparent;
   cursor: pointer;
   white-space: nowrap;
-  transition: all var(--transition-fast);
-  min-width: 0;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  flex: 0 0 150px;
+  width: 150px;
+  overflow: hidden;
   position: relative;
   border-radius: 6px 6px 0 0;
   margin-top: 2px;
+}
+
+.tab > :global(svg) {
+  flex-shrink: 0;
+}
+
+.tabName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tab:hover {
@@ -359,6 +388,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   width: 18px;
   height: 18px;
   border-radius: var(--radius-sm);

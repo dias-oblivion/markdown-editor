@@ -11,6 +11,7 @@ interface SidebarProps {
   activeFilePath: string | null;
   collapsed?: boolean;
   onOpenDirectory: () => void;
+  onOpenClaudePlans?: () => void;
   onFileSelect: (entry: FileEntry) => void;
   onCreateFile: (dirPath: string, fileName: string) => Promise<void>;
   onRenameFile: (oldPath: string, newName: string) => Promise<void>;
@@ -24,7 +25,7 @@ interface SidebarProps {
   onNewFileDialogDone?: () => void;
 }
 
-export function Sidebar({ rootEntry, activeFilePath, collapsed, onOpenDirectory, onFileSelect, onCreateFile, onRenameFile, onDeleteFile, onCreateDirectory, onRenameDirectory, onDeleteDirectory, onRefresh, onMoveFile, requestNewFile, onNewFileDialogDone }: SidebarProps) {
+export function Sidebar({ rootEntry, activeFilePath, collapsed, onOpenDirectory, onOpenClaudePlans, onFileSelect, onCreateFile, onRenameFile, onDeleteFile, onCreateDirectory, onRenameDirectory, onDeleteDirectory, onRefresh, onMoveFile, requestNewFile, onNewFileDialogDone }: SidebarProps) {
   const [newFileDialog, setNewFileDialog] = useState<{ dirPath: string } | null>(null);
   const [newFolderDialog, setNewFolderDialog] = useState<{ dirPath: string } | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; dirPath: string; fileEntry?: FileEntry; isDirTarget?: boolean } | null>(null);
@@ -205,6 +206,15 @@ export function Sidebar({ rootEntry, activeFilePath, collapsed, onOpenDirectory,
           >
             <Icon icon="codicon:folder-opened" width={16} />
           </button>
+          {onOpenClaudePlans && (
+            <button
+              className={styles.iconButton}
+              onClick={onOpenClaudePlans}
+              title="Abrir ~/.claude/plans"
+            >
+              <Icon icon="codicon:list-flat" width={16} />
+            </button>
+          )}
         </div>
       </div>
       <div

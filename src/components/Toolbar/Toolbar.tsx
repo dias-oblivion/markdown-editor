@@ -76,9 +76,10 @@ export function Toolbar({
               key={tab.id}
               className={`${styles.tab} ${tab.id === activeTabId ? styles.active : ''}`}
               onClick={() => onTabSelect(tab.id)}
+              title={tab.name}
             >
               <Icon icon="vscode-icons:file-type-markdown" width={14} />
-              <span className={tab.isDirty ? styles.dirty : ''}>
+              <span className={`${styles.tabName} ${tab.isDirty ? styles.dirty : ''}`}>
                 {tab.isDirty ? '● ' : ''}{tab.name}
               </span>
               <button

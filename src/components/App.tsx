@@ -81,6 +81,7 @@ export function App() {
     deleteDirectory,
     refreshTree,
     moveFile,
+    openClaudePlans,
   } = useFileSystem();
 
   // Use mock data if enabled, otherwise use real data
@@ -317,6 +318,7 @@ Esse é um teste de diagrama mermaid.
         activeFilePath={activeTab?.path ?? null}
         collapsed={!sidebarVisible}
         onOpenDirectory={openDirectory}
+        onOpenClaudePlans={openClaudePlans}
         onFileSelect={openFile}
         onCreateFile={createFile}
         onRenameFile={renameFile}

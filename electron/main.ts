@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import { spawn, spawnSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -124,6 +125,8 @@ ipcMain.handle('dialog:openDirectory', async () => {
   if (result.canceled) return null;
   return result.filePaths[0];
 });
+
+ipcMain.handle('app:homeDir', () => os.homedir());
 
 ipcMain.handle('fs:readDirectory', async (_event, dirPath: string) => {
   return readDirectoryRecursive(dirPath);

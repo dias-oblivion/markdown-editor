@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   renameDirectory: (oldPath: string, newName: string) => ipcRenderer.invoke('fs:renameDirectory', oldPath, newName),
   deleteDirectory: (dirPath: string) => ipcRenderer.invoke('fs:deleteDirectory', dirPath),
   getInitialWorkspace: () => ipcRenderer.invoke('app:getInitialWorkspace'),
+  homeDir: () => ipcRenderer.invoke('app:homeDir'),
   moveFile: (oldPath: string, targetDirPath: string) =>
     ipcRenderer.invoke('fs:moveFile', oldPath, targetDirPath),
   claudeAssist: (action: string, content: string, fileName: string, useTerminal: boolean) =>
