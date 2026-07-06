@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Icon } from '@iconify/react';
 import type { FileEntry } from '../../types';
-import { flattenFiles } from '../../utils/fileSystem';
 import { FileTree } from './FileTree';
 import { NewFileDialog } from './NewFileDialog';
 import { ConfirmDialog } from '../ConfirmDialog/ConfirmDialog';
@@ -59,10 +58,20 @@ export function Sidebar({
   const [renamingPath, setRenamingPath] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ path: string; name: string; isDirectory?: boolean } | null>(null);
   const [renameDirDialog, setRenameDirDialog] = useState<{ dirPath: string; currentName: string } | null>(null);
-  // Bump to remount the FileTree (collapse-all resets expansion to defaults)
-  const [treeKey, setTreeKey] = useState(0);
+  // Overflow ("⋯") action menu in the action bar
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const isPlans = source === 'plans';
+
+  // Close the overflow menu on Escape
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
 
   // Open dialog when parent requests it (e.g. Ctrl+N)
   useEffect(() => {
@@ -71,12 +80,18 @@ export function Sidebar({
     }
   }, [requestNewFile, rootEntry, newFileDialog]);
 
-  // Recent-first list of plans (flattened, newest by creation time on top)
-  const plansList = useMemo(() => {
+  // Só os .md soltos na raiz de ~/.claude/plans — recent-first (caixa de entrada de planos novos)
+  const planRootFiles = useMemo(() => {
     if (!isPlans || !rootEntry) return [];
-    return flattenFiles(rootEntry)
+    return (rootEntry.children ?? [])
       .filter(f => !f.isDirectory)
       .sort((a, b) => (b.birthtime ?? b.mtime ?? 0) - (a.birthtime ?? a.mtime ?? 0));
+  }, [isPlans, rootEntry]);
+
+  // Subpastas criadas/movidas manualmente — arquivo navegável, fora da lista de recentes
+  const planFolders = useMemo(() => {
+    if (!isPlans || !rootEntry) return [];
+    return (rootEntry.children ?? []).filter(f => f.isDirectory);
   }, [isPlans, rootEntry]);
 
   const openedSet = useMemo(() => new Set(openedPlans), [openedPlans]);
@@ -242,26 +257,50 @@ export function Sidebar({
           {isPlans ? 'Claude Plans' : (rootEntry?.name ?? 'Explorer')}
         </span>
         <div className={styles.headerActions}>
-          {rootEntry && !isPlans && (
-            <>
-              <button className={styles.iconButton} onClick={openNewFileDialogForRoot} title="Novo arquivo (Ctrl+N)">
-                <Icon icon="codicon:new-file" width={16} />
-              </button>
-              <button className={styles.iconButton} onClick={openNewFolderDialogForRoot} title="Nova pasta">
-                <Icon icon="codicon:new-folder" width={16} />
-              </button>
-              <button className={styles.iconButton} onClick={() => setTreeKey(k => k + 1)} title="Recolher tudo">
-                <Icon icon="codicon:collapse-all" width={16} />
-              </button>
-            </>
-          )}
-          <button className={styles.iconButton} onClick={onRefresh} title="Atualizar">
-            <Icon icon="codicon:refresh" width={16} />
-          </button>
-          {!isPlans && (
-            <button className={styles.iconButton} onClick={onOpenDirectory} title="Abrir pasta">
-              <Icon icon="codicon:folder-opened" width={16} />
+          {isPlans ? (
+            <button className={styles.iconButton} onClick={onRefresh} title="Atualizar">
+              <Icon icon="codicon:refresh" width={16} />
             </button>
+          ) : (
+            <div className={styles.menuAnchor}>
+              <button
+                className={`${styles.iconButton} ${menuOpen ? styles.iconButtonActive : ''}`}
+                onClick={() => setMenuOpen(o => !o)}
+                title="Mais ações"
+              >
+                <Icon icon="codicon:ellipsis" width={16} />
+              </button>
+              {menuOpen && (
+                <>
+                  <div className={styles.ctxOverlay} onClick={() => setMenuOpen(false)} onContextMenu={e => { e.preventDefault(); setMenuOpen(false); }} />
+                  <div className={styles.overflowMenu}>
+                    {rootEntry && (
+                      <>
+                        <div className={styles.ctxItem} onClick={() => { openNewFileDialogForRoot(); setMenuOpen(false); }}>
+                          <Icon icon="codicon:new-file" width={14} />
+                          <span className={styles.ctxLabel}>Novo arquivo</span>
+                          <span className={styles.ctxShortcut}>Ctrl+N</span>
+                        </div>
+                        <div className={styles.ctxItem} onClick={() => { openNewFolderDialogForRoot(); setMenuOpen(false); }}>
+                          <Icon icon="codicon:new-folder" width={14} />
+                          <span className={styles.ctxLabel}>Nova pasta</span>
+                        </div>
+                        <div className={styles.ctxDivider} />
+                        <div className={styles.ctxItem} onClick={() => { onRefresh(); setMenuOpen(false); }}>
+                          <Icon icon="codicon:refresh" width={14} />
+                          <span className={styles.ctxLabel}>Atualizar</span>
+                        </div>
+                        <div className={styles.ctxDivider} />
+                      </>
+                    )}
+                    <div className={styles.ctxItem} onClick={() => { onOpenDirectory(); setMenuOpen(false); }}>
+                      <Icon icon="codicon:folder-opened" width={14} />
+                      <span className={styles.ctxLabel}>Abrir pasta…</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -279,26 +318,55 @@ export function Sidebar({
         }}
       >
         {isPlans ? (
-          plansList.length > 0 ? (
-            <div className={styles.plansList}>
-              {plansList.map((plan) => {
-                const isNew = !openedSet.has(plan.path);
-                const isActive = plan.path === activeFilePath;
-                return (
-                  <div
-                    key={plan.path}
-                    className={`${styles.planItem} ${isActive ? styles.planItemActive : ''}`}
-                    onClick={() => onFileSelect(plan)}
-                    onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); handleFileContextMenu(e, plan); }}
-                    title={plan.path}
-                  >
-                    <span className={`${styles.planDot} ${isNew ? styles.planDotNew : ''}`} />
-                    <span className={styles.planName}>{plan.name.replace(/\.md$/, '')}</span>
-                    <span className={styles.planDate}>{formatRelativeDate(plan.birthtime ?? plan.mtime)}</span>
-                  </div>
-                );
-              })}
-            </div>
+          (planRootFiles.length > 0 || planFolders.length > 0) ? (
+            <>
+              {/* Recentes: só os planos soltos na raiz */}
+              {planRootFiles.length > 0 && (
+                <div className={styles.plansList}>
+                  {planRootFiles.map((plan) => {
+                    const isNew = !openedSet.has(plan.path);
+                    const isActive = plan.path === activeFilePath;
+                    return (
+                      <div
+                        key={plan.path}
+                        className={`${styles.planItem} ${isActive ? styles.planItemActive : ''}`}
+                        onClick={() => onFileSelect(plan)}
+                        onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); handleFileContextMenu(e, plan); }}
+                        title={plan.path}
+                      >
+                        <span className={`${styles.planDot} ${isNew ? styles.planDotNew : ''}`} />
+                        <span className={styles.planName}>{plan.name.replace(/\.md$/, '')}</span>
+                        <span className={styles.planDate}>{formatRelativeDate(plan.birthtime ?? plan.mtime)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {/* Pastas: arquivo/organização manual, navegável, começa recolhido */}
+              {planFolders.length > 0 && (
+                <div className={styles.plansFolders}>
+                  {planRootFiles.length > 0 && (
+                    <div className={styles.plansFoldersLabel}>Pastas</div>
+                  )}
+                  {planFolders.map((folder) => (
+                    <FileTree
+                      key={folder.path}
+                      entry={folder}
+                      initialExpanded={false}
+                      activeFilePath={activeFilePath}
+                      renamingPath={renamingPath}
+                      onFileSelect={onFileSelect}
+                      onDirContextMenu={handleDirContextMenu}
+                      onFileContextMenu={handleFileContextMenu}
+                      onStartRename={(path) => setRenamingPath(path)}
+                      onConfirmRename={handleConfirmRename}
+                      onCancelRename={handleCancelRename}
+                      onMoveFile={onMoveFile}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           ) : (
             <div className={styles.empty}>
               <Icon icon="codicon:checklist" width={28} style={{ opacity: 0.3 }} />
@@ -307,7 +375,6 @@ export function Sidebar({
           )
         ) : rootEntry ? (
           <FileTree
-            key={treeKey}
             entry={rootEntry}
             activeFilePath={activeFilePath}
             renamingPath={renamingPath}

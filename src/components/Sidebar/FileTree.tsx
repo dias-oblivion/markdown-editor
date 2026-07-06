@@ -6,6 +6,8 @@ import styles from './Sidebar.module.css';
 interface FileTreeProps {
   entry: FileEntry;
   depth?: number;
+  /** Override the default open state for this node (default: open when depth < 1). */
+  initialExpanded?: boolean;
   activeFilePath: string | null;
   renamingPath: string | null;
   onFileSelect: (entry: FileEntry) => void;
@@ -18,11 +20,11 @@ interface FileTreeProps {
 }
 
 export function FileTree({
-  entry, depth = 0, activeFilePath, renamingPath,
+  entry, depth = 0, initialExpanded, activeFilePath, renamingPath,
   onFileSelect, onDirContextMenu, onFileContextMenu,
   onStartRename, onConfirmRename, onCancelRename, onMoveFile,
 }: FileTreeProps) {
-  const [expanded, setExpanded] = useState(depth < 1);
+  const [expanded, setExpanded] = useState(initialExpanded ?? depth < 1);
   const [dragOverPath, setDragOverPath] = useState<string | null>(null);
 
   if (!entry.isDirectory) {
