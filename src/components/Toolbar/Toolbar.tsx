@@ -15,6 +15,8 @@ interface ToolbarProps {
   activeTabId: string | null;
   onTabSelect: (id: string) => void;
   onTabClose: (id: string) => void;
+  sidebarVisible: boolean;
+  onToggleSidebar: () => void;
   onFind: () => void;
   chatVisible: boolean;
   onToggleChat: () => void;
@@ -33,6 +35,8 @@ export function Toolbar({
   activeTabId,
   onTabSelect,
   onTabClose,
+  sidebarVisible,
+  onToggleSidebar,
   onFind,
   chatVisible,
   onToggleChat,
@@ -99,6 +103,16 @@ export function Toolbar({
       {/* Top bar */}
       <div className={styles.topBar}>
         <div className={styles.topBarLeft}>
+          <button
+            className={`${styles.headerBtn} ${sidebarVisible ? styles.active : ''}`}
+            onClick={onToggleSidebar}
+            title={sidebarVisible ? 'Esconder lista de arquivos' : 'Mostrar lista de arquivos'}
+          >
+            <Icon icon="codicon:layout-sidebar-left" width={14} />
+          </button>
+
+          <div className={styles.headerDivider} />
+
           <span className={styles.appTitle}>Markdown Editor</span>
 
           <div className={styles.headerDivider} />
@@ -108,7 +122,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => applyInlineFormat('**', '**')}
-              title="Bold (Alt+B)"
+              title="Bold (Ctrl+B)"
             >
               <Icon icon="codicon:bold" width={14} />
             </button>
@@ -116,7 +130,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => applyInlineFormat('_', '_')}
-              title="Italic (Alt+I)"
+              title="Italic (Ctrl+I)"
             >
               <Icon icon="codicon:italic" width={14} />
             </button>
@@ -124,7 +138,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => applyInlineFormat('<u>', '</u>')}
-              title="Underline (Alt+U)"
+              title="Underline (Ctrl+U)"
             >
               <Icon icon="lucide:underline" width={14} />
             </button>
@@ -132,7 +146,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => applyInlineFormat('~~', '~~')}
-              title="Strikethrough (Alt+S)"
+              title="Strikethrough (Ctrl+Shift+S)"
             >
               <Icon icon="codicon:strikethrough" width={14} />
             </button>
@@ -144,7 +158,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => applyInlineFormat('[', '](url)')}
-              title="Link (Alt+K)"
+              title="Link (Ctrl+K)"
             >
               <Icon icon="codicon:link" width={14} />
             </button>
@@ -152,7 +166,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => insertLinePrefix('1. ')}
-              title="Lista Ordenada (Alt+O)"
+              title="Lista Ordenada (Ctrl+Shift+O)"
             >
               <Icon icon="codicon:list-ordered" width={14} />
             </button>
@@ -160,7 +174,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => insertLinePrefix('- ')}
-              title="Lista com bullets (Alt+L)"
+              title="Lista com bullets (Ctrl+Shift+L)"
             >
               <Icon icon="codicon:list-unordered" width={14} />
             </button>
@@ -168,7 +182,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => insertLinePrefix('> ')}
-              title="Blockquote (Alt+Q)"
+              title="Blockquote (Ctrl+Shift+Q)"
             >
               <Icon icon="codicon:quote" width={14} />
             </button>
@@ -181,7 +195,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => onShowCodeDialog(true)}
-              title="Código (Alt+C)"
+              title="Código (Ctrl+Shift+K)"
             >
               <Icon icon="codicon:code" width={14} />
             </button>
@@ -189,7 +203,7 @@ export function Toolbar({
             <button
               className={styles.headerBtn}
               onClick={() => onShowTableDialog(true)}
-              title="Tabela (Alt+T)"
+              title="Tabela (Ctrl+Shift+T)"
             >
               <Icon icon="codicon:table" width={14} />
             </button>

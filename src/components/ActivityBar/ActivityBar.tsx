@@ -14,7 +14,7 @@ export function ActivityBar({ sidebarVisible, settingsOpen, onToggleSidebar, onO
       <button
         className={`${styles.activityButton} ${sidebarVisible && !settingsOpen ? styles.active : ''}`}
         onClick={onToggleSidebar}
-        data-tooltip="Explorer (Ctrl+B)"
+        data-tooltip="Explorer"
         title="Explorer"
       >
         <Icon icon="codicon:files" width={24} />

@@ -13,229 +13,56 @@ import { MarkdownPreview } from './MarkdownPreview';
 import styles from './Editor.module.css';
 
 // ── Syntax highlighting themes ──
+// Minimal palettes: pure-neutral text + slate accent + 2 muted hues.
+// Dark serves ink/graphite; light serves paper/mist.
 
 const darkHighlight = HighlightStyle.define([
-  { tag: tags.comment, color: '#6a737d' },
-  { tag: tags.keyword, color: '#5c9ce6' },
-  { tag: tags.string, color: '#4caf50' },
-  { tag: tags.number, color: '#e85454' },
-  { tag: tags.bool, color: '#e85454' },
-  { tag: tags.operator, color: '#e8a838' },
-  { tag: tags.function(tags.variableName), color: '#e8a838' },
-  { tag: tags.definition(tags.variableName), color: '#d4d4d4' },
-  { tag: tags.typeName, color: '#e8a838' },
-  { tag: tags.propertyName, color: '#e85454' },
-  { tag: tags.heading, color: '#4FC3F7', fontWeight: 'bold' },
+  { tag: tags.comment, color: '#6a6a6a', fontStyle: 'italic' },
+  { tag: tags.keyword, color: '#5b7fb8' },
+  { tag: tags.string, color: '#8fa876' },
+  { tag: tags.number, color: '#c2a06a' },
+  { tag: tags.bool, color: '#c2a06a' },
+  { tag: tags.operator, color: '#9a9a9a' },
+  { tag: tags.function(tags.variableName), color: '#d6d6d6' },
+  { tag: tags.definition(tags.variableName), color: '#d6d6d6' },
+  { tag: tags.typeName, color: '#8fa876' },
+  { tag: tags.propertyName, color: '#c2a06a' },
+  { tag: tags.heading, color: '#5b7fb8', fontWeight: 'bold' },
   { tag: tags.emphasis, fontStyle: 'italic' },
   { tag: tags.strong, fontWeight: 'bold' },
-  { tag: tags.link, color: '#5c9ce6', textDecoration: 'underline' },
-  { tag: tags.url, color: '#5c9ce6' },
+  { tag: tags.link, color: '#5b7fb8', textDecoration: 'underline' },
+  { tag: tags.url, color: '#5b7fb8' },
   { tag: tags.strikethrough, textDecoration: 'line-through' },
-  { tag: tags.meta, color: '#7C4DFF' },
-  { tag: tags.processingInstruction, color: '#5c9ce6' },
+  { tag: tags.meta, color: '#9a9a9a' },
+  { tag: tags.processingInstruction, color: '#5b7fb8' },
 ]);
 
 const lightHighlight = HighlightStyle.define([
-  { tag: tags.comment, color: '#6a737d' },
-  { tag: tags.keyword, color: '#1976d2' },
-  { tag: tags.string, color: '#388e3c' },
-  { tag: tags.number, color: '#d32f2f' },
-  { tag: tags.bool, color: '#d32f2f' },
-  { tag: tags.operator, color: '#c48820' },
-  { tag: tags.function(tags.variableName), color: '#c48820' },
+  { tag: tags.comment, color: '#9a9a9a', fontStyle: 'italic' },
+  { tag: tags.keyword, color: '#3d6098' },
+  { tag: tags.string, color: '#5e7a50' },
+  { tag: tags.number, color: '#9a7430' },
+  { tag: tags.bool, color: '#9a7430' },
+  { tag: tags.operator, color: '#6a6a6a' },
+  { tag: tags.function(tags.variableName), color: '#333333' },
   { tag: tags.definition(tags.variableName), color: '#1a1a1a' },
-  { tag: tags.typeName, color: '#c48820' },
-  { tag: tags.propertyName, color: '#d32f2f' },
-  { tag: tags.heading, color: '#0277BD', fontWeight: 'bold' },
+  { tag: tags.typeName, color: '#5e7a50' },
+  { tag: tags.propertyName, color: '#9a7430' },
+  { tag: tags.heading, color: '#3d6098', fontWeight: 'bold' },
   { tag: tags.emphasis, fontStyle: 'italic' },
   { tag: tags.strong, fontWeight: 'bold' },
-  { tag: tags.link, color: '#1976d2', textDecoration: 'underline' },
-  { tag: tags.url, color: '#1976d2' },
+  { tag: tags.link, color: '#3d6098', textDecoration: 'underline' },
+  { tag: tags.url, color: '#3d6098' },
   { tag: tags.strikethrough, textDecoration: 'line-through' },
-  { tag: tags.meta, color: '#5E35B1' },
-  { tag: tags.processingInstruction, color: '#1976d2' },
-]);
-
-const githubDarkHighlight = HighlightStyle.define([
-  { tag: tags.comment, color: '#8b949e' },
-  { tag: tags.keyword, color: '#ff7b72' },
-  { tag: tags.string, color: '#a5d6ff' },
-  { tag: tags.number, color: '#79c0ff' },
-  { tag: tags.bool, color: '#79c0ff' },
-  { tag: tags.operator, color: '#ff7b72' },
-  { tag: tags.function(tags.variableName), color: '#d2a8ff' },
-  { tag: tags.definition(tags.variableName), color: '#ffa657' },
-  { tag: tags.typeName, color: '#ffa657' },
-  { tag: tags.propertyName, color: '#79c0ff' },
-  { tag: tags.heading, color: '#79c0ff', fontWeight: 'bold' },
-  { tag: tags.emphasis, fontStyle: 'italic' },
-  { tag: tags.strong, fontWeight: 'bold' },
-  { tag: tags.link, color: '#a5d6ff', textDecoration: 'underline' },
-  { tag: tags.url, color: '#a5d6ff' },
-  { tag: tags.strikethrough, textDecoration: 'line-through' },
-  { tag: tags.meta, color: '#d2a8ff' },
-  { tag: tags.processingInstruction, color: '#ff7b72' },
-]);
-
-const githubLightHighlight = HighlightStyle.define([
-  { tag: tags.comment, color: '#6e7781' },
-  { tag: tags.keyword, color: '#cf222e' },
-  { tag: tags.string, color: '#0a3069' },
-  { tag: tags.number, color: '#0550ae' },
-  { tag: tags.bool, color: '#0550ae' },
-  { tag: tags.operator, color: '#cf222e' },
-  { tag: tags.function(tags.variableName), color: '#8250df' },
-  { tag: tags.definition(tags.variableName), color: '#953800' },
-  { tag: tags.typeName, color: '#953800' },
-  { tag: tags.propertyName, color: '#0550ae' },
-  { tag: tags.heading, color: '#0550ae', fontWeight: 'bold' },
-  { tag: tags.emphasis, fontStyle: 'italic' },
-  { tag: tags.strong, fontWeight: 'bold' },
-  { tag: tags.link, color: '#0a3069', textDecoration: 'underline' },
-  { tag: tags.url, color: '#0a3069' },
-  { tag: tags.strikethrough, textDecoration: 'line-through' },
-  { tag: tags.meta, color: '#8250df' },
-  { tag: tags.processingInstruction, color: '#cf222e' },
-]);
-
-const draculaHighlight = HighlightStyle.define([
-  { tag: tags.comment, color: '#6272a4' },
-  { tag: tags.keyword, color: '#ff79c6' },
-  { tag: tags.string, color: '#f1fa8c' },
-  { tag: tags.number, color: '#bd93f9' },
-  { tag: tags.bool, color: '#bd93f9' },
-  { tag: tags.operator, color: '#ff79c6' },
-  { tag: tags.function(tags.variableName), color: '#50fa7b' },
-  { tag: tags.definition(tags.variableName), color: '#f8f8f2' },
-  { tag: tags.typeName, color: '#8be9fd' },
-  { tag: tags.propertyName, color: '#8be9fd' },
-  { tag: tags.heading, color: '#ff79c6', fontWeight: 'bold' },
-  { tag: tags.emphasis, fontStyle: 'italic' },
-  { tag: tags.strong, fontWeight: 'bold' },
-  { tag: tags.link, color: '#8be9fd', textDecoration: 'underline' },
-  { tag: tags.url, color: '#8be9fd' },
-  { tag: tags.strikethrough, textDecoration: 'line-through' },
-  { tag: tags.meta, color: '#bd93f9' },
-  { tag: tags.processingInstruction, color: '#ff79c6' },
-]);
-
-const monokaiProHighlight = HighlightStyle.define([
-  { tag: tags.comment, color: '#939293' },
-  { tag: tags.keyword, color: '#ff6188' },
-  { tag: tags.string, color: '#ffd866' },
-  { tag: tags.number, color: '#ab9df2' },
-  { tag: tags.bool, color: '#ab9df2' },
-  { tag: tags.operator, color: '#ff6188' },
-  { tag: tags.function(tags.variableName), color: '#a9dc76' },
-  { tag: tags.definition(tags.variableName), color: '#fcfcfa' },
-  { tag: tags.typeName, color: '#78dce8' },
-  { tag: tags.propertyName, color: '#78dce8' },
-  { tag: tags.heading, color: '#ff6188', fontWeight: 'bold' },
-  { tag: tags.emphasis, fontStyle: 'italic' },
-  { tag: tags.strong, fontWeight: 'bold' },
-  { tag: tags.link, color: '#78dce8', textDecoration: 'underline' },
-  { tag: tags.url, color: '#78dce8' },
-  { tag: tags.strikethrough, textDecoration: 'line-through' },
-  { tag: tags.meta, color: '#ab9df2' },
-  { tag: tags.processingInstruction, color: '#ff6188' },
-]);
-
-const ayuDarkHighlight = HighlightStyle.define([
-  { tag: tags.comment, color: '#626a73' },
-  { tag: tags.keyword, color: '#ff8f40' },
-  { tag: tags.string, color: '#aad94c' },
-  { tag: tags.number, color: '#d2a6ff' },
-  { tag: tags.bool, color: '#d2a6ff' },
-  { tag: tags.operator, color: '#f29668' },
-  { tag: tags.function(tags.variableName), color: '#ffb454' },
-  { tag: tags.definition(tags.variableName), color: '#bfbdb6' },
-  { tag: tags.typeName, color: '#59c2ff' },
-  { tag: tags.propertyName, color: '#59c2ff' },
-  { tag: tags.heading, color: '#59c2ff', fontWeight: 'bold' },
-  { tag: tags.emphasis, fontStyle: 'italic' },
-  { tag: tags.strong, fontWeight: 'bold' },
-  { tag: tags.link, color: '#59c2ff', textDecoration: 'underline' },
-  { tag: tags.url, color: '#59c2ff' },
-  { tag: tags.strikethrough, textDecoration: 'line-through' },
-  { tag: tags.meta, color: '#d2a6ff' },
-  { tag: tags.processingInstruction, color: '#ff8f40' },
-]);
-
-const quietLightHighlight = HighlightStyle.define([
-  { tag: tags.comment, color: '#aaaaaa' },
-  { tag: tags.keyword, color: '#325cc0' },
-  { tag: tags.string, color: '#448c27' },
-  { tag: tags.number, color: '#aa3731' },
-  { tag: tags.bool, color: '#aa3731' },
-  { tag: tags.operator, color: '#325cc0' },
-  { tag: tags.function(tags.variableName), color: '#7a3e9d' },
-  { tag: tags.definition(tags.variableName), color: '#333333' },
-  { tag: tags.typeName, color: '#007299' },
-  { tag: tags.propertyName, color: '#007299' },
-  { tag: tags.heading, color: '#325cc0', fontWeight: 'bold' },
-  { tag: tags.emphasis, fontStyle: 'italic' },
-  { tag: tags.strong, fontWeight: 'bold' },
-  { tag: tags.link, color: '#325cc0', textDecoration: 'underline' },
-  { tag: tags.url, color: '#325cc0' },
-  { tag: tags.strikethrough, textDecoration: 'line-through' },
-  { tag: tags.meta, color: '#7a3e9d' },
-  { tag: tags.processingInstruction, color: '#325cc0' },
-]);
-
-const solarizedLightHighlight = HighlightStyle.define([
-  { tag: tags.comment, color: '#93a1a1' },
-  { tag: tags.keyword, color: '#859900' },
-  { tag: tags.string, color: '#2aa198' },
-  { tag: tags.number, color: '#d33682' },
-  { tag: tags.bool, color: '#d33682' },
-  { tag: tags.operator, color: '#657b83' },
-  { tag: tags.function(tags.variableName), color: '#268bd2' },
-  { tag: tags.definition(tags.variableName), color: '#657b83' },
-  { tag: tags.typeName, color: '#6c71c4' },
-  { tag: tags.propertyName, color: '#268bd2' },
-  { tag: tags.heading, color: '#268bd2', fontWeight: 'bold' },
-  { tag: tags.emphasis, fontStyle: 'italic' },
-  { tag: tags.strong, fontWeight: 'bold' },
-  { tag: tags.link, color: '#268bd2', textDecoration: 'underline' },
-  { tag: tags.url, color: '#268bd2' },
-  { tag: tags.strikethrough, textDecoration: 'line-through' },
-  { tag: tags.meta, color: '#6c71c4' },
-  { tag: tags.processingInstruction, color: '#859900' },
-]);
-
-const gruvboxLightHighlight = HighlightStyle.define([
-  { tag: tags.comment, color: '#928374' },
-  { tag: tags.keyword, color: '#9d0006' },
-  { tag: tags.string, color: '#79740e' },
-  { tag: tags.number, color: '#8f3f71' },
-  { tag: tags.bool, color: '#8f3f71' },
-  { tag: tags.operator, color: '#af3a03' },
-  { tag: tags.function(tags.variableName), color: '#076678' },
-  { tag: tags.definition(tags.variableName), color: '#3c3836' },
-  { tag: tags.typeName, color: '#b57614' },
-  { tag: tags.propertyName, color: '#076678' },
-  { tag: tags.heading, color: '#076678', fontWeight: 'bold' },
-  { tag: tags.emphasis, fontStyle: 'italic' },
-  { tag: tags.strong, fontWeight: 'bold' },
-  { tag: tags.link, color: '#076678', textDecoration: 'underline' },
-  { tag: tags.url, color: '#076678' },
-  { tag: tags.strikethrough, textDecoration: 'line-through' },
-  { tag: tags.meta, color: '#8f3f71' },
-  { tag: tags.processingInstruction, color: '#9d0006' },
+  { tag: tags.meta, color: '#6a6a6a' },
+  { tag: tags.processingInstruction, color: '#3d6098' },
 ]);
 
 function getHighlightStyle(activeTheme: ThemeId): HighlightStyle {
   switch (activeTheme) {
-    case 'github-dark':     return githubDarkHighlight;
-    case 'dracula':         return draculaHighlight;
-    case 'monokai-pro':     return monokaiProHighlight;
-    case 'ayu-dark':        return ayuDarkHighlight;
-    case 'matte-white':     return lightHighlight;
-    case 'github-light':    return githubLightHighlight;
-    case 'quiet-light':     return quietLightHighlight;
-    case 'solarized-light': return solarizedLightHighlight;
-    case 'gruvbox-light':   return gruvboxLightHighlight;
-    default:                return darkHighlight; // matte-black
+    case 'paper':
+    case 'mist':  return lightHighlight;
+    default:      return darkHighlight; // ink, graphite
   }
 }
 
@@ -515,7 +342,7 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
     };
   }, []);
 
-  // Apply format to selection
+  // Apply (or toggle off) format on selection
   const applyFormat = useCallback((prefix: string, suffix: string) => {
     const view = viewRef.current;
     if (!view) return;
@@ -523,10 +350,41 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
     const sel = getSelection();
     if (!sel) return;
 
-    const formatted = `${prefix}${sel.text}${suffix}`;
+    const { from, to, text } = sel;
+    const doc = view.state.doc;
+
+    // Case 1: markers are inside the selection (e.g. user selected "**texto**")
+    if (
+      text.length >= prefix.length + suffix.length &&
+      text.startsWith(prefix) &&
+      text.endsWith(suffix)
+    ) {
+      const inner = text.slice(prefix.length, text.length - suffix.length);
+      view.dispatch({
+        changes: { from, to, insert: inner },
+        selection: { anchor: from, head: from + inner.length },
+      });
+      view.focus();
+      return;
+    }
+
+    // Case 2: markers surround the selection (typical after the first toggle)
+    const before = doc.sliceString(Math.max(0, from - prefix.length), from);
+    const after = doc.sliceString(to, Math.min(doc.length, to + suffix.length));
+    if (before === prefix && after === suffix) {
+      view.dispatch({
+        changes: { from: from - prefix.length, to: to + suffix.length, insert: text },
+        selection: { anchor: from - prefix.length, head: from - prefix.length + text.length },
+      });
+      view.focus();
+      return;
+    }
+
+    // Otherwise: wrap the selection
+    const formatted = `${prefix}${text}${suffix}`;
     view.dispatch({
-      changes: { from: sel.from, to: sel.to, insert: formatted },
-      selection: { anchor: sel.from + prefix.length, head: sel.from + prefix.length + sel.text.length },
+      changes: { from, to, insert: formatted },
+      selection: { anchor: from + prefix.length, head: from + prefix.length + text.length },
     });
     view.focus();
   }, [getSelection]);

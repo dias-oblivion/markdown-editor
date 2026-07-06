@@ -55,6 +55,11 @@
   color: var(--text-primary);
 }
 
+.headerBtn.active {
+  background: var(--bg-hover);
+  color: var(--accent-primary);
+}
+
 .headerClaudeBtn {
   display: flex;
   align-items: center;
