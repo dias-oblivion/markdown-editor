@@ -468,6 +468,8 @@ interface FsEntry {
   path: string;
   isDirectory: boolean;
   children?: FsEntry[];
+  mtime?: number;
+  birthtime?: number;
 }
 
 async function readDirectoryRecursive(dirPath: string): Promise<FsEntry> {
@@ -483,10 +485,22 @@ async function readDirectoryRecursive(dirPath: string): Promise<FsEntry> {
       const child = await readDirectoryRecursive(entryPath);
       children.push(child);
     } else {
+      let mtime: number | undefined;
+      let birthtime: number | undefined;
+      try {
+        const st = await fs.promises.stat(entryPath);
+        mtime = st.mtimeMs;
+        // birthtime can be 0 on some filesystems; fall back to mtime downstream
+        birthtime = st.birthtimeMs || st.mtimeMs;
+      } catch {
+        // stat can fail on broken symlinks — leave timestamps undefined
+      }
       children.push({
         name: entry.name,
         path: entryPath,
         isDirectory: false,
+        mtime,
+        birthtime,
       });
     }
   }

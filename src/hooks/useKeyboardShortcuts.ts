@@ -6,7 +6,7 @@ interface ShortcutHandlers {
   onFind?: () => void;
   onNewFile?: () => void;
   onTogglePreview?: () => void;
-  onToggleSidebar?: () => void;
+  onToggleFocus?: () => void;
   onToggleChat?: () => void;
   onFormatBold?: () => void;
   onFormatItalic?: () => void;
@@ -50,9 +50,10 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
         handlers.onTogglePreview?.();
       }
 
-      if (ctrl && e.key === 'b') {
+      // F11 — toggle immersive focus (reading) mode
+      if (e.key === 'F11') {
         e.preventDefault();
-        handlers.onToggleSidebar?.();
+        handlers.onToggleFocus?.();
       }
 
       if (ctrl && e.shiftKey && (e.key === 'c' || e.key === 'C')) {
@@ -60,52 +61,54 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
         handlers.onToggleChat?.();
       }
 
-      if (e.altKey && (e.key === 'b' || e.key === 'B')) {
+      // Inline formatting (Ctrl)
+      if (ctrl && !e.shiftKey && e.key === 'b') {
         e.preventDefault();
         handlers.onFormatBold?.();
       }
 
-      if (e.altKey && (e.key === 'i' || e.key === 'I')) {
+      if (ctrl && !e.shiftKey && e.key === 'i') {
         e.preventDefault();
         handlers.onFormatItalic?.();
       }
 
-      if (e.altKey && (e.key === 's' || e.key === 'S')) {
-        e.preventDefault();
-        handlers.onFormatStrikethrough?.();
-      }
-
-      if (e.altKey && (e.key === 'u' || e.key === 'U')) {
+      if (ctrl && !e.shiftKey && e.key === 'u') {
         e.preventDefault();
         handlers.onFormatUnderline?.();
       }
 
-      if (e.altKey && (e.key === 'k' || e.key === 'K')) {
+      if (ctrl && !e.shiftKey && e.key === 'k') {
         e.preventDefault();
         handlers.onFormatLink?.();
       }
 
-      if (e.altKey && (e.key === 'o' || e.key === 'O')) {
+      // Block / insert actions (Ctrl+Shift)
+      if (ctrl && e.shiftKey && e.key === 'S') {
+        e.preventDefault();
+        handlers.onFormatStrikethrough?.();
+      }
+
+      if (ctrl && e.shiftKey && e.key === 'O') {
         e.preventDefault();
         handlers.onInsertOrderedList?.();
       }
 
-      if (e.altKey && (e.key === 'l' || e.key === 'L')) {
+      if (ctrl && e.shiftKey && e.key === 'L') {
         e.preventDefault();
         handlers.onInsertBulletedList?.();
       }
 
-      if (e.altKey && (e.key === 'q' || e.key === 'Q')) {
+      if (ctrl && e.shiftKey && e.key === 'Q') {
         e.preventDefault();
         handlers.onInsertBlockquote?.();
       }
 
-      if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+      if (ctrl && e.shiftKey && e.key === 'K') {
         e.preventDefault();
         handlers.onOpenCodeDialog?.();
       }
 
-      if (e.altKey && (e.key === 't' || e.key === 'T')) {
+      if (ctrl && e.shiftKey && e.key === 'T') {
         e.preventDefault();
         handlers.onOpenTableDialog?.();
       }

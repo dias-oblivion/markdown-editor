@@ -4,6 +4,10 @@ export interface FileEntry {
   isDirectory: boolean;
   children?: FileEntry[];
   handle?: FileSystemDirectoryHandle | FileSystemFileHandle;
+  /** Last-modified time in ms (Electron only). Used to sort Claude Plans by recency. */
+  mtime?: number;
+  /** Creation time in ms (Electron only). Falls back to mtime when unavailable. */
+  birthtime?: number;
 }
 
 export interface EditorTab {
@@ -39,16 +43,10 @@ export interface CodeBlockConfig {
 }
 
 export type ThemeId =
-  | 'matte-black'
-  | 'github-dark'
-  | 'dracula'
-  | 'monokai-pro'
-  | 'ayu-dark'
-  | 'matte-white'
-  | 'github-light'
-  | 'quiet-light'
-  | 'solarized-light'
-  | 'gruvbox-light';
+  | 'obsidian'
+  | 'graphite'
+  | 'paper'
+  | 'mist';
 
 export interface ThemeMeta {
   id: ThemeId;
@@ -59,16 +57,10 @@ export interface ThemeMeta {
 }
 
 export const THEMES: ThemeMeta[] = [
-  { id: 'matte-black',     name: 'Matte Black',     swatchColors: ['#111111', '#1e1e1e', '#e8a838', '#5c9ce6'], isDark: true  },
-  { id: 'github-dark',     name: 'GitHub Dark',     swatchColors: ['#0d1117', '#161b22', '#2f81f7', '#3fb950'], isDark: true  },
-  { id: 'dracula',         name: 'Dracula',         swatchColors: ['#282a36', '#1e1f29', '#bd93f9', '#ff79c6'], isDark: true  },
-  { id: 'monokai-pro',     name: 'Monokai Pro',     swatchColors: ['#2d2a2e', '#221f22', '#ff6188', '#ffd866'], isDark: true  },
-  { id: 'ayu-dark',        name: 'Ayu Dark',        swatchColors: ['#0d1017', '#090e14', '#ffb454', '#59c2ff'], isDark: true  },
-  { id: 'matte-white',     name: 'Matte White',     swatchColors: ['#ffffff', '#f5f5f5', '#d49520', '#5c9ce6'], isDark: false },
-  { id: 'github-light',    name: 'GitHub Light',    swatchColors: ['#ffffff', '#f6f8fa', '#0969da', '#1a7f37'], isDark: false },
-  { id: 'quiet-light',     name: 'Quiet Light',     swatchColors: ['#f5f5f0', '#e8e8e3', '#325cc0', '#448c27'], isDark: false },
-  { id: 'solarized-light', name: 'Solarized Light', swatchColors: ['#fdf6e3', '#eee8d5', '#268bd2', '#859900'], isDark: false },
-  { id: 'gruvbox-light',   name: 'Gruvbox Light',   swatchColors: ['#fbf1c7', '#ebdbb2', '#b57614', '#076678'], isDark: false },
+  { id: 'obsidian', name: 'Obsidian', swatchColors: ['#1E1E1E', '#262626', '#7C6CF7', '#DCDDDE'], isDark: true  },
+  { id: 'graphite', name: 'Graphite', swatchColors: ['#171717', '#212121', '#7C6CF7', '#E2E2E2'], isDark: true  },
+  { id: 'paper',    name: 'Paper',    swatchColors: ['#FFFFFF', '#F1F1F4', '#6B5FD6', '#1A1A1A'], isDark: false },
+  { id: 'mist',     name: 'Mist',     swatchColors: ['#F4F4F6', '#EAEAEE', '#6B5FD6', '#232323'], isDark: false },
 ];
 
 export type ClaudeAssistAction = 'rewriter' | 'diagram' | 'brainstorm' | 'tasks';

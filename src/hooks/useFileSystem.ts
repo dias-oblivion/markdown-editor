@@ -6,6 +6,7 @@ import {
   openDirectoryByPath,
   reopenDirectoryByPath,
   readFileContent,
+  readFileByPath,
   writeFileContent,
   findFileByPath,
   getInitialWorkspace,
@@ -19,34 +20,65 @@ import {
   refreshDirectoryTree,
   moveFile,
 } from '../utils/fileSystem';
-import { saveSession, getSession, clearSession } from '../utils/sessionStorage';
+import { patchSession, getSession, clearSession } from '../utils/sessionStorage';
+
+export type SidebarSource = 'files' | 'plans';
 
 export function useFileSystem() {
-  const [rootEntry, setRootEntry] = useState<FileEntry | null>(null);
+  const [filesRoot, setFilesRoot] = useState<FileEntry | null>(null);
+  const [plansRoot, setPlansRoot] = useState<FileEntry | null>(null);
+  const [sidebarSource, setSidebarSource] = useState<SidebarSource>('files');
   const [tabs, setTabs] = useState<EditorTab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
+  const [openedPlans, setOpenedPlans] = useState<string[]>([]);
   const [isRestoring, setIsRestoring] = useState(true);
 
   // Ref always points to latest tabs — used in callbacks to avoid stale closures
   const tabsRef = useRef<EditorTab[]>([]);
   tabsRef.current = tabs;
 
-  // Track root directory path for Electron persistence
-  const rootPathRef = useRef<string | null>(null);
+  // Track root directory paths for persistence (independent per source)
+  const filesPathRef = useRef<string | null>(null);
+  const plansPathRef = useRef<string | null>(null);
+
+  // Which source is active, mirrored in a ref for stable callbacks
+  const sourceRef = useRef<SidebarSource>(sidebarSource);
+  sourceRef.current = sidebarSource;
+
+  // True while a directory picker / plans load is in flight — suppresses the
+  // focus-triggered refresh that would otherwise revert a freshly opened folder.
+  const isOpeningRef = useRef(false);
+
+  const rootEntry = sidebarSource === 'files' ? filesRoot : plansRoot;
+  const activeRootRef = useRef<FileEntry | null>(null);
+  activeRootRef.current = rootEntry;
 
   const activeTab = tabs.find(t => t.id === activeTabId) ?? null;
 
-  // ── Persist session on tab changes ──
+  // Write the given entry back into whichever root is currently active.
+  const applyActiveRoot = useCallback((entry: FileEntry | null) => {
+    if (sourceRef.current === 'files') {
+      setFilesRoot(entry);
+      filesPathRef.current = entry?.path ?? null;
+    } else {
+      setPlansRoot(entry);
+      plansPathRef.current = entry?.path ?? null;
+    }
+  }, []);
+
+  // ── Persist session on tab / source changes ──
   useEffect(() => {
     if (isRestoring) return;
 
     const activePath = tabs.find(t => t.id === activeTabId)?.path ?? null;
-    saveSession({
-      directoryPath: rootPathRef.current,
+    patchSession({
+      directoryPath: filesPathRef.current,
       openTabPaths: tabs.map(t => t.path),
       activeTabPath: activePath,
+      sidebarSource,
+      openedPlans,
     });
-  }, [tabs, activeTabId, isRestoring]);
+  }, [tabs, activeTabId, sidebarSource, openedPlans, isRestoring]);
 
   // ── Restore session on mount ──
   useEffect(() => {
@@ -60,8 +92,8 @@ export function useFileSystem() {
           if (cliWorkspace && !cancelled) {
             const entry = await reopenDirectoryByPath(cliWorkspace);
             if (entry && !cancelled) {
-              rootPathRef.current = cliWorkspace;
-              setRootEntry(entry);
+              filesPathRef.current = cliWorkspace;
+              setFilesRoot(entry);
               setIsRestoring(false);
               return;
             }
@@ -70,23 +102,32 @@ export function useFileSystem() {
 
         // Priority 2: Restore from session storage
         const session = getSession();
-        if (!session?.directoryPath || cancelled) {
+        if (!session || cancelled) {
           setIsRestoring(false);
           return;
         }
 
+        if (session.openedPlans) setOpenedPlans(session.openedPlans);
+
         if (isElectron()) {
-          const entry = await reopenDirectoryByPath(session.directoryPath);
-          if (!entry || cancelled) {
-            clearSession();
-            setIsRestoring(false);
-            return;
+          // Restore the user's files folder (if any)
+          if (session.directoryPath) {
+            const entry = await reopenDirectoryByPath(session.directoryPath);
+            if (entry && !cancelled) {
+              filesPathRef.current = session.directoryPath;
+              setFilesRoot(entry);
+            }
           }
 
-          rootPathRef.current = session.directoryPath;
-          setRootEntry(entry);
+          // Restore open tabs by reading their paths directly (root-independent)
+          await restoreTabs(session.openTabPaths, session.activeTabPath, session.dirtyContent ?? {}, cancelled);
 
-          await restoreTabs(entry, session.openTabPaths, session.activeTabPath, session.dirtyContent ?? {}, cancelled);
+          // Restore the active sidebar source (lazily loads plans if needed)
+          if (session.sidebarSource === 'plans' && !cancelled) {
+            setSidebarSource('plans');
+            const plans = await loadPlansRoot();
+            if (plans && !cancelled) { /* loaded */ }
+          }
         }
         // Browser fallback: can't reliably restore without handle permissions
       } catch {
@@ -96,7 +137,6 @@ export function useFileSystem() {
     }
 
     async function restoreTabs(
-      entry: FileEntry,
       tabPaths: string[],
       activeTabPath: string | null,
       dirtyContent: Record<string, string>,
@@ -108,18 +148,18 @@ export function useFileSystem() {
       let activeRestoredPath: string | null = null;
 
       for (const tabPath of tabPaths) {
-        const fileEntry = findFileByPath(entry, tabPath);
-        if (!fileEntry || fileEntry.isDirectory) continue;
-
         try {
-          const content = await readFileContent(fileEntry);
           const savedDirty = dirtyContent[tabPath];
+          // In Electron we can read straight from the path, so tabs from either
+          // source (files or plans) survive a restart.
+          const content = savedDirty ?? await readFileByPath(tabPath);
+          const name = tabPath.substring(tabPath.lastIndexOf('/') + 1);
           restoredTabs.push({
             id: crypto.randomUUID(),
-            name: fileEntry.name,
-            path: fileEntry.path,
-            content: savedDirty ?? content,
-            handle: fileEntry.handle as FileSystemFileHandle | undefined,
+            name,
+            path: tabPath,
+            content,
+            handle: undefined,
             isDirty: savedDirty !== undefined,
           });
 
@@ -148,22 +188,45 @@ export function useFileSystem() {
     return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Directory picker ──
-  const handleOpenDirectory = useCallback(async () => {
-    const entry = await openDirectory();
-    if (entry) {
-      setRootEntry(entry);
-      rootPathRef.current = entry.path;
-    }
-  }, []);
-
-  const handleOpenClaudePlans = useCallback(async () => {
+  // ── Load ~/.claude/plans into the plans root ──
+  const loadPlansRoot = useCallback(async (): Promise<FileEntry | null> => {
     const home = await getHomeDir();
-    if (!home) return;
+    if (!home) return null;
     const entry = await openDirectoryByPath(`${home}/.claude/plans`);
     if (entry) {
-      setRootEntry(entry);
-      rootPathRef.current = entry.path;
+      setPlansRoot(entry);
+      plansPathRef.current = entry.path;
+    }
+    return entry;
+  }, []);
+
+  // ── Sidebar source switching ──
+  const showFiles = useCallback(() => setSidebarSource('files'), []);
+
+  const showPlans = useCallback(async () => {
+    setSidebarSource('plans');
+    if (!plansPathRef.current) {
+      isOpeningRef.current = true;
+      try {
+        await loadPlansRoot();
+      } finally {
+        isOpeningRef.current = false;
+      }
+    }
+  }, [loadPlansRoot]);
+
+  // ── Directory picker (user's Files folder) ──
+  const handleOpenDirectory = useCallback(async () => {
+    isOpeningRef.current = true;
+    try {
+      const entry = await openDirectory();
+      if (entry) {
+        setFilesRoot(entry);
+        filesPathRef.current = entry.path;
+        setSidebarSource('files');
+      }
+    } finally {
+      isOpeningRef.current = false;
     }
   }, []);
 
@@ -171,6 +234,11 @@ export function useFileSystem() {
     if (entry.isDirectory) return;
     // In browser we need a handle; in Electron we use the path
     if (!entry.handle && !isElectron()) return;
+
+    // Mark Claude Plans as "seen" so its "new" badge clears
+    if (plansPathRef.current && entry.path.startsWith(plansPathRef.current + '/')) {
+      setOpenedPlans(prev => prev.includes(entry.path) ? prev : [...prev, entry.path]);
+    }
 
     const existing = tabsRef.current.find(t => t.path === entry.path);
     if (existing) {
@@ -230,54 +298,44 @@ export function useFileSystem() {
   }, []);
 
   const handleCreateFile = useCallback(async (dirPath: string, fileName: string) => {
-    const root = rootEntry;
+    const root = activeRootRef.current;
     if (!root) return;
 
-    // Find the target directory in the tree
     const targetDir = dirPath === root.path
       ? root
       : findDirByPath(root, dirPath);
     if (!targetDir) return;
 
-    // Create the file on disk
     const { filePath, handle } = await createNewFile(targetDir, fileName);
 
-    // Refresh the directory tree
     const refreshed = await refreshDirectoryTree(root);
     if (refreshed) {
-      setRootEntry(refreshed);
-      rootPathRef.current = refreshed.path;
+      applyActiveRoot(refreshed);
 
-      // Find the new file and open it
       const newFileEntry = findFileByPath(refreshed, filePath);
       if (newFileEntry) {
-        // If browser mode, attach the handle we got from createNewFile
         if (handle && !newFileEntry.handle) {
           newFileEntry.handle = handle;
         }
         handleOpenFile(newFileEntry);
       }
     }
-  }, [rootEntry, handleOpenFile]);
+  }, [applyActiveRoot, handleOpenFile]);
 
   const handleRenameFile = useCallback(async (oldPath: string, newName: string) => {
-    const root = rootEntry;
+    const root = activeRootRef.current;
     if (!root) return;
 
-    // Find the file entry in the tree
     const fileEntry = findFileByPath(root, oldPath);
     if (!fileEntry) return;
 
-    // Find parent directory for browser mode
     const parentPath = oldPath.substring(0, oldPath.lastIndexOf('/'));
     const parentDir = parentPath === root.path
       ? root
       : findDirByPath(root, parentPath);
 
-    // Perform the rename
     const newPath = await renameFile(fileEntry, newName, parentDir ?? undefined);
 
-    // Update any open tabs that reference the old path
     setTabs(prev =>
       prev.map(t =>
         t.path === oldPath
@@ -286,13 +344,10 @@ export function useFileSystem() {
       )
     );
 
-    // Refresh the directory tree
     const refreshed = await refreshDirectoryTree(root);
     if (refreshed) {
-      setRootEntry(refreshed);
-      rootPathRef.current = refreshed.path;
+      applyActiveRoot(refreshed);
 
-      // Re-attach handle for browser mode if tab is open
       const tab = tabsRef.current.find(t => t.path === newPath);
       if (tab && !tab.handle) {
         const newFileEntry = findFileByPath(refreshed, newPath);
@@ -307,26 +362,22 @@ export function useFileSystem() {
         }
       }
     }
-  }, [rootEntry]);
+  }, [applyActiveRoot]);
 
   const handleDeleteFile = useCallback(async (filePath: string) => {
-    const root = rootEntry;
+    const root = activeRootRef.current;
     if (!root) return;
 
-    // Find the file entry in the tree
     const fileEntry = findFileByPath(root, filePath);
     if (!fileEntry) return;
 
-    // Find parent directory for browser mode
     const parentPath = filePath.substring(0, filePath.lastIndexOf('/'));
     const parentDir = parentPath === root.path
       ? root
       : findDirByPath(root, parentPath);
 
-    // Perform the delete
     await deleteFile(fileEntry, parentDir ?? undefined);
 
-    // Close the tab if the file is open
     const openTab = tabsRef.current.find(t => t.path === filePath);
     if (openTab) {
       setTabs(prev => {
@@ -344,16 +395,14 @@ export function useFileSystem() {
       });
     }
 
-    // Refresh the directory tree
     const refreshed = await refreshDirectoryTree(root);
     if (refreshed) {
-      setRootEntry(refreshed);
-      rootPathRef.current = refreshed.path;
+      applyActiveRoot(refreshed);
     }
-  }, [rootEntry, activeTabId]);
+  }, [applyActiveRoot, activeTabId]);
 
   const handleCreateDirectory = useCallback(async (dirPath: string, folderName: string) => {
-    const root = rootEntry;
+    const root = activeRootRef.current;
     if (!root) return;
 
     const targetDir = dirPath === root.path
@@ -365,13 +414,12 @@ export function useFileSystem() {
 
     const refreshed = await refreshDirectoryTree(root);
     if (refreshed) {
-      setRootEntry(refreshed);
-      rootPathRef.current = refreshed.path;
+      applyActiveRoot(refreshed);
     }
-  }, [rootEntry]);
+  }, [applyActiveRoot]);
 
   const handleRenameDirectory = useCallback(async (oldPath: string, newName: string) => {
-    const root = rootEntry;
+    const root = activeRootRef.current;
     if (!root) return;
 
     const dirEntry = findDirByPath(root, oldPath);
@@ -384,7 +432,6 @@ export function useFileSystem() {
 
     const newPath = await renameDirectory(dirEntry, newName, parentDir ?? undefined);
 
-    // Update any open tabs whose paths were inside the renamed directory
     setTabs(prev =>
       prev.map(t =>
         t.path.startsWith(oldPath + '/')
@@ -395,13 +442,12 @@ export function useFileSystem() {
 
     const refreshed = await refreshDirectoryTree(root);
     if (refreshed) {
-      setRootEntry(refreshed);
-      rootPathRef.current = refreshed.path;
+      applyActiveRoot(refreshed);
     }
-  }, [rootEntry]);
+  }, [applyActiveRoot]);
 
   const handleDeleteDirectory = useCallback(async (dirPath: string) => {
-    const root = rootEntry;
+    const root = activeRootRef.current;
     if (!root) return;
 
     const dirEntry = findDirByPath(root, dirPath);
@@ -414,7 +460,6 @@ export function useFileSystem() {
 
     await deleteDirectory(dirEntry, parentDir ?? undefined);
 
-    // Close any open tabs whose paths were inside the deleted directory
     setTabs(prev => {
       const remaining = prev.filter(t => !t.path.startsWith(dirPath + '/'));
       if (remaining.length === 0) {
@@ -427,38 +472,35 @@ export function useFileSystem() {
 
     const refreshed = await refreshDirectoryTree(root);
     if (refreshed) {
-      setRootEntry(refreshed);
-      rootPathRef.current = refreshed.path;
+      applyActiveRoot(refreshed);
     }
-  }, [rootEntry, activeTabId]);
+  }, [applyActiveRoot, activeTabId]);
 
   const handleRefresh = useCallback(async () => {
-    const root = rootEntry;
+    // Guard against the focus-refresh race that reverts a freshly opened folder
+    if (isOpeningRef.current) return;
+    const root = activeRootRef.current;
     if (!root) return;
 
-    // Refresh the directory tree to detect external changes
     const refreshed = await refreshDirectoryTree(root);
     if (refreshed) {
-      setRootEntry(refreshed);
-      rootPathRef.current = refreshed.path;
+      applyActiveRoot(refreshed);
     }
-  }, [rootEntry]);
+  }, [applyActiveRoot]);
 
   const handleMoveFile = useCallback(async (filePath: string, targetDirPath: string) => {
-    const root = rootEntry;
+    const root = activeRootRef.current;
     if (!root) return;
 
     const fileEntry = findFileByPath(root, filePath);
     const targetDirEntry = findDirByPath(root, targetDirPath);
     if (!fileEntry || !targetDirEntry) return;
 
-    // No-op: file is already in the target directory
     const currentDirPath = filePath.substring(0, filePath.lastIndexOf('/'));
     if (currentDirPath === targetDirPath) return;
 
     const newPath = await moveFile(fileEntry, targetDirEntry);
 
-    // Update any open tab that was pointing to the moved file
     const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
     setTabs(prev =>
       prev.map(t =>
@@ -468,22 +510,25 @@ export function useFileSystem() {
       )
     );
 
-    // Refresh the directory tree
     const refreshed = await refreshDirectoryTree(root);
     if (refreshed) {
-      setRootEntry(refreshed);
-      rootPathRef.current = refreshed.path;
+      applyActiveRoot(refreshed);
     }
-  }, [rootEntry]);
+  }, [applyActiveRoot]);
 
   return {
     rootEntry,
+    filesRoot,
+    plansRoot,
+    sidebarSource,
+    showFiles,
+    showPlans,
+    openedPlans,
     tabs,
     activeTab,
     activeTabId,
     setActiveTabId,
     openDirectory: handleOpenDirectory,
-    openClaudePlans: handleOpenClaudePlans,
     openFile: handleOpenFile,
     closeTab: handleCloseTab,
     updateContent: handleUpdateContent,
