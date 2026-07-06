@@ -224,6 +224,10 @@ export function useFileSystem() {
         setFilesRoot(entry);
         filesPathRef.current = entry.path;
         setSidebarSource('files');
+        // Persiste a pasta recém-selecionada na hora. O efeito de sessão só reage a
+        // mudanças de estado (tabs/source); uma troca de pasta que não altera outro
+        // estado nunca seria gravada, fazendo o app reabrir a pasta anterior no restart.
+        patchSession({ directoryPath: entry.path });
       }
     } finally {
       isOpeningRef.current = false;
