@@ -257,11 +257,10 @@ export function Sidebar({
           {isPlans ? 'Claude Plans' : (rootEntry?.name ?? 'Explorer')}
         </span>
         <div className={styles.headerActions}>
-          {isPlans ? (
-            <button className={styles.iconButton} onClick={onRefresh} title="Atualizar">
-              <Icon icon="codicon:refresh" width={16} />
-            </button>
-          ) : (
+          <button className={styles.iconButton} onClick={onRefresh} title="Atualizar">
+            <Icon icon="codicon:refresh" width={16} />
+          </button>
+          {!isPlans && (
             <div className={styles.menuAnchor}>
               <button
                 className={`${styles.iconButton} ${menuOpen ? styles.iconButtonActive : ''}`}
@@ -284,11 +283,6 @@ export function Sidebar({
                         <div className={styles.ctxItem} onClick={() => { openNewFolderDialogForRoot(); setMenuOpen(false); }}>
                           <Icon icon="codicon:new-folder" width={14} />
                           <span className={styles.ctxLabel}>Nova pasta</span>
-                        </div>
-                        <div className={styles.ctxDivider} />
-                        <div className={styles.ctxItem} onClick={() => { onRefresh(); setMenuOpen(false); }}>
-                          <Icon icon="codicon:refresh" width={14} />
-                          <span className={styles.ctxLabel}>Atualizar</span>
                         </div>
                         <div className={styles.ctxDivider} />
                       </>
@@ -320,7 +314,25 @@ export function Sidebar({
         {isPlans ? (
           (planRootFiles.length > 0 || planFolders.length > 0) ? (
             <>
-              {/* Recentes: só os planos soltos na raiz */}
+              {/* Pastas primeiro (arquivo/organização manual), navegáveis e recolhidas.
+                  Não seguem a ordem recent-first — essa regra é só dos .md soltos do Claude. */}
+              {planFolders.map((folder) => (
+                <FileTree
+                  key={folder.path}
+                  entry={folder}
+                  initialExpanded={false}
+                  activeFilePath={activeFilePath}
+                  renamingPath={renamingPath}
+                  onFileSelect={onFileSelect}
+                  onDirContextMenu={handleDirContextMenu}
+                  onFileContextMenu={handleFileContextMenu}
+                  onStartRename={(path) => setRenamingPath(path)}
+                  onConfirmRename={handleConfirmRename}
+                  onCancelRename={handleCancelRename}
+                  onMoveFile={onMoveFile}
+                />
+              ))}
+              {/* Planos soltos na raiz (criados pelo Claude) — recent-first */}
               {planRootFiles.length > 0 && (
                 <div className={styles.plansList}>
                   {planRootFiles.map((plan) => {
@@ -340,30 +352,6 @@ export function Sidebar({
                       </div>
                     );
                   })}
-                </div>
-              )}
-              {/* Pastas: arquivo/organização manual, navegável, começa recolhido */}
-              {planFolders.length > 0 && (
-                <div className={styles.plansFolders}>
-                  {planRootFiles.length > 0 && (
-                    <div className={styles.plansFoldersLabel}>Pastas</div>
-                  )}
-                  {planFolders.map((folder) => (
-                    <FileTree
-                      key={folder.path}
-                      entry={folder}
-                      initialExpanded={false}
-                      activeFilePath={activeFilePath}
-                      renamingPath={renamingPath}
-                      onFileSelect={onFileSelect}
-                      onDirContextMenu={handleDirContextMenu}
-                      onFileContextMenu={handleFileContextMenu}
-                      onStartRename={(path) => setRenamingPath(path)}
-                      onConfirmRename={handleConfirmRename}
-                      onCancelRename={handleCancelRename}
-                      onMoveFile={onMoveFile}
-                    />
-                  ))}
                 </div>
               )}
             </>
