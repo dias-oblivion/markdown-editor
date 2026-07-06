@@ -15,8 +15,8 @@ interface ToolbarProps {
   activeTabId: string | null;
   onTabSelect: (id: string) => void;
   onTabClose: (id: string) => void;
-  sidebarVisible: boolean;
-  onToggleSidebar: () => void;
+  settingsOpen: boolean;
+  onToggleSettings: () => void;
   onFind: () => void;
   chatVisible: boolean;
   onToggleChat: () => void;
@@ -35,8 +35,8 @@ export function Toolbar({
   activeTabId,
   onTabSelect,
   onTabClose,
-  sidebarVisible,
-  onToggleSidebar,
+  settingsOpen,
+  onToggleSettings,
   onFind,
   chatVisible,
   onToggleChat,
@@ -103,16 +103,6 @@ export function Toolbar({
       {/* Top bar */}
       <div className={styles.topBar}>
         <div className={styles.topBarLeft}>
-          <button
-            className={`${styles.headerBtn} ${sidebarVisible ? styles.active : ''}`}
-            onClick={onToggleSidebar}
-            title={sidebarVisible ? 'Esconder lista de arquivos' : 'Mostrar lista de arquivos'}
-          >
-            <Icon icon="codicon:layout-sidebar-left" width={14} />
-          </button>
-
-          <div className={styles.headerDivider} />
-
           <span className={styles.appTitle}>Markdown Editor</span>
 
           <div className={styles.headerDivider} />
@@ -241,6 +231,14 @@ export function Toolbar({
           </div>
 
           <div className={styles.topBarSep} />
+
+          <button
+            className={`${styles.headerBtn} ${settingsOpen ? styles.active : ''}`}
+            onClick={onToggleSettings}
+            title="Configurações"
+          >
+            <Icon icon="codicon:gear" width={15} />
+          </button>
 
           {/* AI Assistant Chat toggle - only show in Electron */}
           {isElectron() && (

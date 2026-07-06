@@ -49,7 +49,6 @@
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
 
   /* ── Layout (not theme-specific) ── */
-  --activitybar-width: 48px;
   --sidebar-width: 264px;
   --toolbar-height: 40px;
   --statusbar-height: 28px;

@@ -7,7 +7,6 @@ import { useFileSystem } from '../hooks/useFileSystem';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { getAISettings, saveAISettings } from '../utils/aiSettings';
 import { getSession, patchSession } from '../utils/sessionStorage';
-import { ActivityBar } from './ActivityBar/ActivityBar';
 import { Sidebar } from './Sidebar/Sidebar';
 import { Toolbar } from './Toolbar/Toolbar';
 import { Editor } from './Editor/Editor';
@@ -338,13 +337,6 @@ Esse é um teste de diagrama mermaid.
       style={{ display: 'flex', height: '100vh', width: '100vw' }}
       onContextMenu={handleContextMenu}
     >
-      <ActivityBar
-        sidebarVisible={sidebarVisible}
-        settingsOpen={settingsOpen}
-        onToggleSidebar={() => { setSettingsOpen(false); toggleSidebar(); }}
-        onOpenSettings={() => setSettingsOpen(prev => !prev)}
-      />
-
       <Sidebar
         rootEntry={rootEntry}
         activeFilePath={activeTab?.path ?? null}
@@ -387,8 +379,8 @@ Esse é um teste de diagrama mermaid.
           activeTabId={activeTabId}
           onTabSelect={setActiveTabId}
           onTabClose={handleTabCloseRequest}
-          sidebarVisible={sidebarVisible}
-          onToggleSidebar={toggleSidebar}
+          settingsOpen={settingsOpen}
+          onToggleSettings={() => setSettingsOpen(prev => !prev)}
           onFind={() => setShowFind(true)}
           chatVisible={chatVisible}
           onToggleChat={toggleChat}
@@ -401,7 +393,36 @@ Esse é um teste de diagrama mermaid.
 
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Editor or empty state */}
-          <div style={{ flex: 1, overflow: 'hidden', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ position: 'relative', flex: 1, overflow: 'hidden', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            {/* Botão flutuante discreto para reabrir a listagem quando colapsada */}
+            {!sidebarVisible && (
+              <button
+                onClick={() => setSidebarVisible(true)}
+                title="Mostrar lista de arquivos"
+                style={{
+                  position: 'absolute',
+                  top: 8,
+                  left: 8,
+                  zIndex: 5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 28,
+                  height: 28,
+                  borderRadius: 6,
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  opacity: 0.55,
+                  transition: 'opacity 0.15s ease, background 0.15s ease',
+                }}
+                onMouseOver={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'var(--bg-hover)'; }}
+                onMouseOut={(e) => { e.currentTarget.style.opacity = '0.55'; e.currentTarget.style.background = 'var(--bg-secondary)'; }}
+              >
+                <Icon icon="codicon:layout-sidebar-left" width={15} />
+              </button>
+            )}
             {showEmptyState ? (
               rootEntry ? (
                 // Simplified empty state when folder is open
