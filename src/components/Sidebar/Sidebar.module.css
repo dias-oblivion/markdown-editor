@@ -21,23 +21,100 @@
   pointer-events: none;
 }
 
-.header {
+/* ── Source tabs (Arquivos / Plans) ── */
+.sourceBar {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  padding: 8px 8px 0;
+  background: var(--bg-secondary);
+}
+
+.sourceTabs {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sourceTab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  padding: 7px 8px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.sourceTab span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sourceTab:hover {
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+}
+
+.sourceTabActive {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-primary);
+}
+
+.sourceTabActive:hover {
+  color: var(--text-primary);
+}
+
+.collapseBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.collapseBtn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* ── Action bar ── */
+.actionBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  gap: 6px;
+  padding: 6px 8px 6px 14px;
   border-bottom: 1px solid var(--border-color);
-  font-size: 10px;
-  font-weight: 700;
+  background: var(--bg-secondary);
+}
+
+.actionTitle {
+  font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: var(--text-secondary);
-  background: var(--bg-tertiary);
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .headerActions {
   display: flex;
-  gap: 2px;
+  gap: 1px;
+  flex-shrink: 0;
 }
 
 .iconButton {
@@ -73,6 +150,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 12px;
   height: 100%;
   color: var(--text-muted);
   padding: 24px 16px;
@@ -83,9 +161,86 @@
 .empty p {
   color: var(--text-muted);
   line-height: 1.5;
-  font-size: 11px;
-  opacity: 0.7;
+  font-size: 12px;
   margin: 0;
+}
+
+.openInline {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: var(--radius-md);
+  background: var(--accent-primary);
+  color: var(--accent-contrast);
+  font-size: 12px;
+  font-weight: 500;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.openInline:hover {
+  background: var(--accent-hover);
+}
+
+.openInline:active {
+  transform: scale(0.97);
+}
+
+/* ── Claude Plans list (recent-first) ── */
+.plansList {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 6px;
+}
+
+.planItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.planItem:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.planItemActive {
+  background: var(--accent-muted);
+  color: var(--accent-primary);
+}
+
+.planDot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.planDotNew {
+  background: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.planName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.planDate {
+  flex-shrink: 0;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .openButton {

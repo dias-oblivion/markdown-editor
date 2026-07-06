@@ -72,8 +72,39 @@ function toggleCheckboxInSource(source: string, index: number, isChecked: boolea
   return lines.join('\n');
 }
 
+/**
+ * GFM renders a task item as `<li class="task-list-item"><input> raw text</li>`,
+ * with the label as a bare text node. Wrap that label (everything up to the first
+ * nested list) in a `.task-label` span so it can be aligned and struck through
+ * independently of any sub-tasks.
+ */
+function wrapTaskLabels(container: HTMLElement) {
+  container.querySelectorAll<HTMLLIElement>('li.task-list-item').forEach((li) => {
+    const checkbox = li.querySelector(':scope > input[type="checkbox"]');
+    if (!checkbox) return;
+    if (li.querySelector(':scope > .task-label')) return; // already wrapped
+
+    const label = document.createElement('span');
+    label.className = 'task-label';
+
+    const toMove: ChildNode[] = [];
+    let node = checkbox.nextSibling;
+    while (node) {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const tag = (node as HTMLElement).tagName;
+        if (tag === 'UL' || tag === 'OL') break; // leave nested lists as siblings
+      }
+      toMove.push(node);
+      node = node.nextSibling;
+    }
+    if (toMove.length === 0) return;
+    toMove.forEach((n) => label.appendChild(n));
+    checkbox.after(label);
+  });
+}
+
 const LIGHT_THEMES = new Set([
-  'matte-white', 'github-light', 'quiet-light', 'solarized-light', 'gruvbox-light',
+  'paper', 'mist',
 ]);
 
 function getMermaidTheme(): 'dark' | 'default' {
@@ -91,6 +122,7 @@ export function MarkdownPreview({ source, onToggleCheckbox }: MarkdownPreviewPro
 
     // Set the HTML first
     ref.current.innerHTML = html;
+    wrapTaskLabels(ref.current);
 
     const blocks = ref.current.querySelectorAll<HTMLElement>('pre code.language-mermaid');
     if (!blocks.length) {

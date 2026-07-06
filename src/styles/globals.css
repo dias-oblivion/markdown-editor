@@ -237,88 +237,89 @@ input:focus, textarea:focus {
 /* ── Task list checkboxes ── */
 .markdown-preview .contains-task-list {
   list-style: none;
-  padding-left: 0.25em;
+  padding-left: 0;
+  margin: 0.5em 0;
 }
 
-/* Nested task lists — visual hierarchy */
+/* Nested task lists — subtle indent + guide line */
 .markdown-preview .contains-task-list .contains-task-list {
-  padding-left: 1.6em;
-  border-left: 2px solid var(--border-color);
-  margin-top: 0;
-  margin-left: 0.15em;
-}
-
-/* Sub-tasks closer to parent */
-.markdown-preview .contains-task-list .contains-task-list .task-list-item {
-  margin: 0.15em 0;
-}
-
-/* First sub-task tighter to parent */
-.markdown-preview .contains-task-list .contains-task-list .task-list-item:first-child {
-  margin-top: 0;
+  padding-left: 1.35em;
+  margin-left: 0.55em;
+  margin-top: 0.2em;
+  margin-bottom: 0;
+  border-left: 1.5px solid var(--border-color);
 }
 
 .markdown-preview .task-list-item {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.55em;
-  margin: 0.4em 0;
+  align-items: flex-start;      /* keep checkbox pinned to the first text line */
+  column-gap: 0.6em;
+  row-gap: 0;
+  margin: 0.28em 0;
   padding: 0;
+  line-height: 1.65;
 }
 
+/* The label text is wrapped in .task-label (see MarkdownPreview) so it can take
+   the remaining width and receive the "done" styling without affecting sub-lists.
+   flex-basis:0 keeps it on the checkbox's row so wrapped lines indent under the
+   text (not under the checkbox). */
+.markdown-preview .task-list-item > .task-label {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Push nested lists to their own row, full width, aligned under the text */
 .markdown-preview .task-list-item > ul,
 .markdown-preview .task-list-item > ol {
   flex: 0 0 100%;
-  margin-top: 0.1em;
-  margin-bottom: 0;
+  margin: 0.2em 0 0;
+  padding-left: 0;
 }
 
-.markdown-preview .task-list-item input[type="checkbox"] {
+.markdown-preview .task-list-item > input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
   padding: 0;
   margin: 0;
-  border: 1.5px solid var(--text-secondary);
-  border-radius: 3px;
-  background: transparent;
+  /* Vertically center the box against the first line's cap height */
+  margin-top: 0.18em;
+  border: 1.5px solid var(--text-muted);
+  border-radius: 4px;
+  background: var(--bg-primary);
   cursor: pointer;
   transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.markdown-preview .task-list-item input[type="checkbox"]:hover {
+.markdown-preview .task-list-item > input[type="checkbox"]:hover {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 20%, transparent);
+  box-shadow: 0 0 0 3px var(--accent-muted);
 }
 
-.markdown-preview .task-list-item input[type="checkbox"]:checked {
-  background: var(--accent-primary);
+.markdown-preview .task-list-item > input[type="checkbox"]:focus-visible {
+  outline: none;
   border-color: var(--accent-primary);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='%23111111' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  box-shadow: 0 0 0 3px var(--accent-muted);
+}
+
+.markdown-preview .task-list-item > input[type="checkbox"]:checked {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='%23ffffff' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: center;
   background-size: 68%;
 }
 
-[data-theme="light"] .markdown-preview .task-list-item input[type="checkbox"]:checked {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='%23ffffff' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-}
-
-/* Only match items whose OWN (direct-child) checkbox is checked — prevents cascade to parent */
-.markdown-preview .task-list-item:has(> input[type="checkbox"]:checked) {
+/* Strike + dim only the label of an item whose OWN checkbox is checked */
+.markdown-preview .task-list-item > input[type="checkbox"]:checked + .task-label {
   color: var(--text-muted);
   text-decoration: line-through;
-  text-decoration-color: color-mix(in srgb, var(--text-muted) 60%, transparent);
-}
-
-/* Reset strikethrough for nested lists inside a checked item (each child styles itself) */
-.markdown-preview .task-list-item:has(> input[type="checkbox"]:checked) > ul,
-.markdown-preview .task-list-item:has(> input[type="checkbox"]:checked) > ol {
-  text-decoration: none;
-  color: var(--text-primary);
+  text-decoration-color: color-mix(in srgb, var(--text-muted) 55%, transparent);
 }
 
 /* ── Horizontal rule ── */
@@ -385,124 +386,67 @@ input:focus, textarea:focus {
   color: var(--text-primary);
 }
 
+/* ── Dark themes (ink, graphite) — minimal syntax palette ── */
 .token.comment,
 .token.prolog,
 .token.doctype,
-.token.cdata { color: #6a737d; }
-.token.punctuation { color: #e0e0e0; }
+.token.cdata { color: #6a6a6a; font-style: italic; }
+.token.punctuation { color: #8e8e8e; }
 .token.property,
 .token.tag,
 .token.boolean,
 .token.number,
 .token.constant,
 .token.symbol,
-.token.deleted { color: #e85454; }
+.token.deleted { color: #c2a06a; }
 .token.selector,
 .token.attr-name,
 .token.string,
 .token.char,
 .token.builtin,
-.token.inserted { color: #4caf50; }
+.token.inserted { color: #8fa876; }
 .token.operator,
 .token.entity,
-.token.url { color: #e8a838; }
+.token.url { color: #9a9a9a; }
 .token.atrule,
 .token.attr-value,
-.token.keyword { color: #5c9ce6; }
+.token.keyword { color: #5b7fb8; }
 .token.function,
-.token.class-name { color: #e8a838; }
+.token.class-name { color: #d6d6d6; }
 .token.regex,
 .token.important,
-.token.variable { color: #e8a838; }
+.token.variable { color: #c2a06a; }
 
-/* ── Light themes Prism overrides (matte-white, quiet-light, solarized-light, gruvbox-light) ── */
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.punctuation { color: #333333; }
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.property,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.tag,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.boolean,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.number,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.constant,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.symbol,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.deleted { color: #d32f2f; }
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.selector,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.attr-name,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.string,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.char,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.builtin,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.inserted { color: #388e3c; }
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.operator,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.entity,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.url { color: #c48820; }
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.atrule,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.attr-value,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.keyword { color: #1976d2; }
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.function,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.class-name { color: #c48820; }
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.regex,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.important,
-:is([data-theme="matte-white"], [data-theme="quiet-light"], [data-theme="solarized-light"], [data-theme="gruvbox-light"]) .token.variable { color: #c48820; }
-
-/* ── GitHub Dark Prism overrides ── */
-[data-theme="github-dark"] .token.comment,
-[data-theme="github-dark"] .token.prolog,
-[data-theme="github-dark"] .token.doctype,
-[data-theme="github-dark"] .token.cdata { color: #8b949e; }
-[data-theme="github-dark"] .token.punctuation { color: #e6edf3; }
-[data-theme="github-dark"] .token.property,
-[data-theme="github-dark"] .token.tag { color: #7ee787; }
-[data-theme="github-dark"] .token.boolean,
-[data-theme="github-dark"] .token.number,
-[data-theme="github-dark"] .token.constant,
-[data-theme="github-dark"] .token.symbol { color: #79c0ff; }
-[data-theme="github-dark"] .token.deleted { color: #ffa198; }
-[data-theme="github-dark"] .token.selector,
-[data-theme="github-dark"] .token.attr-name,
-[data-theme="github-dark"] .token.string,
-[data-theme="github-dark"] .token.char,
-[data-theme="github-dark"] .token.builtin { color: #a5d6ff; }
-[data-theme="github-dark"] .token.inserted { color: #7ee787; }
-[data-theme="github-dark"] .token.operator,
-[data-theme="github-dark"] .token.entity,
-[data-theme="github-dark"] .token.url { color: #ff7b72; }
-[data-theme="github-dark"] .token.atrule,
-[data-theme="github-dark"] .token.attr-value,
-[data-theme="github-dark"] .token.keyword { color: #ff7b72; }
-[data-theme="github-dark"] .token.function,
-[data-theme="github-dark"] .token.class-name { color: #d2a8ff; }
-[data-theme="github-dark"] .token.regex,
-[data-theme="github-dark"] .token.important,
-[data-theme="github-dark"] .token.variable { color: #ffa657; }
-
-/* ── GitHub Light Prism overrides ── */
-[data-theme="github-light"] .token.comment,
-[data-theme="github-light"] .token.prolog,
-[data-theme="github-light"] .token.doctype,
-[data-theme="github-light"] .token.cdata { color: #6e7781; }
-[data-theme="github-light"] .token.punctuation { color: #1f2328; }
-[data-theme="github-light"] .token.property,
-[data-theme="github-light"] .token.tag { color: #116329; }
-[data-theme="github-light"] .token.boolean,
-[data-theme="github-light"] .token.number,
-[data-theme="github-light"] .token.constant,
-[data-theme="github-light"] .token.symbol { color: #0550ae; }
-[data-theme="github-light"] .token.deleted { color: #82071e; }
-[data-theme="github-light"] .token.selector,
-[data-theme="github-light"] .token.attr-name,
-[data-theme="github-light"] .token.string,
-[data-theme="github-light"] .token.char,
-[data-theme="github-light"] .token.builtin { color: #0a3069; }
-[data-theme="github-light"] .token.inserted { color: #116329; }
-[data-theme="github-light"] .token.operator,
-[data-theme="github-light"] .token.entity,
-[data-theme="github-light"] .token.url { color: #cf222e; }
-[data-theme="github-light"] .token.atrule,
-[data-theme="github-light"] .token.attr-value,
-[data-theme="github-light"] .token.keyword { color: #cf222e; }
-[data-theme="github-light"] .token.function,
-[data-theme="github-light"] .token.class-name { color: #8250df; }
-[data-theme="github-light"] .token.regex,
-[data-theme="github-light"] .token.important,
-[data-theme="github-light"] .token.variable { color: #953800; }
+/* ── Light themes (paper, mist) — minimal syntax palette ── */
+:is([data-theme="paper"], [data-theme="mist"]) .token.comment,
+:is([data-theme="paper"], [data-theme="mist"]) .token.prolog,
+:is([data-theme="paper"], [data-theme="mist"]) .token.doctype,
+:is([data-theme="paper"], [data-theme="mist"]) .token.cdata { color: #9a9a9a; }
+:is([data-theme="paper"], [data-theme="mist"]) .token.punctuation { color: #6a6a6a; }
+:is([data-theme="paper"], [data-theme="mist"]) .token.property,
+:is([data-theme="paper"], [data-theme="mist"]) .token.tag,
+:is([data-theme="paper"], [data-theme="mist"]) .token.boolean,
+:is([data-theme="paper"], [data-theme="mist"]) .token.number,
+:is([data-theme="paper"], [data-theme="mist"]) .token.constant,
+:is([data-theme="paper"], [data-theme="mist"]) .token.symbol,
+:is([data-theme="paper"], [data-theme="mist"]) .token.deleted { color: #9a7430; }
+:is([data-theme="paper"], [data-theme="mist"]) .token.selector,
+:is([data-theme="paper"], [data-theme="mist"]) .token.attr-name,
+:is([data-theme="paper"], [data-theme="mist"]) .token.string,
+:is([data-theme="paper"], [data-theme="mist"]) .token.char,
+:is([data-theme="paper"], [data-theme="mist"]) .token.builtin,
+:is([data-theme="paper"], [data-theme="mist"]) .token.inserted { color: #5e7a50; }
+:is([data-theme="paper"], [data-theme="mist"]) .token.operator,
+:is([data-theme="paper"], [data-theme="mist"]) .token.entity,
+:is([data-theme="paper"], [data-theme="mist"]) .token.url { color: #6a6a6a; }
+:is([data-theme="paper"], [data-theme="mist"]) .token.atrule,
+:is([data-theme="paper"], [data-theme="mist"]) .token.attr-value,
+:is([data-theme="paper"], [data-theme="mist"]) .token.keyword { color: #3d6098; }
+:is([data-theme="paper"], [data-theme="mist"]) .token.function,
+:is([data-theme="paper"], [data-theme="mist"]) .token.class-name { color: #333333; }
+:is([data-theme="paper"], [data-theme="mist"]) .token.regex,
+:is([data-theme="paper"], [data-theme="mist"]) .token.important,
+:is([data-theme="paper"], [data-theme="mist"]) .token.variable { color: #9a7430; }
 
 /* Animations */
 @keyframes fadeIn {
@@ -558,4 +502,86 @@ input:focus, textarea:focus {
 
 .animate-slideInRight {
   animation: slideInRight 0.2s ease-out;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Focus / reading mode (F11) — immersive, centered column
+   ───────────────────────────────────────────────────────── */
+.reading-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: var(--bg-primary);
+  overflow-y: auto;
+  animation: fadeIn 0.28s var(--ease-out);
+}
+
+.reading-shell .markdown-preview {
+  max-width: 74ch;
+  margin: 0 auto;
+  padding: 8vh 28px 22vh;
+  font-family: var(--font-reading);
+  font-size: 1.13rem;
+  line-height: 1.85;
+  height: auto;
+  overflow: visible;
+}
+
+.reading-shell .markdown-preview h1 {
+  font-size: 2.2em;
+  border-bottom: none;
+  margin-top: 0.4em;
+}
+
+.reading-shell .markdown-preview h2 {
+  border-bottom: none;
+}
+
+.reading-exit {
+  position: fixed;
+  top: 18px;
+  right: 22px;
+  z-index: 2001;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 12px;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  transition: opacity var(--transition-normal), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.reading-shell:hover .reading-exit {
+  opacity: 1;
+}
+
+.reading-exit:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.reading-exit kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+}
+
+/* ── Respect reduced-motion (Accessibility) ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

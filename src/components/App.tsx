@@ -6,11 +6,12 @@ import { THEMES } from '../types';
 import { useFileSystem } from '../hooks/useFileSystem';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { getAISettings, saveAISettings } from '../utils/aiSettings';
-import { getSession, saveSession } from '../utils/sessionStorage';
+import { getSession, patchSession } from '../utils/sessionStorage';
 import { ActivityBar } from './ActivityBar/ActivityBar';
 import { Sidebar } from './Sidebar/Sidebar';
 import { Toolbar } from './Toolbar/Toolbar';
 import { Editor } from './Editor/Editor';
+import { MarkdownPreview } from './Editor/MarkdownPreview';
 import { CommandPalette } from './CommandPalette/CommandPalette';
 import { ContextMenu } from './ContextMenu/ContextMenu';
 import { SettingsDialog } from './SettingsDialog/SettingsDialog';
@@ -21,10 +22,12 @@ const VALID_THEMES = new Set(THEMES.map(t => t.id));
 
 function getInitialTheme(): ThemeId {
   try {
-    const saved = localStorage.getItem('markdown-editor-theme') as ThemeId;
-    if (VALID_THEMES.has(saved)) return saved;
+    const saved = localStorage.getItem('markdown-editor-theme');
+    // Migrate the former default ('ink') to the new Obsidian identity
+    if (saved === 'ink') return 'obsidian';
+    if (VALID_THEMES.has(saved as ThemeId)) return saved as ThemeId;
   } catch { /* ignore */ }
-  return 'matte-black';
+  return 'obsidian';
 }
 
 // ── Mock data for development/preview ──
@@ -64,6 +67,10 @@ const USE_MOCK_DATA = false;
 export function App() {
   const {
     rootEntry: realRootEntry,
+    sidebarSource,
+    showFiles,
+    showPlans,
+    openedPlans,
     tabs,
     activeTab,
     activeTabId,
@@ -81,7 +88,6 @@ export function App() {
     deleteDirectory,
     refreshTree,
     moveFile,
-    openClaudePlans,
   } = useFileSystem();
 
   // Use mock data if enabled, otherwise use real data
@@ -113,9 +119,13 @@ mindmap
 Esse é um teste de diagrama mermaid.
 ` : '';
 
-  const [scratchContent, setScratchContent] = useState(MOCK_CONTENT);
+  const [scratchContent, setScratchContent] = useState(() => {
+    if (MOCK_CONTENT) return MOCK_CONTENT;
+    return getSession()?.scratchContent ?? '';
+  });
   const [requestNewFile, setRequestNewFile] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [focusMode, setFocusMode] = useState(false);
   const [aiSettings, setAISettings] = useState<AISettings>(getAISettings);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [chatVisible, setChatVisible] = useState(false);
@@ -136,19 +146,27 @@ Esse é um teste de diagrama mermaid.
     saveAISettings(aiSettings);
   }, [aiSettings]);
 
-  // Hot exit: persist unsaved content before the window closes
+  // Hot exit — collect the current unsaved buffers (dirty tabs + scratch pad)
+  const snapshotDrafts = useCallback(() => {
+    const dirtyContent: Record<string, string> = {};
+    for (const tab of tabs) {
+      if (tab.isDirty) dirtyContent[tab.path] = tab.content;
+    }
+    patchSession({ dirtyContent, scratchContent });
+  }, [tabs, scratchContent]);
+
+  // Persist drafts periodically (debounced) so nothing is lost even on a crash/kill,
+  // without ever writing to the file on disk (the ● marker stays until Ctrl+S).
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      const dirtyContent: Record<string, string> = {};
-      for (const tab of tabs) {
-        if (tab.isDirty) dirtyContent[tab.path] = tab.content;
-      }
-      const existing = getSession();
-      if (existing) saveSession({ ...existing, dirtyContent });
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [tabs]);
+    const timer = setTimeout(snapshotDrafts, 800);
+    return () => clearTimeout(timer);
+  }, [snapshotDrafts]);
+
+  // Reinforce the snapshot right before the window closes
+  useEffect(() => {
+    window.addEventListener('beforeunload', snapshotDrafts);
+    return () => window.removeEventListener('beforeunload', snapshotDrafts);
+  }, [snapshotDrafts]);
 
   // Auto-refresh file tree when window gains focus (to detect external file changes)
   useEffect(() => {
@@ -201,7 +219,7 @@ Esse é um teste de diagrama mermaid.
       const session = getSession();
       if (session?.dirtyContent) {
         const { [tab.path]: _, ...rest } = session.dirtyContent;
-        saveSession({ ...session, dirtyContent: rest });
+        patchSession({ dirtyContent: rest });
       }
     }
     closeTab(closeRequestTabId);
@@ -215,7 +233,7 @@ Esse é um teste de diagrama mermaid.
       const session = getSession();
       if (session?.dirtyContent) {
         const { [tab.path]: _, ...rest } = session.dirtyContent;
-        saveSession({ ...session, dirtyContent: rest });
+        patchSession({ dirtyContent: rest });
       }
     }
     closeTab(closeRequestTabId);
@@ -229,6 +247,20 @@ Esse é um teste de diagrama mermaid.
   const toggleChat = useCallback(() => {
     setChatVisible(prev => !prev);
   }, []);
+
+  const toggleFocus = useCallback(() => {
+    setFocusMode(prev => !prev);
+  }, []);
+
+  // Exit focus mode with Escape
+  useEffect(() => {
+    if (!focusMode) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFocusMode(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [focusMode]);
 
   // When a pending insert is queued and the active tab changes, set the tab content directly
   useEffect(() => {
@@ -251,7 +283,7 @@ Esse é um teste de diagrama mermaid.
     onTogglePreview: () => {
       setViewMode(prev => prev === 'editor' ? 'preview' : 'editor');
     },
-    onToggleSidebar: toggleSidebar,
+    onToggleFocus: toggleFocus,
     onToggleChat: toggleChat,
     onFormatBold: () => handleFormat('bold'),
     onFormatItalic: () => handleFormat('italic'),
@@ -317,8 +349,12 @@ Esse é um teste de diagrama mermaid.
         rootEntry={rootEntry}
         activeFilePath={activeTab?.path ?? null}
         collapsed={!sidebarVisible}
+        source={sidebarSource}
+        openedPlans={openedPlans}
+        onShowFiles={showFiles}
+        onShowPlans={showPlans}
+        onCollapse={toggleSidebar}
         onOpenDirectory={openDirectory}
-        onOpenClaudePlans={openClaudePlans}
         onFileSelect={openFile}
         onCreateFile={createFile}
         onRenameFile={renameFile}
@@ -351,6 +387,8 @@ Esse é um teste de diagrama mermaid.
           activeTabId={activeTabId}
           onTabSelect={setActiveTabId}
           onTabClose={handleTabCloseRequest}
+          sidebarVisible={sidebarVisible}
+          onToggleSidebar={toggleSidebar}
           onFind={() => setShowFind(true)}
           chatVisible={chatVisible}
           onToggleChat={toggleChat}
@@ -422,9 +460,9 @@ Esse é um teste de diagrama mermaid.
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: '0 8px 32px rgba(232, 168, 56, 0.2)',
+                      boxShadow: '0 8px 32px rgba(124, 108, 247, 0.28)',
                     }}>
-                      <Icon icon="codicon:markdown" width={40} style={{ color: 'var(--bg-primary)' }} />
+                      <Icon icon="codicon:markdown" width={40} style={{ color: 'var(--accent-contrast)' }} />
                     </div>
                     <h1 style={{
                       fontSize: 28,
@@ -455,22 +493,22 @@ Esse é um teste de diagrama mermaid.
                         gap: 10,
                         padding: '14px 28px',
                         background: 'var(--accent-primary)',
-                        color: 'var(--bg-primary)',
+                        color: 'var(--accent-contrast)',
                         borderRadius: 10,
                         fontSize: 14,
                         fontWeight: 600,
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
-                        boxShadow: '0 4px 16px rgba(232, 168, 56, 0.25)',
+                        boxShadow: '0 4px 16px rgba(124, 108, 247, 0.3)',
                         border: 'none',
                       }}
                       onMouseOver={(e) => {
                         e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 6px 24px rgba(232, 168, 56, 0.35)';
+                        e.currentTarget.style.boxShadow = '0 6px 24px rgba(124, 108, 247, 0.42)';
                       }}
                       onMouseOut={(e) => {
                         e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(232, 168, 56, 0.25)';
+                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(124, 108, 247, 0.3)';
                       }}
                     >
                       <Icon icon="codicon:folder-opened" width={18} />
@@ -554,6 +592,17 @@ Esse é um teste de diagrama mermaid.
           onFormat={handleFormat}
           onClose={() => setContextMenu(null)}
         />
+      )}
+
+      {/* Focus / reading mode (F11) */}
+      {focusMode && (
+        <div className="reading-shell">
+          <button className="reading-exit" onClick={() => setFocusMode(false)} title="Sair do modo foco">
+            <Icon icon="codicon:screen-normal" width={13} />
+            Sair <kbd>Esc</kbd>
+          </button>
+          <MarkdownPreview source={currentContent} />
+        </div>
       )}
 
       {/* Unsaved Changes Dialog */}
