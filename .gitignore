@@ -15,6 +15,19 @@ release
 *.local
 .env
 
+# Yarn (Berry, node-modules linker) — versiona yarn.lock/.yarnrc.yml, ignora o resto
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+
+# Artefatos de debug/QA (screenshots soltos na raiz, Playwright MCP)
+/*.png
+.playwright-mcp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
