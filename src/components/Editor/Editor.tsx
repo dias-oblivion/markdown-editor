@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
-import { EditorState, Compartment } from '@codemirror/state';
+import { EditorState, Compartment, Annotation } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
@@ -11,6 +11,10 @@ import type { ViewMode, ThemeId } from '../../types';
 import { getWordCount, getCharCount, getFileSize, getReadTime } from '../../utils/markdown';
 import { MarkdownPreview } from './MarkdownPreview';
 import styles from './Editor.module.css';
+
+// Marca transações de sincronização programática (troca de aba / conteúdo externo),
+// para o updateListener não confundir com edição do usuário e sujar a aba.
+const External = Annotation.define<boolean>();
 
 // ── Syntax highlighting themes ──
 // Minimal palettes: pure-neutral text + slate accent + 2 muted hues.
@@ -115,7 +119,8 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
           indentWithTab,
         ]),
         EditorView.updateListener.of(update => {
-          if (update.docChanged) {
+          // Só propaga edições reais do usuário; ignora syncs programáticos anotados
+          if (update.docChanged && !update.transactions.some(tr => tr.annotation(External))) {
             onChangeRef.current(update.state.doc.toString());
           }
         }),
@@ -192,6 +197,7 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
           to: currentContent.length,
           insert: content,
         },
+        annotations: External.of(true),
       });
     }
   }, [content]);
