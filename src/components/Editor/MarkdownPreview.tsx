@@ -112,6 +112,31 @@ function getMermaidTheme(): 'dark' | 'default' {
   return LIGHT_THEMES.has(t) ? 'default' : 'dark';
 }
 
+// Monotonic id so every mermaid.render() call gets a unique, DOM-safe target id.
+let mermaidRenderId = 0;
+
+/**
+ * Replace a diagram container with a visible error box showing the message and
+ * the raw Mermaid source, so a failed diagram is fixable instead of silently
+ * vanishing. Built via textContent to keep the (untrusted) source inert.
+ */
+function renderMermaidError(container: HTMLElement, message: string, code: string) {
+  container.className = 'mermaid-error';
+  container.textContent = '';
+
+  const header = document.createElement('div');
+  header.className = 'mermaid-error-header';
+  header.textContent = `Erro ao renderizar diagrama Mermaid — ${message}`;
+
+  const pre = document.createElement('pre');
+  pre.className = 'mermaid-error-code';
+  const codeEl = document.createElement('code');
+  codeEl.textContent = code;
+  pre.appendChild(codeEl);
+
+  container.append(header, pre);
+}
+
 export function MarkdownPreview({ source, onToggleCheckbox }: MarkdownPreviewProps) {
   const html = useMarkdown(source);
   const ref = useRef<HTMLDivElement>(null);
@@ -130,29 +155,50 @@ export function MarkdownPreview({ source, onToggleCheckbox }: MarkdownPreviewPro
       return;
     }
 
-    mermaid.initialize({ startOnLoad: false, theme: getMermaidTheme(), layout: 'elk' });
+    // Default layout (dagre) instead of forcing 'elk', which only supports
+    // flowcharts and breaks other diagram types.
+    mermaid.initialize({ startOnLoad: false, theme: getMermaidTheme() });
 
+    // Swap each mermaid code block for a container we render into individually.
+    const targets: Array<{ container: HTMLDivElement; code: string }> = [];
     blocks.forEach((block) => {
       const pre = block.parentElement;
       if (!pre) return;
-
-      const code = block.textContent ?? '';
+      const code = (block.textContent ?? '').trim();
       const container = document.createElement('div');
-      container.className = 'mermaid mermaid-diagram';
-      container.textContent = code;
+      container.className = 'mermaid-diagram';
       pre.replaceWith(container);
+      targets.push({ container, code });
     });
 
-    const mermaidNodes = ref.current.querySelectorAll<HTMLElement>('.mermaid');
+    let cancelled = false;
 
-    mermaid
-      .run({ nodes: Array.from(mermaidNodes) })
-      .then(() => {
-        if (ref.current) {
-          setProcessedHtml(ref.current.innerHTML);
+    (async () => {
+      for (const { container, code } of targets) {
+        const id = `mmd-${mermaidRenderId++}`;
+        try {
+          // parse() catches most syntax errors cleanly, before render() touches the DOM.
+          await mermaid.parse(code);
+          const { svg } = await mermaid.render(id, code);
+          if (cancelled) return;
+          container.innerHTML = svg;
+        } catch (err) {
+          if (cancelled) return;
+          const message = err instanceof Error ? err.message : String(err);
+          // Render may leave an orphan measurement node behind on failure.
+          document.getElementById(id)?.remove();
+          document.getElementById(`d${id}`)?.remove();
+          renderMermaidError(container, message, code);
         }
-      })
-      .catch(console.error);
+      }
+      if (!cancelled && ref.current) {
+        setProcessedHtml(ref.current.innerHTML);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [html]);
 
   useEffect(() => {

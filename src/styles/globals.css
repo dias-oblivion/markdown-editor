@@ -377,6 +377,42 @@ input:focus, textarea:focus {
   height: auto;
 }
 
+/* Mermaid render failure — surface the error + raw source instead of vanishing */
+.markdown-preview .mermaid-error {
+  margin: 1.2em 0;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-md, 6px);
+  background: rgba(239, 68, 68, 0.06);
+  overflow: hidden;
+}
+
+.markdown-preview .mermaid-error-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--danger);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.markdown-preview .mermaid-error-header::before {
+  content: '⚠';
+}
+
+.markdown-preview .mermaid-error-code {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--bg-secondary);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  white-space: pre;
+}
+
 /* Prism theme overrides */
 .markdown-preview pre[class*="language-"] {
   background: var(--bg-secondary);
