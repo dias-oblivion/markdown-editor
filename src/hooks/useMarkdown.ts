@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import remarkRehype from 'remark-rehype';
 import rehypePrism from 'rehype-prism-plus';
 import rehypeStringify from 'rehype-stringify';
+import DOMPurify from 'dompurify';
 
 const processor = unified()
   .use(remarkParse)
@@ -25,7 +26,14 @@ export function useMarkdown(source: string) {
   const parse = useCallback(async (text: string) => {
     try {
       const result = await processor.process(normalizeCheckboxSyntax(text));
-      setHtml(String(result));
+      // The pipeline lets raw HTML/SVG through (allowDangerousHtml) and the
+      // preview injects it via innerHTML, so sanitize before it renders.
+      // html + svg profiles keep task-list inputs, Prism/mermaid code blocks
+      // and legitimate SVG diagrams, while stripping <script>, on*= handlers, etc.
+      const clean = DOMPurify.sanitize(String(result), {
+        USE_PROFILES: { html: true, svg: true, svgFilters: true },
+      });
+      setHtml(clean);
     } catch {
       setHtml('<p style="color: var(--danger);">Error parsing markdown</p>');
     }

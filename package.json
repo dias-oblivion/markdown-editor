@@ -22,6 +22,7 @@
     "@codemirror/view": "^6.39.13",
     "@iconify/react": "^6.0.2",
     "@mermaid-js/layout-elk": "^0.2.0",
+    "dompurify": "^3.4.11",
     "mermaid": "^11.12.3",
     "prismjs": "^1.30.0",
     "react": "^19.2.0",
@@ -35,6 +36,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/dompurify": "^3.2.0",
     "@types/node": "^24.10.1",
     "@types/prismjs": "^1.26.5",
     "@types/react": "^19.2.5",
