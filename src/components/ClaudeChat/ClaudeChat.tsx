@@ -20,34 +20,137 @@ const SUGGESTIONS = [
   { icon: 'codicon:question', text: 'Explique este conteúdo' },
 ];
 
-const PRESETS = [
+interface Preset {
+  id: string;
+  label: string;
+  icon: string;
+  desc?: string;
+  prompt: (content: string) => string;
+}
+
+// Ações diretas (topo do preset bar)
+const ACTION_PRESETS: Preset[] = [
   {
     id: 'rewriter',
     label: 'Reescrever',
     icon: 'codicon:edit',
-    prompt: (content: string) =>
+    prompt: (content) =>
       `Reescreva o seguinte conteúdo markdown de forma profissional e detalhada, mantendo todas as informações:\n\n${content}`,
   },
   {
     id: 'brainstorm',
     label: 'Brainstorm',
     icon: 'codicon:lightbulb',
-    prompt: (content: string) =>
+    prompt: (content) =>
       `Com base neste conteúdo markdown, gere 5 ideias criativas e perspectivas alternativas:\n\n${content}`,
-  },
-  {
-    id: 'diagram',
-    label: 'Diagrama',
-    icon: 'codicon:type-hierarchy-sub',
-    prompt: (content: string) =>
-      `Analise este conteúdo e gere um diagrama de sequência Mermaid representando os conceitos-chave:\n\n${content}`,
   },
   {
     id: 'tasks',
     label: 'Tarefas',
     icon: 'codicon:checklist',
-    prompt: (content: string) =>
+    prompt: (content) =>
       `Converta este conteúdo em uma lista de tarefas estruturada com checkboxes markdown:\n\n${content}`,
+  },
+];
+
+// Regras de sintaxe embutidas em todo prompt Mermaid para reduzir falhas de render.
+const MERMAID_RULES = `Regras obrigatórias:
+- Responda APENAS com um único bloco \`\`\`mermaid ... \`\`\`, sem nenhum texto antes ou depois.
+- Use aspas duplas em todo label que contenha espaço, parêntese, dois-pontos, barra, vírgula ou acento. Ex: A["Serviço de Pagamento (v2)"].
+- Não use os caracteres ( ) [ ] { } < > # ; crus dentro de labels sem aspas.
+- Não use palavras reservadas do Mermaid (end, class, state, graph, subgraph) como identificador de nó.
+- Gere somente a sintaxe do tipo pedido e garanta que o diagrama é válido.`;
+
+function diagramPrompt(instruction: string, content: string): string {
+  return `${instruction}\n\n${MERMAID_RULES}\n\nBaseie-se neste plano/documento:\n\n${content}`;
+}
+
+// Tipos de diagrama que um time de engenharia usa para explicar arquitetura.
+const DIAGRAM_PRESETS: Preset[] = [
+  {
+    id: 'c4-context',
+    label: 'Contexto (C4)',
+    icon: 'codicon:globe',
+    desc: 'Sistema, usuários e sistemas externos',
+    prompt: (c) =>
+      diagramPrompt(
+        'Gere um diagrama de contexto C4 (use `C4Context`) mostrando o sistema principal, seus usuários/atores e os sistemas externos com que integra, com as relações rotuladas.',
+        c,
+      ),
+  },
+  {
+    id: 'c4-container',
+    label: 'Contêineres (C4)',
+    icon: 'codicon:layers',
+    desc: 'Apps, serviços, bancos e filas',
+    prompt: (c) =>
+      diagramPrompt(
+        'Gere um diagrama de contêineres C4 (use `C4Container`) detalhando os contêineres internos do sistema (aplicações, APIs, serviços, bancos, filas) e como se comunicam.',
+        c,
+      ),
+  },
+  {
+    id: 'sequence',
+    label: 'Sequência',
+    icon: 'codicon:arrow-swap',
+    desc: 'Interações ao longo do tempo',
+    prompt: (c) =>
+      diagramPrompt(
+        'Gere um diagrama de sequência (use `sequenceDiagram`) representando o principal fluxo de chamadas/interações entre atores e componentes ao longo do tempo.',
+        c,
+      ),
+  },
+  {
+    id: 'flowchart',
+    label: 'Fluxo',
+    icon: 'codicon:type-hierarchy-sub',
+    desc: 'Fluxo de controle e decisões',
+    prompt: (c) =>
+      diagramPrompt(
+        'Gere um fluxograma (use `flowchart TD`) representando o fluxo de controle, etapas e decisões do processo descrito.',
+        c,
+      ),
+  },
+  {
+    id: 'class',
+    label: 'Classe / Domínio',
+    icon: 'codicon:symbol-class',
+    desc: 'Entidades e relações do domínio',
+    prompt: (c) =>
+      diagramPrompt(
+        'Gere um diagrama de classes (use `classDiagram`) modelando as principais entidades/classes do domínio, seus atributos e relações.',
+        c,
+      ),
+  },
+  {
+    id: 'er',
+    label: 'ER / Dados',
+    icon: 'codicon:database',
+    desc: 'Schema de banco de dados',
+    prompt: (c) =>
+      diagramPrompt(
+        'Gere um diagrama entidade-relacionamento (use `erDiagram`) modelando as entidades de dados, seus campos-chave e cardinalidades.',
+        c,
+      ),
+  },
+  {
+    id: 'state',
+    label: 'Estado',
+    icon: 'codicon:debug-step-over',
+    desc: 'Máquina de estados / ciclo de vida',
+    prompt: (c) =>
+      diagramPrompt(
+        'Gere um diagrama de estados (use `stateDiagram-v2`) representando os estados e transições do principal ciclo de vida descrito.',
+        c,
+      ),
+  },
+  {
+    id: 'arch-svg',
+    label: 'Arquitetura (SVG)',
+    icon: 'codicon:circuit-board',
+    desc: 'Visual livre em SVG — cole cru no arquivo',
+    prompt: (c) =>
+      `Desenhe um diagrama de arquitetura do sistema abaixo como UM único bloco de código \`\`\`html contendo apenas um elemento <svg> autocontido (sem <script>, sem <style> externo e sem imagens externas).\n\nRegras do SVG:\n- Defina viewBox e deixe o SVG responsivo (width="100%", height="auto").\n- Use currentColor para textos e linhas; preenchimentos com boa legibilidade em tema claro e escuro (ex.: fill semitransparente).\n- Represente componentes como caixas rotuladas e conexões como linhas/setas com rótulos.\n- Não inclua nenhum texto fora do bloco \`\`\`html.\n\nBaseie-se neste plano/documento:\n\n${c}`,
   },
 ];
 
@@ -280,6 +383,7 @@ export function ClaudeChat({
   const { messages, isLoading, sendMessage, clearHistory } = useClaudeChat({ workspacePath });
   const providerName = aiSettings ? AI_PROVIDER_CONFIGS[aiSettings.provider].name : 'Claude Chat';
   const [input, setInput] = useState('');
+  const [diagramMenuOpen, setDiagramMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasContent = activeContent.trim().length > 0;
@@ -295,6 +399,16 @@ export function ClaudeChat({
       setTimeout(() => textareaRef.current?.focus(), 150);
     }
   }, [visible]);
+
+  // Close the diagram menu on Escape
+  useEffect(() => {
+    if (!diagramMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDiagramMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [diagramMenuOpen]);
 
 
   function handleSend() {
@@ -315,7 +429,7 @@ export function ClaudeChat({
     }
   }
 
-  function handlePreset(preset: typeof PRESETS[number]) {
+  function handlePreset(preset: Preset) {
     if (!hasContent) return;
     const prompt = preset.prompt(activeContent.slice(0, 3000));
     sendMessage(prompt);
@@ -354,7 +468,7 @@ export function ClaudeChat({
 
       {/* Preset buttons */}
       <div className={styles.presetBar}>
-        {PRESETS.map(preset => (
+        {ACTION_PRESETS.map(preset => (
           <button
             key={preset.id}
             className={styles.presetBtn}
@@ -366,6 +480,46 @@ export function ClaudeChat({
             <span>{preset.label}</span>
           </button>
         ))}
+
+        {/* Diagram dropdown */}
+        <div className={styles.menuAnchor}>
+          <button
+            className={`${styles.presetBtn} ${diagramMenuOpen ? styles.presetBtnActive : ''}`}
+            onClick={() => setDiagramMenuOpen(o => !o)}
+            disabled={!hasContent || isLoading}
+            title={hasContent ? 'Gerar diagrama a partir do arquivo' : 'Abra um arquivo para gerar diagramas'}
+          >
+            <Icon icon="codicon:type-hierarchy-sub" width={12} />
+            <span>Diagrama</span>
+            <Icon icon="codicon:chevron-down" width={11} className={styles.presetChevron} />
+          </button>
+
+          {diagramMenuOpen && (
+            <>
+              <div className={styles.menuOverlay} onClick={() => setDiagramMenuOpen(false)} />
+              <div className={styles.diagramMenu} role="menu">
+                {DIAGRAM_PRESETS.map(preset => (
+                  <button
+                    key={preset.id}
+                    className={styles.diagramItem}
+                    role="menuitem"
+                    onClick={() => {
+                      handlePreset(preset);
+                      setDiagramMenuOpen(false);
+                    }}
+                    disabled={isLoading}
+                  >
+                    <Icon icon={preset.icon} width={14} className={styles.diagramItemIcon} />
+                    <span className={styles.diagramItemText}>
+                      <span className={styles.diagramItemLabel}>{preset.label}</span>
+                      {preset.desc && <span className={styles.diagramItemDesc}>{preset.desc}</span>}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <div className={styles.divider} />
