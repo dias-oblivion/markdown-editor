@@ -592,6 +592,7 @@ Esse é um teste de diagrama mermaid.
             activeFileName={activeTab?.name ?? (USE_MOCK_DATA ? 'README.md' : '')}
             workspacePath={rootEntry?.path}
             aiSettings={aiSettings}
+            onInsertText={handleInsertText}
           />
         </div>
       </div>

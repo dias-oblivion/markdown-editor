@@ -12,6 +12,18 @@ interface ClaudeChatProps {
   activeFileName: string;
   workspacePath?: string;
   aiSettings?: AISettings;
+  onInsertText?: (text: string) => void;
+}
+
+// Idiomas que devem entrar CRUS no markdown (o preview renderiza como HTML/SVG);
+// os demais entram como bloco de código cercado.
+const RAW_INSERT_LANGS = new Set(['html', 'svg']);
+
+// Monta o texto a inserir no editor conforme o tipo do bloco.
+function buildInsertText(content: string, type: 'code' | 'mermaid' | 'text', language?: string): string {
+  if (type === 'mermaid') return `\`\`\`mermaid\n${content}\n\`\`\``;
+  if (language && RAW_INSERT_LANGS.has(language.toLowerCase())) return content;
+  return `\`\`\`${language ?? ''}\n${content}\n\`\`\``;
 }
 
 const SUGGESTIONS = [
@@ -243,18 +255,28 @@ function RenderLine({ line }: { line: string }) {
 function ContentBlock({
   content,
   type,
-  language
+  language,
+  onInsertText,
 }: {
   content: string;
   type: 'code' | 'mermaid' | 'text';
   language?: string;
+  onInsertText?: (text: string) => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const [inserted, setInserted] = useState(false);
 
   function handleCopy() {
     navigator.clipboard.writeText(content);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  }
+
+  function handleInsert() {
+    if (!onInsertText) return;
+    onInsertText(buildInsertText(content, type, language));
+    setInserted(true);
+    setTimeout(() => setInserted(false), 1500);
   }
 
   // Para blocos de texto, não mostrar botão de copiar
@@ -279,13 +301,25 @@ function ContentBlock({
   // Para blocos de código/diagrama
   return (
     <div className={styles.contentBlock}>
-      <button
-        className={`${styles.copyBlockBtn} ${copied ? styles.copyBlockBtnSuccess : ''}`}
-        onClick={handleCopy}
-        title={copied ? 'Copiado!' : 'Copiar bloco'}
-      >
-        <Icon icon={copied ? 'codicon:check' : 'codicon:copy'} width={11} />
-      </button>
+      <div className={styles.blockActions}>
+        {onInsertText && (
+          <button
+            className={`${styles.blockActionBtn} ${inserted ? styles.blockActionBtnSuccess : ''}`}
+            onClick={handleInsert}
+            title="Inserir no editor (na posição do cursor)"
+          >
+            <Icon icon={inserted ? 'codicon:check' : 'codicon:insert'} width={11} />
+            <span>{inserted ? 'Inserido' : 'Inserir'}</span>
+          </button>
+        )}
+        <button
+          className={`${styles.blockActionBtn} ${copied ? styles.blockActionBtnSuccess : ''}`}
+          onClick={handleCopy}
+          title={copied ? 'Copiado!' : 'Copiar bloco'}
+        >
+          <Icon icon={copied ? 'codicon:check' : 'codicon:copy'} width={11} />
+        </button>
+      </div>
 
       <div className={styles.codeBlock}>
         {language && <div className={styles.codeLang}>{language}</div>}
@@ -296,7 +330,7 @@ function ContentBlock({
 }
 
 // Renders message content — handles fenced code blocks and block-level markdown
-function MessageContent({ content }: { content: string }) {
+function MessageContent({ content, onInsertText }: { content: string; onInsertText?: (text: string) => void }) {
   if (!content) {
     return (
       <span className={styles.typingDots}>
@@ -322,6 +356,7 @@ function MessageContent({ content }: { content: string }) {
               content={code}
               type={isMermaid ? 'mermaid' : 'code'}
               language={firstLine || undefined}
+              onInsertText={onInsertText}
             />
           );
         }
@@ -337,7 +372,7 @@ function formatTime(ts: number): string {
   return new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
-function MessageBubble({ message, providerName }: { message: ChatMessage; providerName: string }) {
+function MessageBubble({ message, providerName, onInsertText }: { message: ChatMessage; providerName: string; onInsertText?: (text: string) => void }) {
   const isUser = message.role === 'user';
 
   return (
@@ -365,7 +400,7 @@ function MessageBubble({ message, providerName }: { message: ChatMessage; provid
           isUser ? styles.userContent : styles.assistantContent,
           !isUser && message.content.startsWith('❌') ? styles.errorContent : '',
         ].filter(Boolean).join(' ')}>
-          <MessageContent content={message.content} />
+          <MessageContent content={message.content} onInsertText={isUser ? undefined : onInsertText} />
         </div>
       </div>
     </div>
@@ -379,6 +414,7 @@ export function ClaudeChat({
   activeFileName,
   workspacePath,
   aiSettings,
+  onInsertText,
 }: ClaudeChatProps) {
   const { messages, isLoading, sendMessage, clearHistory } = useClaudeChat({ workspacePath });
   const providerName = aiSettings ? AI_PROVIDER_CONFIGS[aiSettings.provider].name : 'Claude Chat';
@@ -566,6 +602,7 @@ export function ClaudeChat({
                 key={message.id}
                 message={message}
                 providerName={providerName}
+                onInsertText={onInsertText}
               />
             ))}
             {isLoading && messages[messages.length - 1]?.role === 'assistant' &&
