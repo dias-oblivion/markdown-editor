@@ -20,12 +20,38 @@ function normalizeCheckboxSyntax(text: string): string {
     .replace(/^([ \t]*)\[\] - /gm, '$1- [ ] ');
 }
 
+/**
+ * CommonMark cannot keep a raw HTML block that contains blank lines — a blank
+ * line ends the HTML block. So a multi-line inline `<svg>` with blank lines
+ * between its sections (exactly how AI-generated diagrams are formatted) gets
+ * shredded into paragraphs, injecting stray `<p>`/`</p>` tags in the middle of
+ * the SVG. When that HTML is later parsed, the stray `</p>` forces the parser
+ * out of SVG foreign content, so every element after the first blank line lands
+ * in the HTML namespace — where DOMPurify strips it as an invalid SVG tag. The
+ * result is an empty diagram, and the shredding can take out following blocks
+ * (e.g. a ```mermaid fence) as collateral.
+ *
+ * Fix the source before parsing: collapse blank lines *inside* each
+ * `<svg>…</svg>` and isolate the block with blank lines so it parses as one
+ * intact HTML block. Whitespace inside SVG is insignificant, so the rendered
+ * output is identical — we only touch what we display, never the file on disk.
+ */
+function normalizeInlineSvg(text: string): string {
+  return text
+    // Collapse blank lines within each <svg>…</svg> so it stays a single block.
+    .replace(/<svg[\s\S]*?<\/svg>/gi, (block) => block.replace(/\n(?:[ \t]*\n)+/g, '\n'))
+    // Ensure a blank line *before* <svg> so it isn't folded into a paragraph.
+    .replace(/([^\n])\n(<svg[\s>])/gi, '$1\n\n$2')
+    // Ensure a blank line *after* </svg> so following markdown stays separate.
+    .replace(/(<\/svg>)\n([^\n])/gi, '$1\n\n$2');
+}
+
 export function useMarkdown(source: string) {
   const [html, setHtml] = useState('');
 
   const parse = useCallback(async (text: string) => {
     try {
-      const result = await processor.process(normalizeCheckboxSyntax(text));
+      const result = await processor.process(normalizeInlineSvg(normalizeCheckboxSyntax(text)));
       // The pipeline lets raw HTML/SVG through (allowDangerousHtml) and the
       // preview injects it via innerHTML, so sanitize before it renders.
       // html + svg profiles keep task-list inputs, Prism/mermaid code blocks
