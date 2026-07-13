@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
+import { EditorView, keymap, highlightActiveLine } from '@codemirror/view';
 import { EditorState, Compartment, Annotation } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
@@ -144,9 +144,7 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
     const state = EditorState.create({
       doc: content,
       extensions: [
-        lineNumbers(),
         highlightActiveLine(),
-        highlightActiveLineGutter(),
         history(),
         markdown({ base: markdownLanguage, codeLanguages: languages }),
         highlightCompartment.current.of(syntaxHighlighting(initialStyle)),
@@ -174,19 +172,13 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
           '.cm-content': {
             caretColor: 'var(--accent-primary)',
             color: 'var(--text-primary)',
+            // Faz a área editável ocupar toda a altura visível já numa nota nova/curta
+            minHeight: '100%',
           },
           '.cm-scroller': {
             fontFamily: 'var(--font-mono)',
             fontSize: '14px',
             lineHeight: '1.6',
-          },
-          '.cm-gutters': {
-            backgroundColor: 'var(--bg-tertiary)',
-            borderRight: '1px solid var(--border-color)',
-            color: 'var(--text-muted)',
-          },
-          '.cm-activeLineGutter': {
-            backgroundColor: 'var(--bg-elevated)',
           },
           '.cm-activeLine': {
             backgroundColor: 'var(--bg-hover)',
@@ -619,10 +611,6 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
     };
   }, [applyFormat, getSelection]);
 
-  const currentLine = viewRef.current
-    ? viewRef.current.state.doc.lineAt(viewRef.current.state.selection.main.head).number
-    : 1;
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
       <div className={styles.editorArea}>
@@ -708,8 +696,6 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
         <span className={styles.statusItem}>{getFileSize(content)}</span>
         <span className={styles.statusDivider} />
         <span className={styles.statusItem}>{getReadTime(content)} read</span>
-        <span className={styles.statusDivider} />
-        <span className={styles.statusItem}>Ln <span className={styles.statusHighlight}>{currentLine}</span></span>
       </div>
 
       {/* Menu de comandos slash (posição fixed — escapa do overflow dos contêineres) */}
