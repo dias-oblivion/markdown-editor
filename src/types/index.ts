@@ -45,8 +45,12 @@ export interface CodeBlockConfig {
 export type ThemeId =
   | 'obsidian'
   | 'graphite'
+  | 'midnight'
+  | 'forest'
+  | 'ember'
   | 'paper'
-  | 'mist';
+  | 'mist'
+  | 'sepia';
 
 export interface ThemeMeta {
   id: ThemeId;
@@ -57,10 +61,16 @@ export interface ThemeMeta {
 }
 
 export const THEMES: ThemeMeta[] = [
+  // ── Dark ──
   { id: 'obsidian', name: 'Obsidian', swatchColors: ['#1E1E1E', '#262626', '#7C6CF7', '#DCDDDE'], isDark: true  },
   { id: 'graphite', name: 'Graphite', swatchColors: ['#171717', '#212121', '#7C6CF7', '#E2E2E2'], isDark: true  },
+  { id: 'midnight', name: 'Midnight', swatchColors: ['#14161D', '#1A1D26', '#5B8DEF', '#D3D8E3'], isDark: true  },
+  { id: 'forest',   name: 'Forest',   swatchColors: ['#16191A', '#1C211F', '#5DB075', '#D6DBD7'], isDark: true  },
+  { id: 'ember',    name: 'Ember',    swatchColors: ['#1B1714', '#221D19', '#E0A34A', '#E4DDD3'], isDark: true  },
+  // ── Light ──
   { id: 'paper',    name: 'Paper',    swatchColors: ['#FFFFFF', '#F1F1F4', '#6B5FD6', '#1A1A1A'], isDark: false },
   { id: 'mist',     name: 'Mist',     swatchColors: ['#F4F4F6', '#EAEAEE', '#6B5FD6', '#232323'], isDark: false },
+  { id: 'sepia',    name: 'Sepia',    swatchColors: ['#F5ECDA', '#ECE1C9', '#A4703A', '#3B3327'], isDark: false },
 ];
 
 export type ClaudeAssistAction = 'rewriter' | 'diagram' | 'brainstorm' | 'tasks';

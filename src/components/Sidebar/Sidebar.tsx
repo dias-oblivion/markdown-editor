@@ -16,7 +16,6 @@ interface SidebarProps {
   openedPlans: string[];
   onShowFiles: () => void;
   onShowPlans: () => void;
-  onCollapse: () => void;
   onOpenDirectory: () => void;
   onFileSelect: (entry: FileEntry) => void;
   onCreateFile: (dirPath: string, fileName: string) => Promise<void>;
@@ -48,7 +47,7 @@ function formatRelativeDate(ms?: number): string {
 
 export function Sidebar({
   rootEntry, activeFilePath, collapsed, source, openedPlans,
-  onShowFiles, onShowPlans, onCollapse, onOpenDirectory, onFileSelect,
+  onShowFiles, onShowPlans, onOpenDirectory, onFileSelect,
   onCreateFile, onRenameFile, onDeleteFile, onCreateDirectory, onRenameDirectory,
   onDeleteDirectory, onRefresh, onMoveFile, requestNewFile, onNewFileDialogDone,
 }: SidebarProps) {
@@ -222,7 +221,7 @@ export function Sidebar({
         }
       }}
     >
-      {/* ── Source tabs + collapse ── */}
+      {/* ── Header: abas (Arquivos / Plans) + ações, numa faixa só ── */}
       <div className={styles.sourceBar}>
         <div className={styles.sourceTabs}>
           <button
@@ -242,20 +241,6 @@ export function Sidebar({
             <span>Plans</span>
           </button>
         </div>
-        <button
-          className={styles.collapseBtn}
-          onClick={onCollapse}
-          title="Recolher barra lateral"
-        >
-          <Icon icon="codicon:chevron-left" width={16} />
-        </button>
-      </div>
-
-      {/* ── Action bar (VS Code-like) ── */}
-      <div className={styles.actionBar}>
-        <span className={styles.actionTitle}>
-          {isPlans ? 'Claude Plans' : (rootEntry?.name ?? 'Explorer')}
-        </span>
         <div className={styles.headerActions}>
           <button className={styles.iconButton} onClick={onRefresh} title="Atualizar">
             <Icon icon="codicon:refresh" width={16} />

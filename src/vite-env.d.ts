@@ -1,5 +1,9 @@
 /// <reference types="vite/client" />
 
+// Pacotes @fontsource são CSS-only (efeito colateral), sem declarações de tipo próprias
+declare module '@fontsource-variable/inter';
+declare module '@fontsource-variable/jetbrains-mono';
+
 interface FileSystemDirectoryHandle {
   entries(): AsyncIterableIterator<[string, FileSystemHandle]>;
   getFileHandle(name: string, options?: { create?: boolean }): Promise<FileSystemFileHandle>;

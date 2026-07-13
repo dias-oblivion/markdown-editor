@@ -67,8 +67,10 @@ const lightHighlight = HighlightStyle.define([
 function getHighlightStyle(activeTheme: ThemeId): HighlightStyle {
   switch (activeTheme) {
     case 'paper':
-    case 'mist':  return lightHighlight;
-    default:      return darkHighlight; // ink, graphite
+    case 'mist':
+    case 'sepia': return lightHighlight;
+    // obsidian, graphite, midnight, forest, ember
+    default:      return darkHighlight;
   }
 }
 
@@ -174,6 +176,8 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
             color: 'var(--text-primary)',
             // Faz a área editável ocupar toda a altura visível já numa nota nova/curta
             minHeight: '100%',
+            // Respiro do conteúdo — alinhado com o padding lateral do preview (32px)
+            padding: '16px 32px 32px',
           },
           '.cm-scroller': {
             fontFamily: 'var(--font-mono)',

@@ -44,6 +44,31 @@ export function SettingsDialog({
     if (e.target === overlayRef.current) onClose();
   }
 
+  const renderSwatch = (theme: (typeof THEMES)[number]) => (
+    <button
+      key={theme.id}
+      className={`${styles.themeSwatch} ${activeTheme === theme.id ? styles.themeSwatchSelected : ''}`}
+      onClick={() => onThemeChange(theme.id)}
+      title={theme.name}
+      aria-pressed={activeTheme === theme.id}
+    >
+      {activeTheme === theme.id && (
+        <span className={styles.checkBadge}>✓</span>
+      )}
+      <div className={styles.swatchColors}>
+        {theme.swatchColors.map((color, i) => (
+          <div key={i} className={styles.swatchColor} style={{ background: color }} />
+        ))}
+      </div>
+      <div
+        className={styles.swatchLabel}
+        style={{ background: theme.swatchColors[1], color: theme.isDark ? 'rgba(255,255,255,0.62)' : 'rgba(0,0,0,0.5)' }}
+      >
+        {theme.name}
+      </div>
+    </button>
+  );
+
   return (
     <div className={styles.overlay} ref={overlayRef} onClick={handleOverlayClick}>
       <div className={styles.dialog} role="dialog" aria-modal="true" aria-label="Configurações">
@@ -76,30 +101,15 @@ export function SettingsDialog({
           {activeTab === 'appearance' && (
             <>
               <p className={styles.sectionTitle}>Tema</p>
+
+              <p className={styles.groupLabel}>Escuros</p>
               <div className={styles.themeGrid}>
-                {THEMES.map((theme) => (
-                  <button
-                    key={theme.id}
-                    className={`${styles.themeSwatch} ${activeTheme === theme.id ? styles.themeSwatchSelected : ''}`}
-                    onClick={() => onThemeChange(theme.id)}
-                    title={theme.name}
-                  >
-                    {activeTheme === theme.id && (
-                      <span className={styles.checkBadge}>✓</span>
-                    )}
-                    <div className={styles.swatchColors}>
-                      {theme.swatchColors.map((color, i) => (
-                        <div key={i} className={styles.swatchColor} style={{ background: color }} />
-                      ))}
-                    </div>
-                    <div
-                      className={styles.swatchLabel}
-                      style={{ background: theme.swatchColors[1], color: theme.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)' }}
-                    >
-                      {theme.name}
-                    </div>
-                  </button>
-                ))}
+                {THEMES.filter((t) => t.isDark).map(renderSwatch)}
+              </div>
+
+              <p className={styles.groupLabel} style={{ marginTop: 16 }}>Claros</p>
+              <div className={styles.themeGrid}>
+                {THEMES.filter((t) => !t.isDark).map(renderSwatch)}
               </div>
 
               <p className={styles.sectionTitle} style={{ marginTop: 24 }}>Fonte do Editor</p>

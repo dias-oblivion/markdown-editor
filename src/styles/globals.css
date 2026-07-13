@@ -85,7 +85,7 @@ input:focus, textarea:focus {
 
 /* Markdown preview styles */
 .markdown-preview {
-  padding: 32px 40px;
+  padding: 28px 32px;
   font-family: var(--font-sans);
   color: var(--text-primary);
   line-height: 1.75;
@@ -454,35 +454,35 @@ input:focus, textarea:focus {
 .token.variable { color: #c2a06a; }
 
 /* ── Light themes (paper, mist) — minimal syntax palette ── */
-:is([data-theme="paper"], [data-theme="mist"]) .token.comment,
-:is([data-theme="paper"], [data-theme="mist"]) .token.prolog,
-:is([data-theme="paper"], [data-theme="mist"]) .token.doctype,
-:is([data-theme="paper"], [data-theme="mist"]) .token.cdata { color: #9a9a9a; }
-:is([data-theme="paper"], [data-theme="mist"]) .token.punctuation { color: #6a6a6a; }
-:is([data-theme="paper"], [data-theme="mist"]) .token.property,
-:is([data-theme="paper"], [data-theme="mist"]) .token.tag,
-:is([data-theme="paper"], [data-theme="mist"]) .token.boolean,
-:is([data-theme="paper"], [data-theme="mist"]) .token.number,
-:is([data-theme="paper"], [data-theme="mist"]) .token.constant,
-:is([data-theme="paper"], [data-theme="mist"]) .token.symbol,
-:is([data-theme="paper"], [data-theme="mist"]) .token.deleted { color: #9a7430; }
-:is([data-theme="paper"], [data-theme="mist"]) .token.selector,
-:is([data-theme="paper"], [data-theme="mist"]) .token.attr-name,
-:is([data-theme="paper"], [data-theme="mist"]) .token.string,
-:is([data-theme="paper"], [data-theme="mist"]) .token.char,
-:is([data-theme="paper"], [data-theme="mist"]) .token.builtin,
-:is([data-theme="paper"], [data-theme="mist"]) .token.inserted { color: #5e7a50; }
-:is([data-theme="paper"], [data-theme="mist"]) .token.operator,
-:is([data-theme="paper"], [data-theme="mist"]) .token.entity,
-:is([data-theme="paper"], [data-theme="mist"]) .token.url { color: #6a6a6a; }
-:is([data-theme="paper"], [data-theme="mist"]) .token.atrule,
-:is([data-theme="paper"], [data-theme="mist"]) .token.attr-value,
-:is([data-theme="paper"], [data-theme="mist"]) .token.keyword { color: #3d6098; }
-:is([data-theme="paper"], [data-theme="mist"]) .token.function,
-:is([data-theme="paper"], [data-theme="mist"]) .token.class-name { color: #333333; }
-:is([data-theme="paper"], [data-theme="mist"]) .token.regex,
-:is([data-theme="paper"], [data-theme="mist"]) .token.important,
-:is([data-theme="paper"], [data-theme="mist"]) .token.variable { color: #9a7430; }
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.comment,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.prolog,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.doctype,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.cdata { color: #9a9a9a; }
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.punctuation { color: #6a6a6a; }
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.property,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.tag,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.boolean,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.number,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.constant,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.symbol,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.deleted { color: #9a7430; }
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.selector,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.attr-name,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.string,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.char,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.builtin,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.inserted { color: #5e7a50; }
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.operator,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.entity,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.url { color: #6a6a6a; }
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.atrule,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.attr-value,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.keyword { color: #3d6098; }
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.function,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.class-name { color: #333333; }
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.regex,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.important,
+:is([data-theme="paper"], [data-theme="mist"], [data-theme="sepia"]) .token.variable { color: #9a7430; }
 
 /* Animations */
 @keyframes fadeIn {

@@ -25,6 +25,8 @@ interface ToolbarProps {
   onShowCodeDialog: (show: boolean) => void;
   onShowTableDialog: (show: boolean) => void;
   aiSettings: AISettings;
+  sidebarVisible: boolean;
+  onToggleSidebar: () => void;
 }
 
 export function Toolbar({
@@ -45,6 +47,8 @@ export function Toolbar({
   onShowCodeDialog,
   onShowTableDialog,
   aiSettings,
+  sidebarVisible,
+  onToggleSidebar,
 }: ToolbarProps) {
   const providerName = AI_PROVIDER_CONFIGS[aiSettings.provider].name;
 
@@ -103,6 +107,14 @@ export function Toolbar({
       {/* Top bar */}
       <div className={styles.topBar}>
         <div className={styles.topBarLeft}>
+          <button
+            className={`${styles.headerBtn} ${sidebarVisible ? styles.active : ''}`}
+            onClick={onToggleSidebar}
+            title={sidebarVisible ? 'Ocultar lista de arquivos' : 'Mostrar lista de arquivos'}
+          >
+            <Icon icon={sidebarVisible ? 'codicon:layout-sidebar-left' : 'codicon:layout-sidebar-left-off'} width={15} />
+          </button>
+
           <span className={styles.appTitle}>Markdown Editor</span>
 
           <div className={styles.headerDivider} />

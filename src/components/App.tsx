@@ -98,25 +98,24 @@ export function App() {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showFind, setShowFind] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
-  const MOCK_CONTENT = USE_MOCK_DATA ? `# Teste Mermaid
+  const MOCK_CONTENT = USE_MOCK_DATA ? `# Notas de Design
 
-\`\`\`mermaid
-mindmap
-  root((Projetos))
-    Frontend
-      React
-      Vue
-      Angular
-    Backend
-      Node.js
-      Python
-      Java
-    Mobile
-      React Native
-      Flutter
+Um editor **minimalista** e _moderno_, inspirado no Obsidian.
+
+## Hierarquia
+
+O corpo usa Inter. Links como [este](https://obsidian.md) ficam sutis até o hover.
+
+- [x] Fontes reais
+- [ ] Polir contraste
+
+\`\`\`ts
+function saudar(nome: string): string {
+  return \`Olá, \${nome}!\`;
+}
 \`\`\`
 
-Esse é um teste de diagrama mermaid.
+> Design não é só o que parece. É como funciona.
 ` : '';
 
   const [scratchContent, setScratchContent] = useState(() => {
@@ -367,7 +366,6 @@ Esse é um teste de diagrama mermaid.
         openedPlans={openedPlans}
         onShowFiles={showFiles}
         onShowPlans={showPlans}
-        onCollapse={toggleSidebar}
         onOpenDirectory={openDirectory}
         onFileSelect={openFile}
         onCreateFile={createFile}
@@ -411,40 +409,13 @@ Esse é um teste de diagrama mermaid.
           aiSettings={aiSettings}
           onShowCodeDialog={setShowCodeDialog}
           onShowTableDialog={setShowTableDialog}
+          sidebarVisible={sidebarVisible}
+          onToggleSidebar={toggleSidebar}
         />
 
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Editor or empty state */}
           <div style={{ position: 'relative', flex: 1, overflow: 'hidden', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-            {/* Botão flutuante discreto para reabrir a listagem quando colapsada */}
-            {!sidebarVisible && (
-              <button
-                onClick={() => setSidebarVisible(true)}
-                title="Mostrar lista de arquivos"
-                style={{
-                  position: 'absolute',
-                  top: 8,
-                  left: 8,
-                  zIndex: 5,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 28,
-                  height: 28,
-                  borderRadius: 6,
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)',
-                  color: 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  opacity: 0.55,
-                  transition: 'opacity 0.15s ease, background 0.15s ease',
-                }}
-                onMouseOver={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'var(--bg-hover)'; }}
-                onMouseOut={(e) => { e.currentTarget.style.opacity = '0.55'; e.currentTarget.style.background = 'var(--bg-secondary)'; }}
-              >
-                <Icon icon="codicon:layout-sidebar-left" width={15} />
-              </button>
-            )}
             {showEmptyState ? (
               rootEntry ? (
                 // Simplified empty state when folder is open
