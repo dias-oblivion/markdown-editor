@@ -553,11 +553,13 @@
   border-radius: var(--radius-sm);
 }
 
-.treeItem[draggable='true'] {
+.treeItem[draggable='true'],
+.planItem[draggable='true'] {
   cursor: grab;
 }
 
-.treeItem[draggable='true']:active {
+.treeItem[draggable='true']:active,
+.planItem[draggable='true']:active {
   cursor: grabbing;
 }
 

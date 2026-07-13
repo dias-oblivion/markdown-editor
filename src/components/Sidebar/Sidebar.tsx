@@ -342,6 +342,11 @@ export function Sidebar({
                       <div
                         key={plan.path}
                         className={`${styles.planItem} ${isActive ? styles.planItemActive : ''}`}
+                        draggable={true}
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('text/plain', plan.path);
+                          e.dataTransfer.effectAllowed = 'move';
+                        }}
                         onClick={() => onFileSelect(plan)}
                         onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); handleFileContextMenu(e, plan); }}
                         title={plan.path}
