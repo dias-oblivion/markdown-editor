@@ -111,6 +111,16 @@ md-update
 
 Or pin a specific version: `docker pull obliviondias/markdown-editor:1.0.0`
 
+## Claude Code Integration
+
+When you finish a plan in [Claude Code](https://claude.com/claude-code)'s plan mode, the editor jumps
+to the front with the plan already open in the **Claude Plans** tab — no more alt-tab → refresh →
+switch tab → click. It works via a `PreToolUse` hook (`scripts/open-plan.sh`) plus a lightweight
+heartbeat/marker channel watched by the Electron main process.
+
+Setup (build the AppImage, register the hook in `~/.claude/settings.json`, restart the editor) is
+documented in **[docs/claude-plan-hook.md](docs/claude-plan-hook.md)**.
+
 ## Roadmap
 
 Future features and improvements planned for the editor:
