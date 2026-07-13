@@ -10,6 +10,8 @@ import { searchKeymap } from '@codemirror/search';
 import type { ViewMode, ThemeId } from '../../types';
 import { getWordCount, getCharCount, getFileSize, getReadTime } from '../../utils/markdown';
 import { MarkdownPreview } from './MarkdownPreview';
+import { SlashMenu } from '../SlashMenu/SlashMenu';
+import { filterCommands, findCommandByWord, formatDate, type SlashCommand } from './slashCommands';
 import styles from './Editor.module.css';
 
 // Marca transações de sincronização programática (troca de aba / conteúdo externo),
@@ -78,9 +80,28 @@ interface EditorProps {
   onInsertRef: React.MutableRefObject<((text: string) => void) | null>;
   showFind: boolean;
   onCloseFind: () => void;
+  /** Comandos slash: abrir o diálogo de tabela. */
+  onSlashTable?: () => void;
+  /** Comandos slash: abrir o diálogo de bloco de código. */
+  onSlashCode?: () => void;
+  /** Comandos slash: enviar (ou só abrir) o assistente de IA. */
+  onSlashAI?: (prompt: string) => void;
 }
 
-export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, showFind, onCloseFind }: EditorProps) {
+// Estado do menu de comandos slash (aberto = não-nulo).
+interface SlashState {
+  /** Posição absoluta do `/` no documento. */
+  from: number;
+  query: string;
+  mode: 'list' | 'arg';
+  argText: string;
+  items: SlashCommand[];
+  index: number;
+  /** Coordenadas de viewport para ancorar o menu. */
+  pos: { left: number; top: number };
+}
+
+export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, showFind, onCloseFind, onSlashTable, onSlashCode, onSlashAI }: EditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
@@ -91,6 +112,23 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
   const [useRegex, setUseRegex] = useState(false);
   const [matchWord, setMatchWord] = useState(false);
   const findInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Comandos slash ──
+  const [slash, setSlash] = useState<SlashState | null>(null);
+  const slashRef = useRef<SlashState | null>(null);
+  // O updateListener do CodeMirror é criado uma única vez no mount; ele consulta
+  // esta ref para recalcular o menu, sempre apontando à versão mais recente.
+  const recomputeSlashRef = useRef<(view: EditorView) => void>(() => {});
+  // Ações do menu consultadas pelo handler de teclado (evita re-subscrição a cada tecla).
+  const slashActionsRef = useRef<{
+    move: (dir: number) => void;
+    execute: (st: SlashState) => void;
+    close: () => void;
+  }>({
+    move: () => {},
+    execute: () => {},
+    close: () => {},
+  });
 
   // Always keep ref pointing to latest onChange
   useEffect(() => {
@@ -122,6 +160,10 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
           // Só propaga edições reais do usuário; ignora syncs programáticos anotados
           if (update.docChanged && !update.transactions.some(tr => tr.annotation(External))) {
             onChangeRef.current(update.state.doc.toString());
+          }
+          // Recalcula o menu de comandos slash a cada mudança de doc ou cursor
+          if (update.docChanged || update.selectionSet) {
+            recomputeSlashRef.current(update.view);
           }
         }),
         EditorView.theme({
@@ -221,6 +263,178 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
   useEffect(() => {
     onInsertRef.current = insertText;
   }, [insertText, onInsertRef]);
+
+  // ── Comandos slash: detecção, execução e teclado ──
+
+  // Recalcula o menu a partir do estado atual do editor.
+  const recomputeSlash = useCallback((view: EditorView) => {
+    const sel = view.state.selection.main;
+    if (!sel.empty) { setSlash(null); return; }
+
+    const head = sel.head;
+    const line = view.state.doc.lineAt(head);
+    const before = line.text.slice(0, head - line.from);
+
+    // Último '/' precedido por início-de-linha ou espaço (ignora URLs/paths tipo http:// e a/b)
+    let slashCol = -1;
+    for (let i = before.length - 1; i >= 0; i--) {
+      if (before[i] === '/' && (i === 0 || /\s/.test(before[i - 1]))) {
+        slashCol = i;
+        break;
+      }
+    }
+    if (slashCol === -1) { setSlash(null); return; }
+
+    const raw = before.slice(slashCol + 1);
+    const from = line.from + slashCol;
+    const spaceIdx = raw.indexOf(' ');
+
+    let mode: 'list' | 'arg';
+    let items: SlashCommand[];
+    let query = '';
+    let argText = '';
+
+    if (spaceIdx === -1) {
+      // Modo lista: filtra comandos pelo que foi digitado
+      if (raw.length > 32) { setSlash(null); return; }
+      query = raw;
+      items = filterCommands(raw);
+      if (items.length === 0) { setSlash(null); return; }
+      mode = 'list';
+    } else {
+      // Modo argumento: só sobrevive se a 1ª palavra for um comando que aceita argumento (/ia)
+      const cmd = findCommandByWord(raw.slice(0, spaceIdx));
+      if (!cmd || !cmd.acceptsArg) { setSlash(null); return; }
+      items = [cmd];
+      argText = raw.slice(spaceIdx + 1);
+      mode = 'arg';
+    }
+
+    const coords = view.coordsAtPos(from);
+    if (!coords) { setSlash(null); return; }
+    const pos = { left: coords.left, top: coords.bottom + 4 };
+
+    setSlash(prev => {
+      // Preserva o índice destacado quando continua em modo lista
+      const index =
+        prev && prev.mode === 'list' && mode === 'list'
+          ? Math.min(prev.index, items.length - 1)
+          : 0;
+      return { from, query, mode, argText, items, index, pos };
+    });
+  }, []);
+
+  // Executa o comando destacado (ou clicado).
+  const executeSlash = useCallback((st: SlashState) => {
+    const view = viewRef.current;
+    if (!view) { setSlash(null); return; }
+
+    const cmd = st.mode === 'arg' ? st.items[0] : st.items[st.index];
+    if (!cmd) { setSlash(null); return; }
+
+    const to = view.state.selection.main.head;
+    const from = st.from;
+
+    switch (cmd.kind) {
+      case 'date-short':
+      case 'date-long':
+      case 'datetime': {
+        const text = formatDate(cmd.kind);
+        view.dispatch({ changes: { from, to, insert: text }, selection: { anchor: from + text.length } });
+        view.focus();
+        break;
+      }
+      case 'table':
+        // Remove o `/…` e delega ao diálogo, que insere na posição do cursor via pipeline existente
+        view.dispatch({ changes: { from, to, insert: '' }, selection: { anchor: from } });
+        onSlashTable?.();
+        break;
+      case 'code':
+        view.dispatch({ changes: { from, to, insert: '' }, selection: { anchor: from } });
+        onSlashCode?.();
+        break;
+      case 'ai':
+        view.dispatch({ changes: { from, to, insert: '' }, selection: { anchor: from } });
+        view.focus();
+        onSlashAI?.(st.argText.trim());
+        break;
+    }
+
+    setSlash(null);
+  }, [onSlashTable, onSlashCode, onSlashAI]);
+
+  // Mantém as refs consultadas por closures de longa duração (updateListener, keydown)
+  // sempre atualizadas — feito em effects para não escrever refs durante o render.
+  useEffect(() => { slashRef.current = slash; }, [slash]);
+  useEffect(() => { recomputeSlashRef.current = recomputeSlash; }, [recomputeSlash]);
+  useEffect(() => {
+    slashActionsRef.current = {
+      move: (dir: number) =>
+        setSlash(s => {
+          if (!s) return s;
+          const len = s.mode === 'arg' ? 1 : s.items.length;
+          return { ...s, index: (s.index + dir + len) % len };
+        }),
+      execute: executeSlash,
+      close: () => setSlash(null),
+    };
+  }, [executeSlash]);
+
+  const slashActive = slash !== null;
+
+  // Navegação por teclado — captura no ancestral do .cm-content, antes do CodeMirror
+  useEffect(() => {
+    if (!slashActive) return;
+    const el = editorRef.current;
+    if (!el) return;
+
+    function onKeyDown(e: KeyboardEvent) {
+      const st = slashRef.current;
+      if (!st) return;
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault(); e.stopPropagation();
+          slashActionsRef.current.move(1);
+          break;
+        case 'ArrowUp':
+          e.preventDefault(); e.stopPropagation();
+          slashActionsRef.current.move(-1);
+          break;
+        case 'Enter':
+        case 'Tab':
+          e.preventDefault(); e.stopPropagation();
+          slashActionsRef.current.execute(st);
+          break;
+        case 'Escape':
+          e.preventDefault(); e.stopPropagation();
+          slashActionsRef.current.close();
+          break;
+      }
+    }
+
+    el.addEventListener('keydown', onKeyDown, true);
+    return () => el.removeEventListener('keydown', onKeyDown, true);
+  }, [slashActive]);
+
+  // Fecha o menu ao clicar fora ou rolar o editor
+  useEffect(() => {
+    if (!slashActive) return;
+
+    function onDocMouseDown(e: MouseEvent) {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('[data-slash-menu]')) return;
+      setSlash(null);
+    }
+    const scroller = editorRef.current?.querySelector('.cm-scroller');
+    const onScroll = () => setSlash(null);
+
+    document.addEventListener('mousedown', onDocMouseDown, true);
+    scroller?.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', onDocMouseDown, true);
+      scroller?.removeEventListener('scroll', onScroll);
+    };
+  }, [slashActive]);
 
   // Focus find input when showing
   useEffect(() => {
@@ -497,6 +711,21 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
         <span className={styles.statusDivider} />
         <span className={styles.statusItem}>Ln <span className={styles.statusHighlight}>{currentLine}</span></span>
       </div>
+
+      {/* Menu de comandos slash (posição fixed — escapa do overflow dos contêineres) */}
+      {slash && (
+        <SlashMenu
+          items={slash.items}
+          activeIndex={slash.index}
+          pos={slash.pos}
+          mode={slash.mode}
+          argText={slash.argText}
+          onSelect={(i) => {
+            executeSlash(slash.mode === 'arg' ? slash : { ...slash, index: i });
+          }}
+          onHover={(i) => setSlash(s => (s ? { ...s, index: i } : s))}
+        />
+      )}
     </div>
   );
 }

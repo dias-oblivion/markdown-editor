@@ -1,5 +1,6 @@
 appId: com.markdown-editor.app
 productName: Markdown Editor
+copyright: © 2026 Gabriel Dias
 directories:
   output: release
   buildResources: build
@@ -9,18 +10,32 @@ files:
   - assets/icon.png
 asar: true
 icon: assets/icon.png
+# Nome de artefato limpo e previsível (sem espaços) para todas as plataformas
+artifactName: markdown-editor-${version}-${arch}.${ext}
 linux:
   target:
     - AppImage
     - deb
   category: Development
   icon: build/icons
+  # Obrigatório para gerar o pacote .deb
+  maintainer: Gabriel Dias <gabrieldias335@gmail.com>
+  synopsis: Editor de markdown minimalista
+  description: Editor de markdown desktop (Electron) com preview, diagramas e assistente de IA.
 mac:
   target:
     - dmg
     - zip
   category: public.app-category.developer-tools
+  # Sem mac.icon → gera .icns a partir do icon: de topo (assets/icon.png, 512×512)
 win:
   target:
     - nsis
     - portable
+  icon: build/icons/256x256.png
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true

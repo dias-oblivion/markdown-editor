@@ -527,6 +527,28 @@ input:focus, textarea:focus {
   }
 }
 
+/* Menus flutuantes (slash, contexto) e painéis ancorados — pop sutil */
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Overlays de tela cheia — fade puro (sem deslocar o fundo) */
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Utility animation classes */
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;

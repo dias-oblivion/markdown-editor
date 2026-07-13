@@ -13,6 +13,9 @@ interface ClaudeChatProps {
   workspacePath?: string;
   aiSettings?: AISettings;
   onInsertText?: (text: string) => void;
+  /** Pergunta agendada pelo comando `/ia …` do editor (nonce evita reenvio). */
+  pendingPrompt?: { text: string; nonce: number } | null;
+  onPromptConsumed?: () => void;
 }
 
 // Idiomas que devem entrar CRUS no markdown (o preview renderiza como HTML/SVG);
@@ -415,6 +418,8 @@ export function ClaudeChat({
   workspacePath,
   aiSettings,
   onInsertText,
+  pendingPrompt,
+  onPromptConsumed,
 }: ClaudeChatProps) {
   const { messages, isLoading, sendMessage, clearHistory } = useClaudeChat({ workspacePath });
   const providerName = aiSettings ? AI_PROVIDER_CONFIGS[aiSettings.provider].name : 'Claude Chat';
@@ -423,6 +428,14 @@ export function ClaudeChat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasContent = activeContent.trim().length > 0;
+
+  // Contexto do arquivo ativo enviado junto às mensagens (reutilizado por handleSend,
+  // sugestões e pelo comando /ia).
+  function buildContext(): string | undefined {
+    return hasContent
+      ? `Arquivo: ${activeFileName || 'sem nome'}\n\n${activeContent.slice(0, 3000)}`
+      : undefined;
+  }
 
   // Auto-scroll to latest message
   useEffect(() => {
@@ -435,6 +448,18 @@ export function ClaudeChat({
       setTimeout(() => textareaRef.current?.focus(), 150);
     }
   }, [visible]);
+
+  // Envia a pergunta agendada pelo comando `/ia …`. Aguarda o painel abrir e o envio
+  // atual terminar; o nonce garante um único disparo por comando.
+  const consumedNonceRef = useRef(0);
+  useEffect(() => {
+    if (!pendingPrompt || !visible || isLoading) return;
+    if (consumedNonceRef.current === pendingPrompt.nonce) return;
+    consumedNonceRef.current = pendingPrompt.nonce;
+    sendMessage(pendingPrompt.text, buildContext());
+    onPromptConsumed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingPrompt, visible, isLoading]);
 
   // Close the diagram menu on Escape
   useEffect(() => {
@@ -451,11 +476,7 @@ export function ClaudeChat({
     const text = input.trim();
     if (!text || isLoading) return;
     setInput('');
-
-    const context = hasContent
-      ? `Arquivo: ${activeFileName || 'sem nome'}\n\n${activeContent.slice(0, 3000)}`
-      : undefined;
-    sendMessage(text, context);
+    sendMessage(text, buildContext());
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -577,10 +598,7 @@ export function ClaudeChat({
                   <button
                     key={s.text}
                     className={styles.suggestionBtn}
-                    onClick={() => {
-                      const context = `Arquivo: ${activeFileName || 'sem nome'}\n\n${activeContent.slice(0, 3000)}`;
-                      sendMessage(s.text, context);
-                    }}
+                    onClick={() => sendMessage(s.text, buildContext())}
                     disabled={isLoading}
                   >
                     <Icon icon={s.icon} width={12} />

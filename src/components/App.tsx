@@ -133,6 +133,9 @@ Esse é um teste de diagrama mermaid.
   const [closeRequestTabId, setCloseRequestTabId] = useState<string | null>(null);
   // Pending content to insert after a new file is created and opened
   const [pendingInsert, setPendingInsert] = useState<string | null>(null);
+  // Prompt vindo do comando `/ia …` do editor — consumido pelo ClaudeChat
+  const [aiPending, setAiPending] = useState<{ text: string; nonce: number } | null>(null);
+  const aiNonceRef = useRef(0);
 
   // Apply theme to document root and persist
   useEffect(() => {
@@ -193,6 +196,16 @@ Esse é um teste de diagrama mermaid.
 
   const handleInsertText = useCallback((text: string) => {
     insertRef.current?.(text);
+  }, []);
+
+  // Comando `/ia …`: abre o assistente e, se houver texto, agenda o envio (com contexto do arquivo).
+  const handleAICommand = useCallback((prompt: string) => {
+    setChatVisible(true);
+    const text = prompt.trim();
+    if (text) {
+      aiNonceRef.current += 1;
+      setAiPending({ text, nonce: aiNonceRef.current });
+    }
   }, []);
 
   const handleSave = useCallback(() => {
@@ -580,6 +593,9 @@ Esse é um teste de diagrama mermaid.
                 onInsertRef={insertRef}
                 showFind={showFind}
                 onCloseFind={() => setShowFind(false)}
+                onSlashTable={() => setShowTableDialog(true)}
+                onSlashCode={() => setShowCodeDialog(true)}
+                onSlashAI={handleAICommand}
               />
             )}
           </div>
@@ -593,6 +609,8 @@ Esse é um teste de diagrama mermaid.
             workspacePath={rootEntry?.path}
             aiSettings={aiSettings}
             onInsertText={handleInsertText}
+            pendingPrompt={aiPending}
+            onPromptConsumed={() => setAiPending(null)}
           />
         </div>
       </div>

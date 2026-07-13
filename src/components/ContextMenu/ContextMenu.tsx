@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@iconify/react';
 import type { FormatAction } from '../../types';
 import styles from './ContextMenu.module.css';
@@ -21,6 +21,7 @@ const FORMAT_OPTIONS: { action: FormatAction; label: string; icon: string; previ
 
 export function ContextMenu({ x, y, onFormat, onClose }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     const menu = menuRef.current;
@@ -35,6 +36,29 @@ export function ContextMenu({ x, y, onFormat, onClose }: ContextMenuProps) {
     }
   }, []);
 
+  // Navegação por teclado — consistente com CommandPalette e SlashMenu
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const len = FORMAT_OPTIONS.length;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setActiveIndex(i => (i + 1) % len);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActiveIndex(i => (i - 1 + len) % len);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        onFormat(FORMAT_OPTIONS[activeIndex].action);
+        onClose();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [activeIndex, onFormat, onClose]);
+
   return (
     <>
       <div className={styles.overlay} onClick={onClose} onContextMenu={e => { e.preventDefault(); onClose(); }} />
@@ -43,10 +67,11 @@ export function ContextMenu({ x, y, onFormat, onClose }: ContextMenuProps) {
         className={styles.menu}
         style={{ left: x, top: y }}
       >
-        {FORMAT_OPTIONS.map(({ action, label, icon, preview }) => (
+        {FORMAT_OPTIONS.map(({ action, label, icon, preview }, i) => (
           <div
             key={action}
-            className={styles.item}
+            className={`${styles.item} ${i === activeIndex ? styles.active : ''}`}
+            onMouseEnter={() => setActiveIndex(i)}
             onClick={() => {
               onFormat(action);
               onClose();
