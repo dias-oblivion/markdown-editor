@@ -69,6 +69,7 @@ export function App() {
     sidebarSource,
     showFiles,
     showPlans,
+    openPlanByPath,
     openedPlans,
     tabs,
     activeTab,
@@ -181,6 +182,14 @@ Esse é um teste de diagrama mermaid.
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, [rootEntry, refreshTree]);
+
+  // Abrir plano recém-finalizado pelo Claude (disparado pelo hook via IPC)
+  useEffect(() => {
+    window.electronAPI?.onOpenPlan?.((filePath) => {
+      openPlanByPath(filePath);
+    });
+    return () => window.electronAPI?.removeOpenPlanListeners?.();
+  }, [openPlanByPath]);
 
   const insertRef = useRef<((text: string) => void) | null>(null);
 

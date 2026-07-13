@@ -64,6 +64,66 @@ let mainWindow: BrowserWindow | null = null;
 
 const isDev = process.env.NODE_ENV === 'development';
 
+// ── Claude Plans integration ──
+// O hook (~/.claude-personal/hooks/open-plan.sh) grava um marcador quando um plano
+// é finalizado; observamos esse arquivo e revelamos o plano. Um heartbeat permite
+// que o hook saiba se já existe uma instância do editor rodando.
+const PLANS_DIR = path.join(os.homedir(), '.claude', 'plans');
+const OPEN_REQUEST_MARKER = path.join(PLANS_DIR, '.open-request');
+const HEARTBEAT_FILE = path.join(PLANS_DIR, '.editor-alive');
+
+let heartbeatTimer: NodeJS.Timeout | null = null;
+
+function startHeartbeat() {
+  try {
+    fs.mkdirSync(PLANS_DIR, { recursive: true });
+  } catch { /* ignore */ }
+  const beat = () => {
+    fs.promises.writeFile(HEARTBEAT_FILE, String(Date.now())).catch(() => {});
+  };
+  beat();
+  heartbeatTimer = setInterval(beat, 3000);
+}
+
+function stopHeartbeat() {
+  if (heartbeatTimer) {
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = null;
+  }
+  fs.promises.unlink(HEARTBEAT_FILE).catch(() => {});
+}
+
+// Traz a janela pra frente (best-effort em WMs Linux com focus-stealing prevention)
+function focusWindow() {
+  if (!mainWindow) {
+    createWindow();
+    return;
+  }
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+  mainWindow.setAlwaysOnTop(true);
+  mainWindow.setAlwaysOnTop(false);
+}
+
+// Lê o marcador (1ª linha = caminho do .md) e manda o renderer abrir o plano
+function openMarkerPlan() {
+  fs.promises.readFile(OPEN_REQUEST_MARKER, 'utf-8').then(content => {
+    const filePath = content.split('\n')[0].trim();
+    if (!filePath) return;
+    focusWindow();
+    mainWindow?.webContents.send('plan:open', filePath);
+  }).catch(() => {});
+}
+
+function watchOpenRequests() {
+  // watchFile (polling) é confiável mesmo que o arquivo ainda não exista.
+  fs.watchFile(OPEN_REQUEST_MARKER, { interval: 300 }, (curr) => {
+    if (curr.mtimeMs === 0) return; // arquivo removido
+    openMarkerPlan();
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -93,14 +153,27 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 
+  // Cold start: se o hook gravou um marcador fresco logo antes de nos iniciar, abre-o.
+  mainWindow.webContents.on('did-finish-load', () => {
+    fs.promises.stat(OPEN_REQUEST_MARKER).then(st => {
+      if (Date.now() - st.mtimeMs < 20000) openMarkerPlan();
+    }).catch(() => {});
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  startHeartbeat();
+  watchOpenRequests();
+});
 
 app.on('window-all-closed', () => {
+  stopHeartbeat();
+  fs.unwatchFile(OPEN_REQUEST_MARKER);
   if (process.platform !== 'darwin') {
     app.quit();
   }

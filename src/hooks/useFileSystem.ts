@@ -53,6 +53,10 @@ export function useFileSystem() {
   const activeRootRef = useRef<FileEntry | null>(null);
   activeRootRef.current = rootEntry;
 
+  // Mirror do plansRoot em ref — usado no listener de "abrir plano" (evita closure velha)
+  const plansRootRef = useRef<FileEntry | null>(null);
+  plansRootRef.current = plansRoot;
+
   const activeTab = tabs.find(t => t.id === activeTabId) ?? null;
 
   // Write the given entry back into whichever root is currently active.
@@ -199,6 +203,29 @@ export function useFileSystem() {
     }
     return entry;
   }, []);
+
+  // ── Abrir um plano por caminho (disparado pelo hook via IPC 'plan:open') ──
+  const openPlanByPath = useCallback(async (filePath: string) => {
+    setSidebarSource('plans');
+
+    // O arquivo é recém-criado: garante o plansRoot atualizado ANTES de procurar.
+    let root = plansRootRef.current;
+    if (!root) {
+      root = await loadPlansRoot();
+    } else {
+      const refreshed = await refreshDirectoryTree(root);
+      if (refreshed) {
+        setPlansRoot(refreshed);
+        plansPathRef.current = refreshed.path;
+        plansRootRef.current = refreshed;
+        root = refreshed;
+      }
+    }
+    if (!root) return;
+
+    const entry = findFileByPath(root, filePath);
+    if (entry) handleOpenFile(entry);
+  }, [loadPlansRoot]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Sidebar source switching ──
   const showFiles = useCallback(() => setSidebarSource('files'), []);
@@ -527,6 +554,7 @@ export function useFileSystem() {
     sidebarSource,
     showFiles,
     showPlans,
+    openPlanByPath,
     openedPlans,
     tabs,
     activeTab,

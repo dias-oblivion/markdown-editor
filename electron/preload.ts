@@ -33,4 +33,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   updateAISettings: (settings: { provider: string; terminalVisible: boolean }) => {
     ipcRenderer.send('ai:updateSettings', settings);
   },
+  onOpenPlan: (callback: (filePath: string) => void) => {
+    ipcRenderer.on('plan:open', (_event, filePath: string) => callback(filePath));
+  },
+  removeOpenPlanListeners: () => {
+    ipcRenderer.removeAllListeners('plan:open');
+  },
 });

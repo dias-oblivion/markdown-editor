@@ -25,6 +25,8 @@ interface ElectronAPI {
   onChatDone: (callback: (result: { success: boolean }) => void) => void;
   removeChatListeners: () => void;
   updateAISettings?: (settings: { provider: string; terminalVisible: boolean }) => void;
+  onOpenPlan?: (callback: (filePath: string) => void) => void;
+  removeOpenPlanListeners?: () => void;
 }
 
 interface Window {
