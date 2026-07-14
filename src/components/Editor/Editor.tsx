@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { EditorView, keymap, highlightActiveLine } from '@codemirror/view';
 import { EditorState, Compartment, Annotation } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
@@ -8,7 +8,7 @@ import { syntaxHighlighting, HighlightStyle } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import { searchKeymap } from '@codemirror/search';
 import type { ViewMode, ThemeId } from '../../types';
-import { getWordCount, getCharCount, getFileSize, getReadTime } from '../../utils/markdown';
+import { getWordCount, getByteSize, formatFileSize, formatReadTime } from '../../utils/markdown';
 import { MarkdownPreview } from './MarkdownPreview';
 import { SlashMenu } from '../SlashMenu/SlashMenu';
 import { filterCommands, findCommandByWord, formatDate, type SlashCommand } from './slashCommands';
@@ -615,21 +615,41 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
     };
   }, [applyFormat, getSelection]);
 
+  // Métricas do status bar — recalculadas só quando o conteúdo muda (não a cada
+  // render). wordCount é computado uma vez e reaproveitado pelo tempo de leitura.
+  const stats = useMemo(() => {
+    const words = getWordCount(content);
+    return {
+      words,
+      chars: content.length,
+      fileSize: formatFileSize(getByteSize(content)),
+      readTime: formatReadTime(words),
+    };
+  }, [content]);
+
+  const handleToggleCheckbox = useCallback((newSource: string) => {
+    onChangeRef.current(newSource);
+  }, []);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
       <div className={styles.editorArea}>
         <div className={styles.editorPane} style={{ display: viewMode === 'editor' ? undefined : 'none' }}>
           <div className={styles.cmEditor} ref={editorRef} />
         </div>
-        <div className={styles.previewPane} style={{ display: viewMode === 'preview' ? undefined : 'none' }}>
-          <div className={styles.previewHeader}>Preview</div>
-          <div className={styles.previewContent}>
-            <MarkdownPreview
-              source={content}
-              onToggleCheckbox={viewMode === 'preview' ? (newSource) => onChangeRef.current(newSource) : undefined}
-            />
+        {/* O preview só é montado no modo preview: no modo editor, montá-lo faria
+            o pipeline markdown + DOMPurify rodar a cada tecla para nada. */}
+        {viewMode === 'preview' && (
+          <div className={styles.previewPane}>
+            <div className={styles.previewHeader}>Preview</div>
+            <div className={styles.previewContent}>
+              <MarkdownPreview
+                source={content}
+                onToggleCheckbox={handleToggleCheckbox}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Find & Replace Bar */}
@@ -690,16 +710,16 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
       {/* Status Bar */}
       <div className={styles.statusBar}>
         <span className={styles.statusItem}>
-          <span className={styles.statusHighlight}>{getWordCount(content)}</span> words
+          <span className={styles.statusHighlight}>{stats.words}</span> words
         </span>
         <span className={styles.statusDivider} />
         <span className={styles.statusItem}>
-          <span className={styles.statusHighlight}>{getCharCount(content)}</span> chars
+          <span className={styles.statusHighlight}>{stats.chars}</span> chars
         </span>
         <div className={styles.statusSpacer} />
-        <span className={styles.statusItem}>{getFileSize(content)}</span>
+        <span className={styles.statusItem}>{stats.fileSize}</span>
         <span className={styles.statusDivider} />
-        <span className={styles.statusItem}>{getReadTime(content)} read</span>
+        <span className={styles.statusItem}>{stats.readTime} read</span>
       </div>
 
       {/* Menu de comandos slash (posição fixed — escapa do overflow dos contêineres) */}

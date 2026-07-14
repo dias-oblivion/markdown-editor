@@ -1,5 +1,9 @@
+import { memo } from 'react';
 import { Icon } from '@iconify/react';
 import type { ViewMode, EditorTab, CodeBlockConfig, TableConfig, AISettings } from '../../types';
+
+/** A Toolbar só consome estes campos de cada aba (não o `content`). */
+type TabSummary = Pick<EditorTab, 'id' | 'name' | 'isDirty'>;
 import { AI_PROVIDER_CONFIGS } from '../../types';
 import { isElectron } from '../../utils/fileSystem';
 import { generateCodeBlock, generateTable } from '../../utils/markdown';
@@ -11,7 +15,7 @@ interface ToolbarProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   onInsertText: (text: string) => void;
-  tabs: EditorTab[];
+  tabs: TabSummary[];
   activeTabId: string | null;
   onTabSelect: (id: string) => void;
   onTabClose: (id: string) => void;
@@ -29,7 +33,7 @@ interface ToolbarProps {
   onToggleSidebar: () => void;
 }
 
-export function Toolbar({
+function ToolbarImpl({
   viewMode,
   onViewModeChange,
   onInsertText,
@@ -292,3 +296,5 @@ export function Toolbar({
     </>
   );
 }
+
+export const Toolbar = memo(ToolbarImpl);

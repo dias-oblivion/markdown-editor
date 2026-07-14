@@ -49,15 +49,29 @@ export function getLineCount(text: string): number {
   return text.split('\n').length;
 }
 
-export function getReadTime(text: string): string {
-  const words = getWordCount(text);
+// Reaproveita uma contagem de palavras já calculada (evita reprocessar o texto).
+export function formatReadTime(words: number): string {
   const minutes = Math.ceil(words / 200);
   return `${minutes} min`;
 }
 
-export function getFileSize(text: string): string {
-  const bytes = new Blob([text]).size;
+export function getReadTime(text: string): string {
+  return formatReadTime(getWordCount(text));
+}
+
+// Contagem de bytes UTF-8 sem alocar um Blob (TextEncoder é bem mais barato).
+const byteEncoder = new TextEncoder();
+
+export function getByteSize(text: string): number {
+  return byteEncoder.encode(text).length;
+}
+
+export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export function getFileSize(text: string): string {
+  return formatFileSize(getByteSize(text));
 }

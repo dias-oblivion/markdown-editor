@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, memo } from 'react';
 import { Icon } from '@iconify/react';
 import type { FileEntry } from '../../types';
 import { FileTree } from './FileTree';
@@ -45,7 +45,7 @@ function formatRelativeDate(ms?: number): string {
   return new Date(ms).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 }
 
-export function Sidebar({
+function SidebarImpl({
   rootEntry, activeFilePath, collapsed, source, openedPlans,
   onShowFiles, onShowPlans, onOpenDirectory, onFileSelect,
   onCreateFile, onRenameFile, onDeleteFile, onCreateDirectory, onRenameDirectory,
@@ -185,6 +185,10 @@ export function Sidebar({
     setRenamingPath(null);
   }, []);
 
+  const handleStartRename = useCallback((path: string) => {
+    setRenamingPath(path);
+  }, []);
+
   const handleCreateConfirm = async (fileName: string) => {
     if (!newFileDialog) return;
     await onCreateFile(newFileDialog.dirPath, fileName);
@@ -311,7 +315,7 @@ export function Sidebar({
                   onFileSelect={onFileSelect}
                   onDirContextMenu={handleDirContextMenu}
                   onFileContextMenu={handleFileContextMenu}
-                  onStartRename={(path) => setRenamingPath(path)}
+                  onStartRename={handleStartRename}
                   onConfirmRename={handleConfirmRename}
                   onCancelRename={handleCancelRename}
                   onMoveFile={onMoveFile}
@@ -359,7 +363,7 @@ export function Sidebar({
             onFileSelect={onFileSelect}
             onDirContextMenu={handleDirContextMenu}
             onFileContextMenu={handleFileContextMenu}
-            onStartRename={(path) => setRenamingPath(path)}
+            onStartRename={handleStartRename}
             onConfirmRename={handleConfirmRename}
             onCancelRename={handleCancelRename}
             onMoveFile={onMoveFile}
@@ -472,3 +476,5 @@ export function Sidebar({
     </div>
   );
 }
+
+export const Sidebar = memo(SidebarImpl);

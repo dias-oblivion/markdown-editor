@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { Icon } from '@iconify/react';
 import type { FileEntry } from '../../types';
 import styles from './Sidebar.module.css';
@@ -19,7 +19,7 @@ interface FileTreeProps {
   onMoveFile: (filePath: string, targetDirPath: string) => void;
 }
 
-export function FileTree({
+function FileTreeImpl({
   entry, depth = 0, initialExpanded, activeFilePath, renamingPath,
   onFileSelect, onDirContextMenu, onFileContextMenu,
   onStartRename, onConfirmRename, onCancelRename, onMoveFile,
@@ -133,6 +133,8 @@ export function FileTree({
     </div>
   );
 }
+
+export const FileTree = memo(FileTreeImpl);
 
 function RenameInput({
   initialName,

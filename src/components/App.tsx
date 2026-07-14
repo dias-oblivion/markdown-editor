@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Icon } from '@iconify/react';
 import type { ViewMode, FormatAction, FileEntry, ThemeId, AISettings } from '../types';
 import { THEMES } from '../types';
@@ -193,6 +193,16 @@ function saudar(nome: string): string {
   const insertRef = useRef<((text: string) => void) | null>(null);
 
   const currentContent = activeTab ? activeTab.content : scratchContent;
+
+  // A Toolbar só precisa de id/name/isDirty de cada aba, não do `content` (que
+  // muda a cada tecla). Deriva um resumo com referência estável — só muda quando
+  // esses três campos mudam — para que digitar não re-renderize a Toolbar.
+  const tabsKey = tabs.map(t => `${t.id}:${t.isDirty ? 1 : 0}:${t.name}`).join('|');
+  const tabsSummary = useMemo(
+    () => tabs.map(t => ({ id: t.id, name: t.name, isDirty: t.isDirty })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tabsKey],
+  );
 
   const handleContentChange = useCallback((content: string) => {
     if (activeTab) {
@@ -395,7 +405,7 @@ function saudar(nome: string): string {
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           onInsertText={handleInsertText}
-          tabs={tabs}
+          tabs={tabsSummary}
           activeTabId={activeTabId}
           onTabSelect={setActiveTabId}
           onTabClose={handleTabCloseRequest}

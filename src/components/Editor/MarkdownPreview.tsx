@@ -1,6 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
-import mermaid from 'mermaid';
-import elkLayouts from '@mermaid-js/layout-elk';
+import { useEffect, useRef, memo } from 'react';
 import { useMarkdown } from '../../hooks/useMarkdown';
 
 interface MarkdownPreviewProps {
@@ -8,7 +6,23 @@ interface MarkdownPreviewProps {
   onToggleCheckbox?: (newSource: string) => void;
 }
 
-mermaid.registerLayoutLoaders(elkLayouts);
+// Mermaid (com o layout ELK) é uma das libs mais pesadas do bundle. Só a
+// carregamos quando um documento realmente contém um diagrama — o import()
+// é cacheado no primeiro uso e o loader ELK é registrado uma única vez.
+type MermaidApi = typeof import('mermaid')['default'];
+let mermaidPromise: Promise<MermaidApi> | null = null;
+function loadMermaid(): Promise<MermaidApi> {
+  if (!mermaidPromise) {
+    mermaidPromise = Promise.all([
+      import('mermaid'),
+      import('@mermaid-js/layout-elk'),
+    ]).then(([{ default: mermaid }, { default: elkLayouts }]) => {
+      mermaid.registerLayoutLoaders(elkLayouts);
+      return mermaid;
+    });
+  }
+  return mermaidPromise;
+}
 
 const CHECKBOX_RE = /^[ \t]*\[[ xX]?\] - /;
 
@@ -137,27 +151,32 @@ function renderMermaidError(container: HTMLElement, message: string, code: strin
   container.append(header, pre);
 }
 
-export function MarkdownPreview({ source, onToggleCheckbox }: MarkdownPreviewProps) {
+function MarkdownPreviewImpl({ source, onToggleCheckbox }: MarkdownPreviewProps) {
   const html = useMarkdown(source);
   const ref = useRef<HTMLDivElement>(null);
-  const [processedHtml, setProcessedHtml] = useState<string>('');
+  // Refs consultadas pelo listener de checkbox (anexado uma única vez) — mantêm
+  // o source e o callback sempre atuais sem re-anexar o handler a cada render.
+  const sourceRef = useRef(source);
+  const onToggleRef = useRef(onToggleCheckbox);
+  useEffect(() => { sourceRef.current = source; }, [source]);
+  useEffect(() => { onToggleRef.current = onToggleCheckbox; }, [onToggleCheckbox]);
 
   useEffect(() => {
-    if (!ref.current || !html) return;
+    const container = ref.current;
+    if (!container || !html) return;
 
     // Set the HTML first
-    ref.current.innerHTML = html;
-    wrapTaskLabels(ref.current);
+    container.innerHTML = html;
+    wrapTaskLabels(container);
 
-    const blocks = ref.current.querySelectorAll<HTMLElement>('pre code.language-mermaid');
-    if (!blocks.length) {
-      setProcessedHtml(html);
-      return;
+    // GFM renderiza os checkboxes como disabled; habilita-os quando há um
+    // callback de toggle (fica só-leitura no modo foco, que não passa callback).
+    if (onToggleCheckbox) {
+      container.querySelectorAll('input[type="checkbox"]').forEach((cb) => cb.removeAttribute('disabled'));
     }
 
-    // Default layout (dagre) instead of forcing 'elk', which only supports
-    // flowcharts and breaks other diagram types.
-    mermaid.initialize({ startOnLoad: false, theme: getMermaidTheme() });
+    const blocks = container.querySelectorAll<HTMLElement>('pre code.language-mermaid');
+    if (!blocks.length) return;
 
     // Swap each mermaid code block for a container we render into individually.
     const targets: Array<{ container: HTMLDivElement; code: string }> = [];
@@ -165,65 +184,66 @@ export function MarkdownPreview({ source, onToggleCheckbox }: MarkdownPreviewPro
       const pre = block.parentElement;
       if (!pre) return;
       const code = (block.textContent ?? '').trim();
-      const container = document.createElement('div');
-      container.className = 'mermaid-diagram';
-      pre.replaceWith(container);
-      targets.push({ container, code });
+      const el = document.createElement('div');
+      el.className = 'mermaid-diagram';
+      pre.replaceWith(el);
+      targets.push({ container: el, code });
     });
 
     let cancelled = false;
 
     (async () => {
-      for (const { container, code } of targets) {
+      // Carrega o Mermaid sob demanda (só há diagramas neste documento).
+      const mermaid = await loadMermaid();
+      if (cancelled) return;
+      // Default layout (dagre) instead of forcing 'elk', which only supports
+      // flowcharts and breaks other diagram types.
+      mermaid.initialize({ startOnLoad: false, theme: getMermaidTheme() });
+
+      for (const { container: diagram, code } of targets) {
         const id = `mmd-${mermaidRenderId++}`;
         try {
           // parse() catches most syntax errors cleanly, before render() touches the DOM.
           await mermaid.parse(code);
           const { svg } = await mermaid.render(id, code);
           if (cancelled) return;
-          container.innerHTML = svg;
+          diagram.innerHTML = svg;
         } catch (err) {
           if (cancelled) return;
           const message = err instanceof Error ? err.message : String(err);
           // Render may leave an orphan measurement node behind on failure.
           document.getElementById(id)?.remove();
           document.getElementById(`d${id}`)?.remove();
-          renderMermaidError(container, message, code);
+          renderMermaidError(diagram, message, code);
         }
-      }
-      if (!cancelled && ref.current) {
-        setProcessedHtml(ref.current.innerHTML);
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [html]);
+  }, [html, onToggleCheckbox]);
 
+  // Um único listener delegado no container trata todos os checkboxes — evita
+  // re-anexar N handlers a cada render e re-serializar o HTML do preview.
   useEffect(() => {
-    if (!ref.current || !onToggleCheckbox || !processedHtml) return;
+    const container = ref.current;
+    if (!container) return;
 
-    const checkboxes = ref.current.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
-    const handlers: Array<() => void> = [];
-
-    checkboxes.forEach((checkbox, index) => {
-      checkbox.removeAttribute('disabled');
-      const handler = () => {
-        const isChecked = checkbox.checked;
-        const newSource = toggleCheckboxInSource(source, index, isChecked);
-        onToggleCheckbox(newSource);
-      };
-      handlers.push(handler);
-      checkbox.addEventListener('change', handler);
-    });
-
-    return () => {
-      checkboxes.forEach((checkbox, index) => {
-        checkbox.removeEventListener('change', handlers[index]);
-      });
+    const onChange = (e: Event) => {
+      const target = e.target;
+      if (!(target instanceof HTMLInputElement) || target.type !== 'checkbox') return;
+      const handler = onToggleRef.current;
+      if (!handler) return;
+      const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+      const index = Array.prototype.indexOf.call(checkboxes, target);
+      if (index === -1) return;
+      handler(toggleCheckboxInSource(sourceRef.current, index, target.checked));
     };
-  }, [processedHtml, source, onToggleCheckbox]);
+
+    container.addEventListener('change', onChange);
+    return () => container.removeEventListener('change', onChange);
+  }, []);
 
   return (
     <div
@@ -232,3 +252,5 @@ export function MarkdownPreview({ source, onToggleCheckbox }: MarkdownPreviewPro
     />
   );
 }
+
+export const MarkdownPreview = memo(MarkdownPreviewImpl);
