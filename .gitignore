@@ -31,6 +31,10 @@ release
 # Notas pessoais (não pertencem ao projeto)
 anotacoes.md
 
+# Superpowers — estado de runtime e docs/planos gerados (não pertencem ao repo)
+.superpowers/
+docs/superpowers/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
