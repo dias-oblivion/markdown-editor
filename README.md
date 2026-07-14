@@ -121,6 +121,19 @@ heartbeat/marker channel watched by the Electron main process.
 Setup (build the AppImage, register the hook in `~/.claude/settings.json`, restart the editor) is
 documented in **[docs/claude-plan-hook.md](docs/claude-plan-hook.md)**.
 
+## Desktop install (Linux)
+
+Run the editor from a terminal command (`markdown-editor`, from anywhere) or the applications menu,
+using the locally built AppImage:
+
+```bash
+yarn dist                        # production build + release/*.AppImage
+bash scripts/install-desktop.sh  # installs the terminal command + menu entry
+```
+
+The installer resolves paths dynamically (nothing hardcoded), so it works on any machine. Details and
+how to replicate on another computer: **[docs/desktop-install.md](docs/desktop-install.md)**.
+
 ## Roadmap
 
 Future features and improvements planned for the editor:
