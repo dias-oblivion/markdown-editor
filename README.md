@@ -14,8 +14,6 @@
 
 This is a markdown editor desktop application that I'm building and personalizing to fit my daily workflow. It runs as an Electron app (and also in the browser) with a dark-first design, live preview, and a file explorer sidebar.
 
-The project is entirely based on and inspired by **[FrankMD](https://github.com/akitaonrails/FrankMD)**, created by **[Akita](https://github.com/akitaonrails)**. All credit for the original idea, design direction, and architecture goes to him. I'm reimagining the application according to my own needs.
-
 ## Features
 
 - CodeMirror 6 editor with markdown syntax highlighting
@@ -39,21 +37,21 @@ The project is entirely based on and inspired by **[FrankMD](https://github.com/
 
 ## Getting Started
 
+This project uses **Yarn 4** (via [Corepack](https://nodejs.org/api/corepack.html), bundled with Node.js).
+
 ```bash
-# Install dependencies
-npm install
+# Enable the pinned Yarn version, then install dependencies
+corepack enable
+yarn install
 
-# Development (browser)
-npm run dev
+# Development — Vite dev server (browser at localhost:5173) + Electron window
+yarn dev
 
-# Development (Electron)
-npm run electron:dev
+# Production build (TypeScript + Vite + Electron)
+yarn build
 
-# Production build
-npm run build
-
-# Package Electron app
-npm run electron:build
+# Package the desktop app (installer for the current OS)
+yarn electron:build
 ```
 
 ## Install via Docker
@@ -133,6 +131,32 @@ bash scripts/install-desktop.sh  # installs the terminal command + menu entry
 
 The installer resolves paths dynamically (nothing hardcoded), so it works on any machine. Details and
 how to replicate on another computer: **[docs/desktop-install.md](docs/desktop-install.md)**.
+
+## Desktop install (macOS)
+
+There's no prebuilt `.dmg` to download — a macOS installer must be built **on a Mac** (a Linux or
+Windows machine can't produce a macOS package). So clone the repo and build it locally.
+
+**Prerequisites:** [Node.js](https://nodejs.org) 20+ and the Xcode Command Line Tools
+(`xcode-select --install`).
+
+```bash
+git clone https://github.com/dias-oblivion/markdown-editor.git
+cd markdown-editor
+corepack enable          # enables the Yarn 4 version pinned in package.json
+yarn install
+yarn electron:build      # builds + writes release/markdown-editor-<version>-<arch>.dmg
+```
+
+Open the generated `.dmg` in `release/` and drag **Markdown Editor** into *Applications*. The
+architecture is picked automatically — `arm64` on Apple Silicon, `x64` on Intel.
+
+> **First launch — Gatekeeper:** the app isn't code-signed, so macOS blocks it the first time
+> ("unidentified developer"). Right-click the app → **Open** → **Open**, or allow it under
+> *System Settings → Privacy & Security → Open Anyway*. Only needed once.
+
+**Just want to try it?** `yarn install && yarn dev` runs the app in development mode (Vite + Electron)
+without installing anything into *Applications*.
 
 ## Roadmap
 
