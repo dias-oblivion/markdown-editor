@@ -28,6 +28,9 @@ release
 /*.png
 .playwright-mcp/
 
+# Notas pessoais (não pertencem ao projeto)
+anotacoes.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
