@@ -8,6 +8,7 @@
     "dev": "concurrently -k \"vite\" \"npm run electron:start\"",
     "electron:start": "npx tsc -p tsconfig.electron.json && npx tsc -p tsconfig.electron.preload.json && wait-on http://localhost:5173 && NODE_ENV=development electron --ozone-platform=x11 .",
     "build": "tsc -b && vite build && npx tsc -p tsconfig.electron.json && npx tsc -p tsconfig.electron.preload.json",
+    "dist": "npm run build && electron-builder --linux AppImage",
     "electron:build": "npm run build && electron-builder",
     "lint": "eslint .",
     "preview": "vite preview"

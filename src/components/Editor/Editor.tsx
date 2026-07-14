@@ -1,18 +1,23 @@
-import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
+import { useEffect, useRef, useCallback, useState, useMemo, lazy, Suspense } from 'react';
 import { EditorView, keymap, highlightActiveLine } from '@codemirror/view';
 import { EditorState, Compartment, Annotation } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { languages } from '@codemirror/language-data';
 import { syntaxHighlighting, HighlightStyle } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import { searchKeymap } from '@codemirror/search';
 import type { ViewMode, ThemeId } from '../../types';
 import { getWordCount, getByteSize, formatFileSize, formatReadTime } from '../../utils/markdown';
-import { MarkdownPreview } from './MarkdownPreview';
 import { SlashMenu } from '../SlashMenu/SlashMenu';
 import { filterCommands, findCommandByWord, formatDate, type SlashCommand } from './slashCommands';
 import styles from './Editor.module.css';
+
+// O preview arrasta todo o pipeline unified/remark/rehype/prism/dompurify (+ o
+// Mermaid lazy). Como o app abre em modo editor, carregá-lo sob demanda tira esse
+// peso do bundle de entrada — só chega ao alternar para preview / focus mode.
+const MarkdownPreview = lazy(() =>
+  import('./MarkdownPreview').then(m => ({ default: m.MarkdownPreview })),
+);
 
 // Marca transações de sincronização programática (troca de aba / conteúdo externo),
 // para o updateListener não confundir com edição do usuário e sujar a aba.
@@ -108,6 +113,9 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
   const highlightCompartment = useRef(new Compartment());
+  // Isola a extensão markdown para poder injetar o catálogo de linguagens depois
+  // (o @codemirror/language-data é carregado sob demanda, fora do bundle de boot).
+  const languageCompartment = useRef(new Compartment());
   const [findText, setFindText] = useState('');
   const [replaceText, setReplaceText] = useState('');
   const [matchCase, setMatchCase] = useState(false);
@@ -148,7 +156,9 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
       extensions: [
         highlightActiveLine(),
         history(),
-        markdown({ base: markdownLanguage, codeLanguages: languages }),
+        // Sem codeLanguages ainda — o realce de blocos de código chega quando o
+        // language-data é carregado (effect abaixo), reconfigurando este compartment.
+        languageCompartment.current.of(markdown({ base: markdownLanguage })),
         highlightCompartment.current.of(syntaxHighlighting(initialStyle)),
         keymap.of([
           ...defaultKeymap,
@@ -221,6 +231,22 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
       effects: highlightCompartment.current.reconfigure(syntaxHighlighting(style)),
     });
   }, [activeTheme]);
+
+  // Carrega o catálogo de linguagens (~150 descritores) sob demanda e habilita o
+  // realce dentro de blocos de código. Fica fora do bundle de entrada.
+  useEffect(() => {
+    let cancelled = false;
+    import('@codemirror/language-data').then(({ languages }) => {
+      const view = viewRef.current;
+      if (cancelled || !view) return;
+      view.dispatch({
+        effects: languageCompartment.current.reconfigure(
+          markdown({ base: markdownLanguage, codeLanguages: languages }),
+        ),
+      });
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   // Sync external content changes
   useEffect(() => {
@@ -643,10 +669,12 @@ export function Editor({ content, viewMode, activeTheme, onChange, onInsertRef, 
           <div className={styles.previewPane}>
             <div className={styles.previewHeader}>Preview</div>
             <div className={styles.previewContent}>
-              <MarkdownPreview
-                source={content}
-                onToggleCheckbox={handleToggleCheckbox}
-              />
+              <Suspense fallback={null}>
+                <MarkdownPreview
+                  source={content}
+                  onToggleCheckbox={handleToggleCheckbox}
+                />
+              </Suspense>
             </div>
           </div>
         )}

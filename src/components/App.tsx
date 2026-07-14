@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from 'react';
 import { Icon } from '@iconify/react';
 import type { ViewMode, FormatAction, FileEntry, ThemeId, AISettings } from '../types';
 import { THEMES } from '../types';
@@ -10,12 +10,16 @@ import { getSession, patchSession } from '../utils/sessionStorage';
 import { Sidebar } from './Sidebar/Sidebar';
 import { Toolbar } from './Toolbar/Toolbar';
 import { Editor } from './Editor/Editor';
-import { MarkdownPreview } from './Editor/MarkdownPreview';
 import { CommandPalette } from './CommandPalette/CommandPalette';
 import { ContextMenu } from './ContextMenu/ContextMenu';
 import { SettingsDialog } from './SettingsDialog/SettingsDialog';
 import { ClaudeChat } from './ClaudeChat/ClaudeChat';
 import { UnsavedChangesDialog } from './UnsavedChangesDialog/UnsavedChangesDialog';
+
+// Lazy — mesmo chunk usado pelo Editor; mantém o pipeline de markdown fora do boot.
+const MarkdownPreview = lazy(() =>
+  import('./Editor/MarkdownPreview').then(m => ({ default: m.MarkdownPreview })),
+);
 
 const VALID_THEMES = new Set(THEMES.map(t => t.id));
 
@@ -631,7 +635,9 @@ function saudar(nome: string): string {
             <Icon icon="codicon:screen-normal" width={13} />
             Sair <kbd>Esc</kbd>
           </button>
-          <MarkdownPreview source={currentContent} />
+          <Suspense fallback={null}>
+            <MarkdownPreview source={currentContent} />
+          </Suspense>
         </div>
       )}
 
