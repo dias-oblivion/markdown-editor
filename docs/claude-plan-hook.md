@@ -102,7 +102,15 @@ Para o teste de ponta a ponta, entre em plan mode numa tarefa qualquer e finaliz
   `src/hooks/useFileSystem.ts` para casarem.
 - **Fallback só no Linux** — o lançamento automático usa o AppImage. Em macOS/Windows, mantenha o
   editor aberto (o caminho "editor aberto" é multiplataforma).
-- **Foco no Wayland/X11** — o `focusWindow()` usa um toggle de `setAlwaysOnTop` (best-effort); alguns
-  window managers com prevenção de roubo de foco podem não trazer a janela 100% pra frente.
+- **Foco no Wayland/X11** — no Linux o app força **Xwayland** via o flag `--ozone-platform=x11` no
+  argv do launch (script `electron:start` no `package.json` e no lançamento do AppImage em
+  `scripts/open-plan.sh`). Isso é necessário porque no GNOME/Wayland a janela nativa não consegue se
+  auto-focar (o Mutter bloqueia o focus-steal e só emite a notificação "… is ready"). **Só o flag no
+  argv funciona** — a env var `ELECTRON_OZONE_PLATFORM_HINT=x11` e o `appendSwitch('ozone-platform',
+  'x11')` em `electron/main.ts` são lidos tarde demais pelo Chromium (Electron 40) e foram ignorados
+  nos testes; o `appendSwitch` fica só como reforço documental. Como janela X11, o `focusWindow()`
+  (`maximize` + `show` + `focus` + `moveTop` + `setAlwaysOnTop` mantido por ~400ms) traz a janela pra
+  frente **maximizada** de forma confiável. Trade-off: backend X11, escala fracionária/HiDPI um pouco
+  pior.
 - **Plano = `.md` mais novo** — robusto no instante do `ExitPlanMode`, já que o Claude grava o arquivo
   imediatamente antes de chamar a tool.

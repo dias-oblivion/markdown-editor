@@ -60,6 +60,18 @@ if (process.env.ELECTRON_IN_DOCKER === '1') {
   app.commandLine.appendSwitch('disable-software-rasterizer');
 }
 
+// Força Xwayland no Linux. No GNOME/Wayland a janela nativa não pode se auto-focar
+// (o Mutter bloqueia o focus-steal e só emite a notificação "… is ready"). Como janela
+// X11, o focusWindow() abaixo (maximize + show + focus + setAlwaysOnTop) traz a janela pra frente.
+//
+// Mecanismo que funciona no Electron 40: o flag --ozone-platform=x11 no argv do launch
+// (script electron:start no package.json e no lançamento do AppImage pelo hook open-plan.sh).
+// O Chromium lê o ozone cedo demais — nem a env var ELECTRON_OZONE_PLATFORM_HINT nem o
+// appendSwitch abaixo pegam sozinhos (verificado). O switch fica só como reforço documental.
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('ozone-platform', 'x11');
+}
+
 let mainWindow: BrowserWindow | null = null;
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -93,17 +105,21 @@ function stopHeartbeat() {
   fs.promises.unlink(HEARTBEAT_FILE).catch(() => {});
 }
 
-// Traz a janela pra frente (best-effort em WMs Linux com focus-stealing prevention)
+// Traz a janela pra frente. Em WMs Linux com focus-stealing prevention, o segredo é manter
+// o always-on-top por um instante (não revertê-lo no mesmo tick) para o compositor ter tempo
+// de restaquear a janela; depois soltamos para não deixá-la fixada acima de tudo.
 function focusWindow() {
   if (!mainWindow) {
     createWindow();
     return;
   }
   if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.maximize();
   mainWindow.show();
   mainWindow.focus();
+  mainWindow.moveTop();
   mainWindow.setAlwaysOnTop(true);
-  mainWindow.setAlwaysOnTop(false);
+  setTimeout(() => mainWindow?.setAlwaysOnTop(false), 400);
 }
 
 // Lê o marcador (1ª linha = caminho do .md) e manda o renderer abrir o plano

@@ -40,7 +40,10 @@ fi
 # Fechado: lança o AppImage (se existir). Se estiver aberto, o marcador acima já basta.
 if [ "$alive" -eq 0 ]; then
   appimage=$(ls -t $APPIMAGE_GLOB 2>/dev/null | head -n1 || true)
-  [ -n "${appimage:-}" ] && setsid "$appimage" --appimage-extract-and-run >/dev/null 2>&1 &
+  # --ozone-platform=x11: força Xwayland para o focusWindow() do editor conseguir trazer a
+  # janela pra frente no GNOME/Wayland (o env var/appendSwitch não bastam; ver
+  # docs/claude-plan-hook.md). O --appimage-* é consumido pelo runtime do AppImage.
+  [ -n "${appimage:-}" ] && setsid "$appimage" --appimage-extract-and-run --ozone-platform=x11 >/dev/null 2>&1 &
 fi
 
 exit 0
