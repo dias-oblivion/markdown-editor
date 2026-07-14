@@ -59,6 +59,8 @@ function SidebarImpl({
   const [renameDirDialog, setRenameDirDialog] = useState<{ dirPath: string; currentName: string } | null>(null);
   // Overflow ("⋯") action menu in the action bar
   const [menuOpen, setMenuOpen] = useState(false);
+  // Pasta raiz ".claude/plans" recolhível na aba Plans (aberta por padrão)
+  const [plansRootExpanded, setPlansRootExpanded] = useState(true);
 
   const isPlans = source === 'plans';
 
@@ -303,50 +305,75 @@ function SidebarImpl({
         {isPlans ? (
           (planRootFiles.length > 0 || planFolders.length > 0) ? (
             <>
-              {/* Pastas primeiro (arquivo/organização manual), navegáveis e recolhidas.
-                  Não seguem a ordem recent-first — essa regra é só dos .md soltos do Claude. */}
-              {planFolders.map((folder) => (
-                <FileTree
-                  key={folder.path}
-                  entry={folder}
-                  initialExpanded={false}
-                  activeFilePath={activeFilePath}
-                  renamingPath={renamingPath}
-                  onFileSelect={onFileSelect}
-                  onDirContextMenu={handleDirContextMenu}
-                  onFileContextMenu={handleFileContextMenu}
-                  onStartRename={handleStartRename}
-                  onConfirmRename={handleConfirmRename}
-                  onCancelRename={handleCancelRename}
-                  onMoveFile={onMoveFile}
-                />
-              ))}
-              {/* Planos soltos na raiz (criados pelo Claude) — recent-first */}
-              {planRootFiles.length > 0 && (
-                <div className={styles.plansList}>
-                  {planRootFiles.map((plan) => {
-                    const isNew = !openedSet.has(plan.path);
-                    const isActive = plan.path === activeFilePath;
-                    return (
-                      <div
-                        key={plan.path}
-                        className={`${styles.planItem} ${isActive ? styles.planItemActive : ''}`}
-                        draggable={true}
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('text/plain', plan.path);
-                          e.dataTransfer.effectAllowed = 'move';
-                        }}
-                        onClick={() => onFileSelect(plan)}
-                        onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); handleFileContextMenu(e, plan); }}
-                        title={plan.path}
-                      >
-                        <span className={`${styles.planDot} ${isNew ? styles.planDotNew : ''}`} />
-                        <span className={styles.planName}>{plan.name.replace(/\.md$/, '')}</span>
-                        <span className={styles.planDate}>{formatRelativeDate(plan.birthtime ?? plan.mtime)}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+              {/* Nó de pasta raiz ".claude/plans" — clicável, envolve todo o conteúdo
+                  como um explorador de arquivos (mesmo visual das pastas do FileTree). */}
+              <div
+                className={styles.treeItem}
+                style={{ '--depth': 0 } as React.CSSProperties}
+                onClick={() => setPlansRootExpanded(v => !v)}
+                title=".claude/plans"
+              >
+                <span className={`${styles.treeItemIcon} ${styles.chevron} ${plansRootExpanded ? styles.open : ''}`}>
+                  <Icon icon="lucide:chevron-right" width={14} />
+                </span>
+                <span className={styles.treeItemIcon}>
+                  <Icon
+                    icon={plansRootExpanded ? 'tabler:folder-open' : 'tabler:folder-filled'}
+                    width={18}
+                    className={styles.folderIcon}
+                  />
+                </span>
+                <span className={styles.treeItemName}>.claude/plans</span>
+              </div>
+              {plansRootExpanded && (
+                <>
+                  {/* Pastas primeiro (arquivo/organização manual), navegáveis e recolhidas.
+                      Não seguem a ordem recent-first — essa regra é só dos .md soltos do Claude. */}
+                  {planFolders.map((folder) => (
+                    <FileTree
+                      key={folder.path}
+                      entry={folder}
+                      depth={1}
+                      initialExpanded={false}
+                      activeFilePath={activeFilePath}
+                      renamingPath={renamingPath}
+                      onFileSelect={onFileSelect}
+                      onDirContextMenu={handleDirContextMenu}
+                      onFileContextMenu={handleFileContextMenu}
+                      onStartRename={handleStartRename}
+                      onConfirmRename={handleConfirmRename}
+                      onCancelRename={handleCancelRename}
+                      onMoveFile={onMoveFile}
+                    />
+                  ))}
+                  {/* Planos soltos na raiz (criados pelo Claude) — recent-first */}
+                  {planRootFiles.length > 0 && (
+                    <div className={`${styles.plansList} ${styles.plansListNested}`}>
+                      {planRootFiles.map((plan) => {
+                        const isNew = !openedSet.has(plan.path);
+                        const isActive = plan.path === activeFilePath;
+                        return (
+                          <div
+                            key={plan.path}
+                            className={`${styles.planItem} ${isActive ? styles.planItemActive : ''}`}
+                            draggable={true}
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData('text/plain', plan.path);
+                              e.dataTransfer.effectAllowed = 'move';
+                            }}
+                            onClick={() => onFileSelect(plan)}
+                            onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); handleFileContextMenu(e, plan); }}
+                            title={plan.path}
+                          >
+                            <span className={`${styles.planDot} ${isNew ? styles.planDotNew : ''}`} />
+                            <span className={styles.planName}>{plan.name.replace(/\.md$/, '')}</span>
+                            <span className={styles.planDate}>{formatRelativeDate(plan.birthtime ?? plan.mtime)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
               )}
             </>
           ) : (
